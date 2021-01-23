@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ParticleEnvironment.iml" filepath="$PROJECT_DIR$/ParticleEnvironment.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ant_colony_optimization/ant_colony_optimization.iml" filepath="$PROJECT_DIR$/ant_colony_optimization/ant_colony_optimization.iml" />
+      <module fileurl="file://$PROJECT_DIR$/neural_network/neural_network.iml" filepath="$PROJECT_DIR$/neural_network/neural_network.iml" />
+    </modules>
+  </component>
+</project>

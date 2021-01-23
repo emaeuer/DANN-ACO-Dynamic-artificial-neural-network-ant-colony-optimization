@@ -4,12 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>groupId</groupId>
+    <groupId>de.emaeuer</groupId>
     <artifactId>ParticleEnvironment</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-    <url>http://maven.apache.org</url>
+    <modules>
+        <module>neural_network</module>
+        <module>ant_colony_optimization</module>
+    </modules>
 
+    <!--TODO remove dependencies from main pom-->
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -41,7 +46,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.3</version>
                 <configuration>
-                    <mainClass>de.uni.Main</mainClass>
+                    <mainClass>de.emaeuer.Main</mainClass>
                 </configuration>
             </plugin>
             <plugin>
