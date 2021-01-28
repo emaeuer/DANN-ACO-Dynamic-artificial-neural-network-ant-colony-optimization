@@ -1,8 +1,7 @@
 package de.emaeuer.ann.util;
 
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.Connection;
-import de.emaeuer.ann.Neuron;
+import de.emaeuer.ann.NeuronID;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -66,11 +65,11 @@ public class NeuralNetworkBuilderTest {
                 .finish();
 
         // check input layer
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(0, 0)), Arrays.asList(new Neuron.NeuronID(1, 0), new Neuron.NeuronID(1, 1)), new ArrayList<>());
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(0, 1)), Arrays.asList(new Neuron.NeuronID(1, 0), new Neuron.NeuronID(1, 1)), new ArrayList<>());
+        checkNeuron(nn, new NeuronID(0, 0), Arrays.asList(new NeuronID(1, 0), new NeuronID(1, 1)), new ArrayList<>());
+        checkNeuron(nn, new NeuronID(0, 1), Arrays.asList(new NeuronID(1, 0), new NeuronID(1, 1)), new ArrayList<>());
         // check output layer
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(1, 0)), new ArrayList<>(), Arrays.asList(new Neuron.NeuronID(0, 0), new Neuron.NeuronID(0, 1)));
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(1, 1)), new ArrayList<>(), Arrays.asList(new Neuron.NeuronID(0, 0), new Neuron.NeuronID(0, 1)));
+        checkNeuron(nn, new NeuronID(1, 0), new ArrayList<>(), Arrays.asList(new NeuronID(0, 0), new NeuronID(0, 1)));
+        checkNeuron(nn, new NeuronID(1, 1), new ArrayList<>(), Arrays.asList(new NeuronID(0, 0), new NeuronID(0, 1)));
     }
 
     @Test
@@ -84,14 +83,14 @@ public class NeuralNetworkBuilderTest {
                 .finish();
 
         // check input layer
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(0, 0)), Arrays.asList(new Neuron.NeuronID(1, 0), new Neuron.NeuronID(1, 1)), new ArrayList<>());
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(0, 1)), Arrays.asList(new Neuron.NeuronID(1, 0), new Neuron.NeuronID(1, 1)), new ArrayList<>());
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(0, 2)), Arrays.asList(new Neuron.NeuronID(1, 0), new Neuron.NeuronID(1, 1)), new ArrayList<>());
+        checkNeuron(nn, new NeuronID(0, 0), Arrays.asList(new NeuronID(1, 0), new NeuronID(1, 1)), new ArrayList<>());
+        checkNeuron(nn, new NeuronID(0, 1), Arrays.asList(new NeuronID(1, 0), new NeuronID(1, 1)), new ArrayList<>());
+        checkNeuron(nn, new NeuronID(0, 2), Arrays.asList(new NeuronID(1, 0), new NeuronID(1, 1)), new ArrayList<>());
         // check input layer
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(1, 0)), Collections.singletonList(new Neuron.NeuronID(2, 0)), Arrays.asList(new Neuron.NeuronID(0, 0), new Neuron.NeuronID(0, 1), new Neuron.NeuronID(0, 2)));
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(1, 1)), Collections.singletonList(new Neuron.NeuronID(2, 0)), Arrays.asList(new Neuron.NeuronID(0, 0), new Neuron.NeuronID(0, 1), new Neuron.NeuronID(0, 2)));
+        checkNeuron(nn, new NeuronID(1, 0), Collections.singletonList(new NeuronID(2, 0)), Arrays.asList(new NeuronID(0, 0), new NeuronID(0, 1), new NeuronID(0, 2)));
+        checkNeuron(nn, new NeuronID(1, 1), Collections.singletonList(new NeuronID(2, 0)), Arrays.asList(new NeuronID(0, 0), new NeuronID(0, 1), new NeuronID(0, 2)));
         // check output layer
-        checkNeuron(nn.getNeuron(new Neuron.NeuronID(2, 0)), new ArrayList<>(), Arrays.asList(new Neuron.NeuronID(1, 0), new Neuron.NeuronID(1, 1)));
+        checkNeuron(nn, new NeuronID(2, 0), new ArrayList<>(), Arrays.asList(new NeuronID(1, 0), new NeuronID(1, 1)));
     }
 
 
@@ -101,19 +100,19 @@ public class NeuralNetworkBuilderTest {
      ##########################################################
     */
 
-    public void checkNeuron(Neuron neuron, List<Neuron.NeuronID> connectTo, List<Neuron.NeuronID> connectFrom) {
-        assertEquals(connectTo.size(), neuron.getOutgoingConnections().size());
-        assertEquals(connectFrom.size(), neuron.getIncomingConnections().size());
+    public void checkNeuron(NeuralNetwork nn, NeuronID neuron, List<NeuronID> connectTo, List<NeuronID> connectFrom) {
+        assertEquals(connectTo.size(), nn.getOutgoingConnectionsOfNeuron(neuron).size());
+        assertEquals(connectFrom.size(), nn.getIncomingConnectionsOfNeuron(neuron).size());
 
-        List<Neuron.NeuronID> connectFromCopy = new ArrayList<>(connectFrom);
-        for (Connection incoming : neuron.getIncomingConnections()) {
-            assertTrue(connectFromCopy.remove(incoming.start().getNeuronID()));
+        List<NeuronID> connectFromCopy = new ArrayList<>(connectFrom);
+        for (NeuronID incoming : nn.getIncomingConnectionsOfNeuron(neuron)) {
+            assertTrue(connectFromCopy.remove(incoming));
         }
         assertTrue(connectFromCopy.isEmpty());
 
-        List<Neuron.NeuronID> connectToCopy = new ArrayList<>(connectTo);
-        for (Connection outgoing : neuron.getOutgoingConnections()) {
-            assertTrue(connectToCopy.remove(outgoing.end().getNeuronID()));
+        List<NeuronID> connectToCopy = new ArrayList<>(connectTo);
+        for (NeuronID outgoing : nn.getOutgoingConnectionsOfNeuron(neuron)) {
+            assertTrue(connectToCopy.remove(outgoing));
         }
         assertTrue(connectToCopy.isEmpty());
     }

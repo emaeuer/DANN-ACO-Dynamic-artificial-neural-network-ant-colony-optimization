@@ -1,29 +1,31 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.util.NeuralNetworkBuilder;
-import de.emaeuer.ann.util.NeuralNetworkModifier;
+import de.emaeuer.ann.impl.NeuralNetworkBuilderImpl;
+import de.emaeuer.ann.impl.NeuralNetworkLayerBuilderImpl;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.List;
-import java.util.stream.Stream;
 
-public interface NeuralNetwork extends Iterable<NeuralNetworkLayer> {
+public interface NeuralNetwork {
 
-    public static NeuralNetworkBuilder build() {
-        return new NeuralNetworkBuilder();
+    static NeuralNetworkBuilder<? extends NeuralNetworkLayerBuilder> build() {
+        return new NeuralNetworkBuilderImpl();
     }
 
-    public RealVector process(RealVector input);
+    RealVector process(RealVector input);
 
-    public Neuron getNeuron(Neuron.NeuronID key);
+    NeuralNetworkModifier modify();
 
-    public NeuralNetworkLayer getLayer(int i);
+    int getDepth();
+    List<NeuronID> getOutgoingConnectionsOfNeuron(NeuronID neuron);
 
-    public NeuralNetworkModifier modify();
+    List<NeuronID> getIncomingConnectionsOfNeuron(NeuronID neuron);
 
-    public int getDepth();
+    boolean neuronHasConnectionTo(NeuronID start, NeuronID end);
 
-    public Stream<NeuralNetworkLayer> stream();
+    boolean neuronHasConnectionToLayer(NeuronID start, int layerIndex);
 
-    public List<NeuralNetworkLayer> getLayers();
+    double getWeightOfConnection(NeuronID start, NeuronID end);
+
+    double getBiasOfNeuron(NeuronID newNeuron);
 }

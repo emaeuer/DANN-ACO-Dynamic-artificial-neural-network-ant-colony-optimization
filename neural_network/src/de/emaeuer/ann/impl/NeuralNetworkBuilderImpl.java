@@ -1,15 +1,15 @@
-package de.emaeuer.ann.util;
+package de.emaeuer.ann.impl;
 
+import de.emaeuer.ann.LayerType;
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.NeuralNetworkLayer;
-import de.emaeuer.ann.impl.NeuralNetworkImpl;
+import de.emaeuer.ann.NeuralNetworkBuilder;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 
 import java.util.function.Consumer;
 
-import static de.emaeuer.ann.NeuralNetworkLayer.LayerType.*;
+import static de.emaeuer.ann.LayerType.*;
 
-public class NeuralNetworkBuilder {
+public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetworkLayerBuilderImpl> {
 
     private static final String EXCEPTION_MESSAGE_PATTERN = "Failed to create neural network the %s is missing";
 
@@ -19,7 +19,8 @@ public class NeuralNetworkBuilder {
 
     private int necessaryModificationFlag = 0b11;
 
-    public NeuralNetworkBuilder inputLayer(int size) {
+    @Override
+    public NeuralNetworkBuilderImpl inputLayer(int size) {
         return inputLayer(b -> b.numberOfNeurons(size));
     }
 
@@ -32,12 +33,13 @@ public class NeuralNetworkBuilder {
      * @param modifier for a neural network layer builder
      * @return this builder
      */
-    public NeuralNetworkBuilder inputLayer(Consumer<NeuralNetworkLayerBuilder> modifier) {
+    @Override
+    public NeuralNetworkBuilderImpl inputLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
         if (0 == ((this.necessaryModificationFlag >> 1) & 1)) {
             throw new IllegalStateException("Input layer was already set and can't be overridden");
         }
 
-        NeuralNetworkLayerBuilder builder = configureLayer(modifier, INPUT);
+        NeuralNetworkLayerBuilderImpl builder = configureLayer(modifier, INPUT);
 
         try {
             this.nn.getLayers().add(builder.finish());
@@ -50,7 +52,8 @@ public class NeuralNetworkBuilder {
         return this;
     }
 
-    public NeuralNetworkBuilder hiddenLayer(int size) {
+    @Override
+    public NeuralNetworkBuilderImpl hiddenLayer(int size) {
         return hiddenLayer(b -> b.numberOfNeurons(size));
     }
 
@@ -63,14 +66,15 @@ public class NeuralNetworkBuilder {
      * @param modifier for a neural network layer builder
      * @return this builder
      */
-    public NeuralNetworkBuilder hiddenLayer(Consumer<NeuralNetworkLayerBuilder> modifier) {
+    @Override
+    public NeuralNetworkBuilderImpl hiddenLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
         if (1 == ((this.necessaryModificationFlag >> 1) & 1)) {
             throw new IllegalStateException("Can't add hidden layer before the input layer");
         } else if (0 == (this.necessaryModificationFlag & 1)) {
             throw new IllegalStateException("Can't add hidden layer after the output layer");
         }
 
-        NeuralNetworkLayerBuilder builder = configureLayer(modifier, HIDDEN);
+        NeuralNetworkLayerBuilderImpl builder = configureLayer(modifier, HIDDEN);
 
         try {
             this.nn.getLayers().add(builder.finish());
@@ -81,7 +85,8 @@ public class NeuralNetworkBuilder {
         return this;
     }
 
-    public NeuralNetworkBuilder outputLayer(int size) {
+    @Override
+    public NeuralNetworkBuilderImpl outputLayer(int size) {
         return outputLayer(b -> b.numberOfNeurons(size));
     }
 
@@ -95,15 +100,15 @@ public class NeuralNetworkBuilder {
      * @param modifier for a neural network layer builder
      * @return this builder
      */
-    public NeuralNetworkBuilder outputLayer(Consumer<NeuralNetworkLayerBuilder> modifier) {
+    @Override
+    public NeuralNetworkBuilderImpl outputLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
         if (0 == (this.necessaryModificationFlag & 1)) {
             throw new IllegalStateException("Output layer was already set and can't be overridden");
         } else if (1 == ((this.necessaryModificationFlag >> 1) & 1)) {
             throw new IllegalStateException("Can't add output layer before the input layer");
         }
 
-
-        NeuralNetworkLayerBuilder builder = configureLayer(modifier, OUTPUT);
+        NeuralNetworkLayerBuilderImpl builder = configureLayer(modifier, OUTPUT);
 
         try {
             this.nn.getLayers().add(builder.finish());
@@ -116,8 +121,8 @@ public class NeuralNetworkBuilder {
         return this;
     }
 
-    private NeuralNetworkLayerBuilder configureLayer(Consumer<NeuralNetworkLayerBuilder> modifier, NeuralNetworkLayer.LayerType p) {
-        NeuralNetworkLayerBuilder builder = NeuralNetworkLayer.build();
+    private NeuralNetworkLayerBuilderImpl configureLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier, LayerType p) {
+        NeuralNetworkLayerBuilderImpl builder = NeuralNetworkLayerImpl.build();
         modifier = modifier.andThen(b -> b.neuralNetwork(this.nn)
                 .layerID(this.nn.getLayers().size())
                 .layerType(p));
@@ -126,12 +131,12 @@ public class NeuralNetworkBuilder {
         return builder;
     }
 
-    private Consumer<NeuralNetworkLayerBuilder> checkAndFullyConnectToPreviousLayer(Consumer<NeuralNetworkLayerBuilder> modifier) {
+    private Consumer<NeuralNetworkLayerBuilderImpl> checkAndFullyConnectToPreviousLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
         if (this.nn.getDepth() == 0) {
             // fully connected isn't possible for input layer
             this.nextFullyConnected = false;
         } else if (this.nextFullyConnected) {
-            modifier = modifier.andThen(b -> b.fullyConnectTo(this.nn.getLayers().get(this.nn.getLayers().size() - 1)));
+            modifier = modifier.andThen(b -> b.fullyConnectTo(this.nn.getLayers().get(this.nn.getLayers().size() - 1).getNeurons()));
             this.nextFullyConnected = false;
         }
         return modifier;
@@ -143,11 +148,13 @@ public class NeuralNetworkBuilder {
      *
      * @return this builder
      */
-    public NeuralNetworkBuilder fullyConnectToNextLayer() {
+    @Override
+    public NeuralNetworkBuilderImpl fullyConnectToNextLayer() {
         this.nextFullyConnected = true;
         return this;
     }
 
+    @Override
     public NeuralNetwork finish() {
         if (this.necessaryModificationFlag != 0) {
             throw new IllegalStateException(buildMessageForCurrentModificationFlag());

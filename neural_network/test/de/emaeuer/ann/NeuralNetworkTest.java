@@ -1,7 +1,6 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.Connection.ConnectionPrototype;
-import de.emaeuer.ann.Neuron.NeuronID;
+import de.emaeuer.ann.impl.NeuralNetworkImpl;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.jupiter.api.Test;
@@ -25,20 +24,18 @@ public class NeuralNetworkTest {
 
     @Test
     public void testXOR() {
-        NeuralNetwork nn = NeuralNetwork.build()
+        NeuralNetworkImpl nn = (NeuralNetworkImpl) NeuralNetwork.build()
                 .inputLayer(2)
                 .hiddenLayer(b -> b.numberOfNeurons(2)
                         .activationFunction(ActivationFunctions.RELU)
-                        .addConnection(
-                                new ConnectionPrototype(new NeuronID(0, 0), new NeuronID(1, 0), 1),
-                                new ConnectionPrototype(new NeuronID(0, 0), new NeuronID(1, 1), -1),
-                                new ConnectionPrototype(new NeuronID(0, 1), new NeuronID(1, 0), -1),
-                                new ConnectionPrototype(new NeuronID(0, 1), new NeuronID(1, 1), 1)))
+                        .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 1)
+                        .addConnection(new NeuronID(0, 0), new NeuronID(1, 1), -1)
+                        .addConnection(new NeuronID(0, 1), new NeuronID(1, 0), -1)
+                        .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 1))
                 .outputLayer(b -> b.numberOfNeurons(1)
                         .activationFunction(ActivationFunctions.RELU)
-                        .addConnection(
-                                new ConnectionPrototype(new NeuronID(1, 0), new NeuronID(2, 0), 1),
-                                new ConnectionPrototype(new NeuronID(1, 1), new NeuronID(2, 0), 1)))
+                        .addConnection(new NeuronID(1, 0), new NeuronID(2, 0), 1)
+                        .addConnection(new NeuronID(1, 1), new NeuronID(2, 0), 1))
                 .finish();
 
         RealVector input = new ArrayRealVector(2);

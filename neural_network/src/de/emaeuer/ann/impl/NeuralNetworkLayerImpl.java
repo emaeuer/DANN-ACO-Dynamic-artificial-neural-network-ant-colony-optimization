@@ -1,25 +1,19 @@
 package de.emaeuer.ann.impl;
 
-import de.emaeuer.ann.Connection;
-import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.NeuralNetworkLayer;
-import de.emaeuer.ann.Neuron;
-import de.emaeuer.ann.Neuron.NeuronID;
-import de.emaeuer.ann.util.NeuralNetworkLayerModifier;
+import de.emaeuer.ann.LayerType;
+import de.emaeuer.ann.NeuronID;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.DoubleFunction;
-import java.util.stream.Stream;
 
-public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
+public class NeuralNetworkLayerImpl {
 
     private LayerType type;
 
-    private int layerID;
+    private int layerIndex;
 
     private DoubleFunction<Double> activationFunction;
 
@@ -27,12 +21,19 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
     private RealVector bias;
     private RealVector activation = null;
 
-    private final List<Neuron> neuronsOfLayer = new ArrayList<>();
-    private final List<Neuron> inputNeurons = new ArrayList<>();
+    private final List<NeuronID> neuronsOfLayer = new ArrayList<>();
+    private final List<NeuronID> inputNeurons = new ArrayList<>();
 
     private NeuralNetworkImpl neuralNetwork;
 
+    private final Map<NeuronID, List<NeuronID>> incomingConnections = new HashMap<>();
+    private final Map<NeuronID, List<NeuronID>> outgoingConnections = new HashMap<>();
+
     private final NeuralNetworkLayerModifier modifier = new NeuralNetworkLayerModifier(this);
+
+    public static NeuralNetworkLayerBuilderImpl build() {
+        return new NeuralNetworkLayerBuilderImpl();
+    }
 
     public RealVector process(RealVector externalInput) {
         if (!isInputLayer()) {
@@ -41,7 +42,6 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
         return processVector(externalInput);
     }
 
-    @Override
     public RealVector process() {
         if (isInputLayer()) {
             throw new IllegalArgumentException("The input layer needs an input vector to process");
@@ -64,59 +64,30 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
 
     private RealVector buildInputVector() {
         return new ArrayRealVector(this.inputNeurons.stream()
-                .mapToDouble(Neuron::getLastActivation)
+                .mapToDouble(this.neuralNetwork::getLastActivationOf)
                 .toArray());
     }
 
-    @Override
-    public Iterator<Neuron> iterator() {
-        return this.neuronsOfLayer.iterator();
+    public int getLayerIndex() {
+        return this.layerIndex;
     }
 
-    @Override
-    public void forEach(Consumer<? super Neuron> action) {
-        this.neuronsOfLayer.forEach(action);
+    public void setLayerIndex(int id) {
+        this.layerIndex = id;
+
+        // refresh neuron layer index and corresponding map entries
+        this.neuronsOfLayer.forEach(n -> modify().applyNeuronIDChange(n, new NeuronID(id, n.getNeuronIndex())));
     }
 
-    @Override
-    public Spliterator<Neuron> spliterator() {
-        return this.neuronsOfLayer.spliterator();
-    }
-
-    @Override
-    public Stream<Neuron> stream() {
-        return this.neuronsOfLayer.stream();
-    }
-
-    @Override
-    public int getLayerID() {
-        return this.layerID;
-    }
-
-    public void setLayerID(int id) {
-        this.layerID = id;
-    }
-
-    @Override
     public int getNumberOfNeurons() {
         // use dimension of activation because it always equal to the number of neurons and is initialized before list of neurons
         return this.activation.getDimension();
     }
 
-    @Override
-    public Neuron getNeuron(int neuronIndex) {
-        if (neuronIndex > getNumberOfNeurons()) {
-            throw new IllegalArgumentException(String.format("Can't find neuron with neuronIndex = %d because the neural network layer only contains %d neurons", neuronIndex, getNumberOfNeurons()));
-        }
-        return this.neuronsOfLayer.get(neuronIndex);
-    }
-
-    @Override
     public boolean isInputLayer() {
         return this.type == LayerType.INPUT;
     }
 
-    @Override
     public boolean isOutputLayer() {
         return this.type == LayerType.OUTPUT;
     }
@@ -125,17 +96,14 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
         return this.activation.getEntry(inLayerID);
     }
 
-    @Override
     public RealVector getBias() {
         return this.bias;
     }
 
-    @Override
     public RealVector getActivation() {
         return this.activation;
     }
 
-    @Override
     public RealMatrix getWeights() {
         return this.weights;
     }
@@ -154,45 +122,38 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
         this.bias.setEntry(inLayerID, bias);
     }
 
-    @Override
     public double getWeightOf(NeuronID start, NeuronID end) {
         if (isInputLayer()) {
             throw new IllegalStateException("Connections to the input layer have no weight");
-        } else if (end.layerID() != this.layerID) {
-            throw new IllegalArgumentException(String.format("Can't retrieve weight of the connection from %s to %s in layer %d", start, end, this.layerID));
+        } else if (end.getLayerIndex() != this.layerIndex) {
+            throw new IllegalArgumentException(String.format("Can't retrieve weight of the connection from %s to %s in layer %d", start, end, this.layerIndex));
         }
 
-        int indexOfInput = this.inputNeurons.indexOf(this.neuralNetwork.getNeuron(start));
+        int indexOfInput = this.inputNeurons.indexOf(start);
 
         if (indexOfInput == -1) {
             throw new IllegalArgumentException(String.format("The connection from %s to %s doesn't exist", start, end));
         }
 
-        return this.weights.getEntry(end.neuronID(), indexOfInput);
+        return this.weights.getEntry(end.getNeuronIndex(), indexOfInput);
     }
 
-    public void setWeightOf(Connection connection, double weight) {
-        setWeightOf(connection.start().getNeuronID(), connection.end().getNeuronID(), weight);
-    }
-
-    @Override
     public void setWeightOf(NeuronID start, NeuronID end, double weight) {
         if (isInputLayer()) {
             throw new IllegalStateException("Can't change weight of connection to the input layer");
-        } else if (end.layerID() != this.layerID) {
-            throw new IllegalArgumentException(String.format("Can't change weight of the connection from %s to %s in layer %d", start, end, this.layerID));
+        } else if (end.getLayerIndex() != this.layerIndex) {
+            throw new IllegalArgumentException(String.format("Can't change weight of the connection from %s to %s in layer %d", start, end, this.layerIndex));
         }
 
-        int indexOfInput = this.inputNeurons.indexOf(this.neuralNetwork.getNeuron(start));
+        int indexOfInput = this.inputNeurons.indexOf(start);
 
         if (indexOfInput == -1) {
             throw new IllegalArgumentException(String.format("The connection from %s to %s doesn't exist", start, end));
         }
 
-        this.weights.setEntry(end.neuronID(), indexOfInput, weight);
+        this.weights.setEntry(end.getNeuronIndex(), indexOfInput, weight);
     }
 
-    @Override
     public NeuralNetworkLayerModifier modify() {
         return this.modifier;
     }
@@ -217,8 +178,24 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
         this.type = type;
     }
 
-    public NeuralNetwork getNeuralNetwork() {
+    public NeuralNetworkImpl getNeuralNetwork() {
         return this.neuralNetwork;
+    }
+
+    public List<NeuronID> getOutgoingConnectionsOfNeuron(NeuronID neuron) {
+        return this.outgoingConnections.getOrDefault(neuron, Collections.emptyList());
+    }
+
+    public Map<NeuronID, List<NeuronID>> getOutgoingConnections() {
+        return this.outgoingConnections;
+    }
+
+    public List<NeuronID> getIncomingConnectionsOfNeuron(NeuronID neuron) {
+        return this.incomingConnections.getOrDefault(neuron, Collections.emptyList());
+    }
+
+    public Map<NeuronID, List<NeuronID>> getIncomingConnections() {
+        return this.incomingConnections;
     }
 
     public void setNeuralNetwork(NeuralNetworkImpl neuralNetwork) {
@@ -229,18 +206,33 @@ public class NeuralNetworkLayerImpl implements NeuralNetworkLayer {
         this.weights = weights;
     }
 
-    @Override
-    public List<Neuron> getNeurons() {
+    public List<NeuronID> getNeurons() {
         return this.neuronsOfLayer;
     }
 
-    @Override
     public LayerType getType() {
         return this.type;
     }
 
-    public List<Neuron> getInputNeurons() {
+    public List<NeuronID> getInputNeurons() {
         return this.inputNeurons;
     }
 
+    public void addOutgoingConnection(NeuronID start, NeuronID end) {
+        if (start.getLayerIndex() != this.layerIndex) {
+            throw new UnsupportedOperationException(String.format("Can't add outgoing connection from %s to %s to layer %d", start, end, this.layerIndex));
+        }
+
+        this.getOutgoingConnections().putIfAbsent(start, new ArrayList<>());
+        this.getOutgoingConnectionsOfNeuron(start).add(end);
+    }
+
+    public void addIncomingConnection(NeuronID start, NeuronID end) {
+        if (end.getLayerIndex() != this.layerIndex) {
+            throw new UnsupportedOperationException(String.format("Can't add incoming connection from %s to %s to layer %d", start, end, this.layerIndex));
+        }
+
+        this.getIncomingConnections().putIfAbsent(end, new ArrayList<>());
+        this.getIncomingConnectionsOfNeuron(end).add(start);
+    }
 }

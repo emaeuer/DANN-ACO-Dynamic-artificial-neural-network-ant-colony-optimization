@@ -1,23 +1,17 @@
 package de.emaeuer.ann.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.NeuralNetworkLayer;
-import de.emaeuer.ann.Neuron;
-import de.emaeuer.ann.util.NeuralNetworkModifier;
+import de.emaeuer.ann.NeuronID;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class NeuralNetworkImpl implements NeuralNetwork {
 
-    private final List<NeuralNetworkLayer> layers = new ArrayList<>();
+    private final List<NeuralNetworkLayerImpl> layers = new ArrayList<>();
 
-    private final NeuralNetworkModifier modifier = new NeuralNetworkModifier(this);
+    private final NeuralNetworkModifierImpl modifier = new NeuralNetworkModifierImpl(this);
 
     @Override
     public RealVector process(RealVector input) {
@@ -29,21 +23,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     }
 
     @Override
-    public Neuron getNeuron(Neuron.NeuronID id) {
-        if (id.layerID() > layers.size()) {
-            throw new IllegalArgumentException(String.format("Can't find neuron with id = %s because the neural network only has %d layers", id, this.layers.size()));
-        }
-        return this.layers.get(id.layerID())
-                .getNeuron(id.neuronID());
-    }
-
-    @Override
-    public NeuralNetworkLayer getLayer(int i) {
-        return this.layers.get(i);
-    }
-
-    @Override
-    public NeuralNetworkModifier modify() {
+    public NeuralNetworkModifierImpl modify() {
         return this.modifier;
     }
 
@@ -51,29 +31,52 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     public int getDepth() {
         return this.layers.size();
     }
+    @Override
+    public List<NeuronID> getOutgoingConnectionsOfNeuron(NeuronID neuron) {
+        return this.layers.get(neuron.getLayerIndex())
+                .getOutgoingConnectionsOfNeuron(neuron);
+    }
 
     @Override
-    public List<NeuralNetworkLayer> getLayers() {
+    public List<NeuronID> getIncomingConnectionsOfNeuron(NeuronID neuron) {
+        return this.layers.get(neuron.getLayerIndex())
+                .getIncomingConnectionsOfNeuron(neuron);
+    }
+
+    @Override
+    public boolean neuronHasConnectionTo(NeuronID start, NeuronID end) {
+        return getOutgoingConnectionsOfNeuron(start).contains(end);
+    }
+
+    @Override
+    public boolean neuronHasConnectionToLayer(NeuronID start, int layerIndex) {
+        return this.layers.get(start.getLayerIndex())
+                .getOutgoingConnectionsOfNeuron(start)
+                .stream()
+                .anyMatch(n -> n.getLayerIndex() == layerIndex);
+    }
+
+    @Override
+    public double getWeightOfConnection(NeuronID start, NeuronID end) {
+        return this.layers.get(end.getLayerIndex())
+                .getWeightOf(start, end);
+    }
+
+    public double getLastActivationOf(NeuronID neuronID) {
+        return this.layers.get(neuronID.getLayerIndex()).getActivationOf(neuronID.getNeuronIndex());
+    }
+
+    public NeuralNetworkLayerImpl getLayer(int layerIndex) {
+        return this.layers.get(layerIndex);
+    }
+
+    public List<NeuralNetworkLayerImpl> getLayers() {
         return this.layers;
     }
 
     @Override
-    public Iterator<NeuralNetworkLayer> iterator() {
-        return this.layers.iterator();
-    }
-
-    @Override
-    public void forEach(Consumer<? super NeuralNetworkLayer> action) {
-        this.layers.forEach(action);
-    }
-
-    @Override
-    public Spliterator<NeuralNetworkLayer> spliterator() {
-        return this.layers.spliterator();
-    }
-
-    @Override
-    public Stream<NeuralNetworkLayer> stream() {
-        return this.layers.stream();
+    public double getBiasOfNeuron(NeuronID neuron) {
+        return this.layers.get(neuron.getLayerIndex())
+                .getBiasOf(neuron.getNeuronIndex());
     }
 }

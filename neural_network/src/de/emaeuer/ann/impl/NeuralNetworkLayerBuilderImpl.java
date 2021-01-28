@@ -1,10 +1,7 @@
-package de.emaeuer.ann.util;
+package de.emaeuer.ann.impl;
 
 import de.emaeuer.ann.*;
-import de.emaeuer.ann.Connection.ConnectionPrototype;
-import de.emaeuer.ann.impl.NeuralNetworkImpl;
-import de.emaeuer.ann.impl.NeuralNetworkLayerImpl;
-import de.emaeuer.ann.Neuron.NeuronID;
+import de.emaeuer.ann.NeuronID;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealVector;
@@ -12,29 +9,30 @@ import org.apache.commons.math3.linear.RealVector;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.DoubleFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class NeuralNetworkLayerBuilder {
+public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder {
 
     private static final String EXCEPTION_MESSAGE_PATTERN = "Failed to create neural network layer because attribute \"%s\" was not set";
 
     private NeuralNetworkLayerImpl layer = new NeuralNetworkLayerImpl();
 
-    private Map<NeuronID, List<ConnectionPrototype>> connections = new HashMap<>();
+    private Map<NeuronID, Map<NeuronID, Double>> connections = new HashMap<>();
 
     private int necessaryModificationFlag = 0b1111;
 
-    public NeuralNetworkLayerBuilder() {
+    public NeuralNetworkLayerBuilderImpl() {
         layer.setActivationFunction(ActivationFunctions.IDENTITY);
     }
 
-    public NeuralNetworkLayerBuilder activationFunction(DoubleFunction<Double> function) {
+    @Override
+    public NeuralNetworkLayerBuilderImpl activationFunction(DoubleFunction<Double> function) {
         layer.setActivationFunction(function);
         return this;
     }
 
-    public NeuralNetworkLayerBuilder numberOfNeurons(int number) {
+    @Override
+    public NeuralNetworkLayerBuilderImpl numberOfNeurons(int number) {
         if (number <= 0) {
             throw new IllegalArgumentException("The layer must contain at least one neuron");
         }
@@ -48,51 +46,50 @@ public class NeuralNetworkLayerBuilder {
         // initialize neurons
         this.layer.getNeurons().clear();
         IntStream.range(0, this.layer.getNumberOfNeurons())
-                .forEach(i -> this.layer.getNeurons().add(new Neuron(i, this.layer)));
+                .forEach(i -> this.layer.getNeurons().add(new NeuronID(this.layer.getLayerIndex(), i)));
 
         return this;
     }
 
-    public NeuralNetworkLayerBuilder layerType(NeuralNetworkLayer.LayerType type) {
+    public NeuralNetworkLayerBuilderImpl layerType(LayerType type) {
         this.necessaryModificationFlag &= 0b1011;
         this.layer.setLayerType(type);
         return this;
     }
 
-    public NeuralNetworkLayerBuilder neuralNetwork(NeuralNetwork neuralNetwork) {
+    public NeuralNetworkLayerBuilderImpl neuralNetwork(NeuralNetwork neuralNetwork) {
         Objects.requireNonNull(neuralNetwork);
         this.necessaryModificationFlag &= 0b1101;
         this.layer.setNeuralNetwork((NeuralNetworkImpl) neuralNetwork);
         return this;
     }
 
-    public NeuralNetworkLayerBuilder layerID(int id) {
+    public NeuralNetworkLayerBuilderImpl layerID(int id) {
         this.necessaryModificationFlag &= 0b1110;
-        this.layer.setLayerID(id);
+        this.layer.setLayerIndex(id);
+        this.layer.getNeurons().forEach(n -> n.setLayerIndex(id));
         return this;
     }
 
-    public NeuralNetworkLayerBuilder addConnection(ConnectionPrototype... connections) {
-        Arrays.stream(connections)
-                .peek(c -> this.connections.putIfAbsent(c.startID(), new ArrayList<>()))
-                .forEach(c -> this.connections.get(c.startID()).add(c));
+    @Override
+    public NeuralNetworkLayerBuilderImpl addConnection(NeuronID start, NeuronID end, double weight) {
+        this.connections.putIfAbsent(start, new HashMap<>());
+        this.connections.get(start).put(end, weight);
+
         return this;
     }
 
-    public NeuralNetworkLayerBuilder fullyConnectTo(NeuralNetworkLayer other) {
-        for (Neuron neuron : other) {
-            NeuronID id = neuron.getNeuronID();
-            List<ConnectionPrototype> connections = this.layer.stream()
-                    .map(end -> new ConnectionPrototype(id, end.getNeuronID()))
-                    .collect(Collectors.toList());
-            this.connections.computeIfAbsent(id, n -> new ArrayList<>());
-            this.connections.get(id).addAll(connections);
+    @Override
+    public NeuralNetworkLayerBuilderImpl fullyConnectTo(List<NeuronID> otherNeurons) {
+        for (NeuronID neuron : otherNeurons) {
+            this.layer.getNeurons().forEach(n -> addConnection(neuron, n, 0));
         }
 
         return this;
     }
 
-    public NeuralNetworkLayerBuilder bias(RealVector bias) {
+    @Override
+    public NeuralNetworkLayerBuilderImpl bias(RealVector bias) {
         if (bias.getDimension() != this.layer.getNumberOfNeurons()) {
             throw new IllegalArgumentException("Invalid bias vector (dimension doesn't match number of neurons in this layer");
         }
@@ -100,7 +97,7 @@ public class NeuralNetworkLayerBuilder {
         return this;
     }
 
-    public NeuralNetworkLayer finish() {
+    public NeuralNetworkLayerImpl finish() {
         if (this.necessaryModificationFlag != 0) {
             throw new IllegalStateException(buildMessageForCurrentModificationFlag());
         }
@@ -108,7 +105,7 @@ public class NeuralNetworkLayerBuilder {
         processConnections();
 
         // disable further modification
-        NeuralNetworkLayer finishedLayer = this.layer;
+        NeuralNetworkLayerImpl finishedLayer = this.layer;
         this.layer = null;
         this.connections = null;
         return finishedLayer;
@@ -128,22 +125,25 @@ public class NeuralNetworkLayerBuilder {
             this.layer.setWeights(MatrixUtils.createRealMatrix(this.layer.getNumberOfNeurons(), this.connections.size()));
         }
 
-        for (Entry<NeuronID, List<ConnectionPrototype>> entry : this.connections.entrySet()) {
+        for (Entry<NeuronID, Map<NeuronID, Double>> entry : this.connections.entrySet()) {
             // add input neuron
-            this.layer.getInputNeurons().add(this.layer.getNeuralNetwork().getNeuron(entry.getKey()));
-            for (ConnectionPrototype prototype : entry.getValue()) {
+            NeuronID start = entry.getKey();
+            this.layer.getInputNeurons().add(start);
+            for (Entry<NeuronID, Double> connection : entry.getValue().entrySet()) {
+                NeuronID end = connection.getKey();
+                double weight = connection.getValue();
+
                 // set weight for connection in weight matrix
-                this.layer.getWeights().setEntry(prototype.endID().neuronID(), this.layer.getInputNeurons().size() - 1, prototype.weight());
-                createRealConnectionForPrototype(prototype);
+                this.layer.getWeights().setEntry(end.getNeuronIndex(), start.getNeuronIndex(), weight);
+
+                // register connection in corresponding layers
+                this.layer.getIncomingConnections().putIfAbsent(end, new ArrayList<>());
+                this.layer.getIncomingConnections().get(end).add(start);
+                NeuralNetworkLayerImpl startLayer = this.layer.getNeuralNetwork().getLayer(start.getLayerIndex());
+                startLayer.getOutgoingConnections().putIfAbsent(start, new ArrayList<>());
+                startLayer.getOutgoingConnections().get(start).add(end);
             }
         }
-    }
-
-    private void createRealConnectionForPrototype(ConnectionPrototype prototype) {
-        // create real connection for prototype and register the connection in the corresponding neurons
-        Connection connection = new Connection(this.layer.getNeuralNetwork().getNeuron(prototype.startID()), this.layer.getNeuron(prototype.endID().neuronID()), this.layer);
-        connection.start().getOutgoingConnections().add(connection);
-        connection.end().getIncomingConnections().add(connection);
     }
 
     private String buildMessageForCurrentModificationFlag() {

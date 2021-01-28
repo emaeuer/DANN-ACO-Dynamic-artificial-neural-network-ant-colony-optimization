@@ -1,10 +1,10 @@
 package de.emaeuer.ann.util;
 
+import de.emaeuer.ann.LayerType;
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.NeuralNetworkLayer;
-import de.emaeuer.ann.Connection.ConnectionPrototype;
 import de.emaeuer.ann.impl.NeuralNetworkImpl;
-import de.emaeuer.ann.Neuron.NeuronID;
+import de.emaeuer.ann.NeuronID;
+import de.emaeuer.ann.impl.NeuralNetworkLayerImpl;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -32,22 +32,22 @@ public class NeuralNetworkLayerBuilderTest {
 
     @Test
     public void testNecessaryFieldsHaveToBeSet() {
-        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayer.build().finish(),
+        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayerImpl.build().finish(),
                 String.format(EXCEPTION_MESSAGE_PATTERN, "NumberOfNeurons"));
-        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayer.build().numberOfNeurons(1).finish(),
+        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayerImpl.build().numberOfNeurons(1).finish(),
                 String.format(EXCEPTION_MESSAGE_PATTERN, "LayerType"));
-        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayer.build().numberOfNeurons(1).layerType(NeuralNetworkLayer.LayerType.INPUT).finish(),
+        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayerImpl.build().numberOfNeurons(1).layerType(LayerType.INPUT).finish(),
                 String.format(EXCEPTION_MESSAGE_PATTERN, "NeuralNetwork"));
-        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayer.build().numberOfNeurons(1).layerType(NeuralNetworkLayer.LayerType.INPUT).neuralNetwork(new NeuralNetworkImpl()).finish(),
+        assertThrows(IllegalStateException.class, () -> NeuralNetworkLayerImpl.build().numberOfNeurons(1).layerType(LayerType.INPUT).neuralNetwork(new NeuralNetworkImpl()).finish(),
                 String.format(EXCEPTION_MESSAGE_PATTERN, "LayerID"));
-        assertDoesNotThrow(() -> NeuralNetworkLayer.build().numberOfNeurons(1).layerType(NeuralNetworkLayer.LayerType.INPUT).neuralNetwork(new NeuralNetworkImpl()).layerID(0).finish());
+        assertDoesNotThrow(() -> NeuralNetworkLayerImpl.build().numberOfNeurons(1).layerType(LayerType.INPUT).neuralNetwork(new NeuralNetworkImpl()).layerID(0).finish());
     }
 
     @Test
     public void successfulCreationOfInputLayer() {
-        NeuralNetworkLayer layer = NeuralNetworkLayer.build()
+        NeuralNetworkLayerImpl layer = NeuralNetworkLayerImpl.build()
                 .numberOfNeurons(5)
-                .layerType(NeuralNetworkLayer.LayerType.INPUT)
+                .layerType(LayerType.INPUT)
                 .neuralNetwork(new NeuralNetworkImpl())
                 .layerID(0)
                 .finish();
@@ -56,7 +56,7 @@ public class NeuralNetworkLayerBuilderTest {
         assertTrue(layer.isInputLayer());
         assertFalse(layer.isOutputLayer());
         assertEquals(5, layer.getNumberOfNeurons());
-        assertEquals(0, layer.getLayerID());
+        assertEquals(0, layer.getLayerIndex());
         assertEquals(new ArrayRealVector(5), layer.getActivation());
         assertNull(layer.getBias());
         assertNull(layer.getWeights());
@@ -73,24 +73,24 @@ public class NeuralNetworkLayerBuilderTest {
         RealVector bias = new ArrayRealVector(new double[] {0.5, -0.5});
         RealMatrix expectedWeights = MatrixUtils.createRealMatrix(new double[][]{{2, 0}, {0, 0.5}});
 
-        NeuralNetwork nn = NeuralNetwork.build()
+        NeuralNetworkImpl nn = (NeuralNetworkImpl) NeuralNetwork.build()
                 .inputLayer(2)
                 .hiddenLayer(b -> b.numberOfNeurons(2)
-                        .addConnection(new ConnectionPrototype(new NeuronID(0, 0), new NeuronID(1, 0), 2),
-                                new ConnectionPrototype(new NeuronID(0, 1), new NeuronID(1, 1), 0.5))
+                        .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 2)
+                        .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 0.5)
                         .bias(bias))
                 .fullyConnectToNextLayer()
                 .outputLayer(2)
                 .finish();
 
 
-        NeuralNetworkLayer layer = nn.getLayer(1);
+        NeuralNetworkLayerImpl layer = nn.getLayer(1);
 
         // test properties
         assertFalse(layer.isInputLayer());
         assertFalse(layer.isOutputLayer());
         assertEquals(2, layer.getNumberOfNeurons());
-        assertEquals(1, layer.getLayerID());
+        assertEquals(1, layer.getLayerIndex());
         assertEquals(new ArrayRealVector(2), layer.getActivation());
         assertEquals(bias, layer.getBias());
         assertEquals(expectedWeights, layer.getWeights());
@@ -110,24 +110,24 @@ public class NeuralNetworkLayerBuilderTest {
         RealVector bias = new ArrayRealVector(new double[] {0.5, -0.5});
         RealMatrix expectedWeights = MatrixUtils.createRealMatrix(new double[][]{{2}, {0.5}});
 
-        NeuralNetwork nn = NeuralNetwork.build()
+        NeuralNetworkImpl nn = (NeuralNetworkImpl) NeuralNetwork.build()
                 .inputLayer(2)
                 .fullyConnectToNextLayer()
                 .hiddenLayer(2)
                 .outputLayer(b -> b.numberOfNeurons(2)
-                        .addConnection(new ConnectionPrototype(new NeuronID(1, 0), new NeuronID(2, 0), 2),
-                                new ConnectionPrototype(new NeuronID(1, 0), new NeuronID(2, 1), 0.5))
+                        .addConnection(new NeuronID(1, 0), new NeuronID(2, 0), 2)
+                        .addConnection(new NeuronID(1, 0), new NeuronID(2, 1), 0.5)
                         .bias(bias))
                 .finish();
 
 
-        NeuralNetworkLayer layer = nn.getLayer(2);
+        NeuralNetworkLayerImpl layer = nn.getLayer(2);
 
         // test properties
         assertFalse(layer.isInputLayer());
         assertTrue(layer.isOutputLayer());
         assertEquals(2, layer.getNumberOfNeurons());
-        assertEquals(2, layer.getLayerID());
+        assertEquals(2, layer.getLayerIndex());
         assertEquals(new ArrayRealVector(2), layer.getActivation());
         assertEquals(bias, layer.getBias());
         assertEquals(expectedWeights, layer.getWeights());
