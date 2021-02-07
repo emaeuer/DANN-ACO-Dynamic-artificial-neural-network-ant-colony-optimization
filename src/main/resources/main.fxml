@@ -1,7 +1,0 @@
-<?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.layout.BorderPane?>
-<BorderPane fx:controller="de.emaeuer.gui.controller.FlappyBirdController" xmlns:fx="http://javafx.com/fxml" fx:id="root">
-    <center>
-        <Canvas fx:id="canvas" focusTraversable="true" onMouseMoved="#mouseOver" onMouseClicked="#mouseClicked" onKeyPressed="#keyPressed" onKeyReleased="#keyReleased" />
-    </center>
-</BorderPane>

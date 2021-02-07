@@ -5,6 +5,9 @@
       <module fileurl="file://$PROJECT_DIR$/ParticleEnvironment.iml" filepath="$PROJECT_DIR$/ParticleEnvironment.iml" />
       <module fileurl="file://$PROJECT_DIR$/ant_colony_optimization/ant_colony_optimization.iml" filepath="$PROJECT_DIR$/ant_colony_optimization/ant_colony_optimization.iml" />
       <module fileurl="file://$PROJECT_DIR$/neural_network/neural_network.iml" filepath="$PROJECT_DIR$/neural_network/neural_network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/optimization_method/optimization_method.iml" filepath="$PROJECT_DIR$/optimization_method/optimization_method.iml" />
+      <module fileurl="file://$PROJECT_DIR$/particle_environment_engine/particle_environment_engine.iml" filepath="$PROJECT_DIR$/particle_environment_engine/particle_environment_engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/particle_environment_gui/particle_environment_gui.iml" filepath="$PROJECT_DIR$/particle_environment_gui/particle_environment_gui.iml" />
     </modules>
   </component>
 </project>

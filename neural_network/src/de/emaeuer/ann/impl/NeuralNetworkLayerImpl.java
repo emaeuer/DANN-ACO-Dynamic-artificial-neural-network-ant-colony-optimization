@@ -1,13 +1,16 @@
 package de.emaeuer.ann.impl;
 
 import de.emaeuer.ann.LayerType;
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.DoubleFunction;
+import java.util.stream.Collectors;
 
 public class NeuralNetworkLayerImpl {
 
@@ -234,5 +237,48 @@ public class NeuralNetworkLayerImpl {
 
         this.getIncomingConnections().putIfAbsent(end, new ArrayList<>());
         this.getIncomingConnectionsOfNeuron(end).add(start);
+    }
+
+    public NeuralNetworkLayerImpl copy(NeuralNetworkImpl copyNn, Map<NeuronID, NeuronID> existingNeurons) {
+        NeuralNetworkLayerImpl copy = new NeuralNetworkLayerImpl();
+        copy.setLayerIndex(this.layerIndex);
+        copy.setLayerType(this.type);
+        copy.setActivationFunction(this.activationFunction);
+        copy.setWeights(this.weights == null ? null : this.weights.copy());
+        copy.setBias(this.bias == null ? null : this.bias.copy());
+        copy.setNeuralNetwork(copyNn);
+        copy.setActivation(new ArrayRealVector(this.getNumberOfNeurons())); // activations are not copied
+        // don't set activation because copy returns a neural network in the initial state
+
+        copyNeuronCollection(existingNeurons, this.neuronsOfLayer, copy.neuronsOfLayer);
+        copyNeuronCollection(existingNeurons, this.inputNeurons, copy.inputNeurons);
+        copyNeuronCollection(existingNeurons, this.incomingConnections, copy.incomingConnections);
+        copyNeuronCollection(existingNeurons, this.outgoingConnections, copy.outgoingConnections);
+
+        return copy;
+    }
+
+    private void copyNeuronCollection(Map<NeuronID, NeuronID> existingNeurons, List<NeuronID> source, List<NeuronID> target) {
+        // copies the neuron or uses an already existing object if present
+        source.stream()
+                .map(n -> existingNeurons.getOrDefault(n, new NeuronID(n.getLayerIndex(), n.getNeuronIndex())))
+                .peek(n -> existingNeurons.putIfAbsent(n, n))
+                .forEach(target::add);
+    }
+
+    private void copyNeuronCollection(Map<NeuronID, NeuronID> existingNeurons, Map<NeuronID, List<NeuronID>> source, Map<NeuronID, List<NeuronID>> target) {
+        // copies the neuron or uses an already existing object if present
+        for (Entry<NeuronID, List<NeuronID>> connectionsOfNeuron : source.entrySet()) {
+            NeuronID neuron = existingNeurons.getOrDefault(connectionsOfNeuron.getKey(),
+                    new NeuronID(connectionsOfNeuron.getKey().getLayerIndex(), connectionsOfNeuron.getKey().getNeuronIndex()));
+            existingNeurons.putIfAbsent(neuron, neuron);
+
+            List<NeuronID> connectionsCopy = connectionsOfNeuron.getValue().stream()
+                    .map(n -> existingNeurons.getOrDefault(n, new NeuronID(n.getLayerIndex(), n.getNeuronIndex())))
+                    .peek(n -> existingNeurons.putIfAbsent(n, n))
+                    .collect(Collectors.toCollection(ArrayList::new));
+
+            target.put(neuron, connectionsCopy);
+        }
     }
 }

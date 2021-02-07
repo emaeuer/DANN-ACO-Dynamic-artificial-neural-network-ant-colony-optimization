@@ -12,23 +12,33 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
         this.nn = nn;
     }
 
+    private NeuronID lastModifiedNeuron;
+
     @Override
-    public NeuralNetworkModifierImpl splitConnection(NeuronID start, NeuronID end) {
-        start = getReferenceToCorrespondingNeuronID(start);
-        end = getReferenceToCorrespondingNeuronID(end);
+    public NeuralNetworkModifierImpl splitConnection(NeuronID startID, NeuronID endID) {
+        NeuronID start = getReferenceToCorrespondingNeuronID(startID);
+        NeuronID end = getReferenceToCorrespondingNeuronID(endID);
 
         // initialize intermediateNeuron depending on the positions of start and end
         int layerDistance = end.getLayerIndex() - start.getLayerIndex();
         NeuronID intermediateNeuron = Math.abs(layerDistance) == 1
-            ? insertNewLayerWithIntermediateNeuron(start, end, layerDistance)
-            : insertIntermediateNeuronToExistingLayer(start, end, layerDistance);
+                ? insertNewLayerWithIntermediateNeuron(start, end, layerDistance)
+                : insertIntermediateNeuronToExistingLayer(start, end, layerDistance);
 
         // replace old connection with two new ones --> configure weights in a way that the new connections are equivalent to the old one
         // connection from start to intermediateNeuron was already inserted with the weight of the old connection
         addConnection(intermediateNeuron, end, 1);
         removeConnection(start, end);
 
-         return this;
+        // refresh passed start and end
+        startID.setLayerIndex(start.getLayerIndex());
+        startID.setNeuronIndex(start.getNeuronIndex());
+        endID.setLayerIndex(end.getLayerIndex());
+        endID.setNeuronIndex(end.getNeuronIndex());
+
+        this.lastModifiedNeuron = intermediateNeuron;
+
+        return this;
     }
 
     private NeuronID insertIntermediateNeuronToExistingLayer(NeuronID start, NeuronID end, int layerDistance) {
@@ -83,12 +93,12 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
 
     @Override
     public NeuralNetworkModifierImpl addConnection(NeuronID startID, NeuronID endID, double weight) {
-        startID = getReferenceToCorrespondingNeuronID(startID);
-        endID = getReferenceToCorrespondingNeuronID(endID);
+        NeuronID start = getReferenceToCorrespondingNeuronID(startID);
+        NeuronID end = getReferenceToCorrespondingNeuronID(endID);
 
         this.nn.getLayer(endID.getLayerIndex())
                 .modify()
-                .addConnection(startID, endID, weight);
+                .addConnection(start, end, weight);
 
         return this;
     }
@@ -107,9 +117,13 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
 
     @Override
     public NeuralNetworkModifierImpl addNeuron(int layerID, double bias) {
-        this.nn.getLayer(layerID)
-                .modify()
+        NeuralNetworkLayerImpl layer = this.nn.getLayer(layerID);
+
+        layer.modify()
                 .addNeuron(bias);
+
+
+        this.lastModifiedNeuron = layer.getNeurons().get(layer.getNumberOfNeurons() - 1);
 
         return this;
     }
@@ -121,6 +135,8 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
                 .modify()
                 .removeNeuron(neuron);
 
+        this.lastModifiedNeuron = neuron;
+
         return this;
     }
 
@@ -130,6 +146,12 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
      * @return reference to the corresponding {@link NeuronID} in this network
      */
     private NeuronID getReferenceToCorrespondingNeuronID(NeuronID other) {
-        return this.nn.getLayer(other.getLayerIndex()).getNeurons().get(other.getNeuronIndex());
+        return this.nn.getLayer(other.getLayerIndex()).getNeurons()
+                .get(other.getNeuronIndex());
+    }
+
+    @Override
+    public NeuronID getLastModifiedNeuron() {
+        return this.lastModifiedNeuron;
     }
 }

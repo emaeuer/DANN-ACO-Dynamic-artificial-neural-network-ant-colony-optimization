@@ -4,6 +4,7 @@ import de.emaeuer.ann.impl.NeuralNetworkBuilderImpl;
 import de.emaeuer.ann.impl.NeuralNetworkLayerBuilderImpl;
 import org.apache.commons.math3.linear.RealVector;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface NeuralNetwork {
@@ -17,6 +18,7 @@ public interface NeuralNetwork {
     NeuralNetworkModifier modify();
 
     int getDepth();
+
     List<NeuronID> getOutgoingConnectionsOfNeuron(NeuronID neuron);
 
     List<NeuronID> getIncomingConnectionsOfNeuron(NeuronID neuron);
@@ -27,5 +29,17 @@ public interface NeuralNetwork {
 
     double getWeightOfConnection(NeuronID start, NeuronID end);
 
+    void setWeightOfConnection(NeuronID start, NeuronID end, double weight);
+
     double getBiasOfNeuron(NeuronID newNeuron);
+
+    void setBiasOfNeuron(NeuronID currentNeuron, double biasValue);
+
+    List<NeuronID> getNeuronsOfLayer(int layerIndex);
+
+    NeuralNetwork copy();
+
+    boolean isOutputNeuron(NeuronID currentNeuron);
+
+    boolean isInputNeuron(NeuronID currentNeuron);
 }

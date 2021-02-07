@@ -1,12 +1,9 @@
 package de.emaeuer.aco.pheromone;
 
+import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.*;
-import de.emaeuer.ann.Connection.ConnectionPrototype;
-import de.emaeuer.ann.Neuron.NeuronID;
-import de.emaeuer.ann.util.NeuralNetworkBuilder;
+import de.emaeuer.ann.NeuronID;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,7 +22,7 @@ public class PheromoneMatrixTest {
             fail("A neural network needs at least 2 layers");
         }
 
-        NeuralNetworkBuilder builder = NeuralNetwork.build()
+        NeuralNetworkBuilder<?> builder = NeuralNetwork.build()
                 .inputLayer(numberOfNeurons[0])
                 .fullyConnectToNextLayer();
 
@@ -72,8 +69,8 @@ public class PheromoneMatrixTest {
         NeuralNetwork nn = NeuralNetwork.build()
                 .inputLayer(2)
                 .outputLayer(b -> b.numberOfNeurons(2)
-                        .addConnection(new ConnectionPrototype(new NeuronID(0, 0), new NeuronID(1, 0), 0),
-                                new ConnectionPrototype(new NeuronID(0, 1), new NeuronID(1, 1), 0)))
+                        .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 0)
+                        .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 0))
                 .finish();
         PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
 
@@ -98,12 +95,12 @@ public class PheromoneMatrixTest {
         NeuralNetwork nn = NeuralNetwork.build()
                 .inputLayer(2)
                 .hiddenLayer(b -> b.numberOfNeurons(2)
-                        .addConnection(new ConnectionPrototype(new NeuronID(0, 0), new NeuronID(1, 0), 0),
-                                new ConnectionPrototype(new NeuronID(0, 1), new NeuronID(1, 1), 0))) // lateral connection
+                        .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 0)
+                        .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 0)) // lateral connection
                 .outputLayer(b -> b.numberOfNeurons(2)
-                        .addConnection(new ConnectionPrototype(new NeuronID(1, 0), new NeuronID(2, 0), 0),
-                                new ConnectionPrototype(new NeuronID(1, 1), new NeuronID(2, 1), 0),
-                                new ConnectionPrototype(new NeuronID(0, 0), new NeuronID(2, 0), 0))) // skip connection
+                        .addConnection(new NeuronID(1, 0), new NeuronID(2, 0), 0)
+                        .addConnection(new NeuronID(1, 1), new NeuronID(2, 1), 0)
+                        .addConnection(new NeuronID(0, 0), new NeuronID(2, 0), 0)) // skip connection
                 .finish();
 
         nn.modify()
@@ -139,7 +136,7 @@ public class PheromoneMatrixTest {
     */
 
     private void checkHasConnectionsTo(PheromoneMatrix matrix, NeuronID start, int expectedRowLength, NeuronID... targets) {
-        PheromoneMatrixLayer layer = matrix.getLayer(start.layerID());
+        PheromoneMatrixLayer layer = matrix.getLayer(start.getLayerIndex());
         double[] expectedRow = new double[expectedRowLength];
 
         for (NeuronID target : targets) {

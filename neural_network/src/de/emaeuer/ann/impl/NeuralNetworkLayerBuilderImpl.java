@@ -134,7 +134,7 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
                 double weight = connection.getValue();
 
                 // set weight for connection in weight matrix
-                this.layer.getWeights().setEntry(end.getNeuronIndex(), start.getNeuronIndex(), weight);
+                this.layer.getWeights().setEntry(end.getNeuronIndex(), this.layer.getInputNeurons().indexOf(start), weight);
 
                 // register connection in corresponding layers
                 this.layer.getIncomingConnections().putIfAbsent(end, new ArrayList<>());

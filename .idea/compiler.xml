@@ -16,13 +16,19 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="neural_network" />
         <module name="ant_colony_optimization" />
+        <module name="particle_environment_gui" />
+        <module name="optimization_method" />
+        <module name="neural_network" />
+        <module name="particle_environment_engine" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="ant_colony_optimization" target="15" />
       <module name="neural_network" target="15" />
+      <module name="optimization_method" target="15" />
+      <module name="particle_environment_engine" target="15" />
+      <module name="particle_environment_gui" target="15" />
       <module name="ParticleEnvironment" target="15" />
     </bytecodeTargetLevel>
   </component>

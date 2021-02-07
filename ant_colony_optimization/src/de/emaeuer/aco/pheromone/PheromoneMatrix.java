@@ -1,47 +1,49 @@
 package de.emaeuer.aco.pheromone;
 
+import de.emaeuer.aco.Decision;
+import de.emaeuer.aco.pheromone.impl.PheromoneMatrixImpl;
+import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.Neuron.NeuronID;
+import de.emaeuer.ann.NeuronID;
 import org.apache.commons.math3.linear.RealVector;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleFunction;
+import java.util.stream.IntStream;
 
-public class PheromoneMatrix {
+public interface PheromoneMatrix {
 
-    private final PheromoneMatrixModifier modifier = new PheromoneMatrixModifier(this);
+    double INITIAL_PHEROMONE_VALUE = 0.1;
 
-    private final List<PheromoneMatrixLayer> pheromoneLayers = new ArrayList<>();
+    DoubleFunction<Double> PHEROMONE_UPDATE = d -> d * 1.2;
+    DoubleFunction<Double> PHEROMONE_DISSIPATION = d -> d * 0.9;
 
-    private PheromoneMatrix() {
-    }
+    static PheromoneMatrix buildForNeuralNetwork(NeuralNetwork network) {
+        PheromoneMatrix pheromone = new PheromoneMatrixImpl(network.getNeuronsOfLayer(0).size());
 
-    public static PheromoneMatrix buildForNeuralNetwork(NeuralNetwork network) {
-        PheromoneMatrix pheromone = new PheromoneMatrix();
-
-        network.stream()
-                .map(PheromoneMatrixLayer::buildForNeuralNetworkLayer)
-                .forEach(pheromone.pheromoneLayers::add);
+        IntStream.range(0, network.getDepth())
+                .mapToObj(i -> PheromoneMatrixLayer.buildForNeuralNetworkLayer(network, i))
+                .forEach(pheromone.getLayers()::add);
 
         return pheromone;
     }
 
-    public RealVector getWeightPheromoneOfNeuron(NeuronID neuron) {
-        return pheromoneLayers.get(neuron.layerID()).getWeightPheromoneOfNeuron(neuron.neuronID());
-    }
+    RealVector getWeightPheromoneOfNeuron(NeuronID neuron);
 
-    public double getBiasPheromoneOfNeuron(NeuronID neuron) {
-        return pheromoneLayers.get(neuron.layerID()).getBiasPheromoneOfNeuron(neuron.neuronID());
-    }
+    RealVector getStartPheromoneValues();
 
-    public void updatePheromone() {
-    }
+    double getBiasPheromoneOfNeuron(NeuronID neuron);
 
-    public int getNumberOfLayers() {
-        return this.pheromoneLayers.size();
-    }
+    void updatePheromone(List<Decision> solution);
 
-    public PheromoneMatrixLayer getLayer(int layerID) {
-        return this.pheromoneLayers.get(layerID);
-    }
+    int getNumberOfLayers();
+
+    PheromoneMatrixLayer getLayer(int layerID);
+
+    List<PheromoneMatrixLayer> getLayers();
+
+    PheromoneMatrixModifier modify();
+
+    NeuronID getTargetOfNeuronByIndex(NeuronID neuron, int targetIndex);
+
 }

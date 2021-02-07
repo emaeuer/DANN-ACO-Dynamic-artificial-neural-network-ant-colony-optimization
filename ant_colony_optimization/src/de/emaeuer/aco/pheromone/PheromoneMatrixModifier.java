@@ -1,34 +1,16 @@
 package de.emaeuer.aco.pheromone;
 
-import de.emaeuer.ann.Neuron;
-import de.emaeuer.ann.Neuron.NeuronID;
+import de.emaeuer.ann.NeuronID;
 
-public class PheromoneMatrixModifier {
+public interface PheromoneMatrixModifier {
 
-    private final PheromoneMatrix matrix;
+    PheromoneMatrixModifier splitConnection(NeuronID start, NeuronID end, NeuronID intermediate);
 
-    public PheromoneMatrixModifier(PheromoneMatrix matrix) {
-        this.matrix = matrix;
-    }
+    PheromoneMatrixModifier addConnection(NeuronID start, NeuronID end);
 
-    public PheromoneMatrixModifier addSplitConnection(NeuronID start, NeuronID end) {
-        return this;
-    }
+    PheromoneMatrixModifier removeConnection(NeuronID start, NeuronID end);
 
-    public PheromoneMatrixModifier addConnection(NeuronID startID, NeuronID endID) {
-        return this;
-    }
+    PheromoneMatrixModifier addNeuron(NeuronID neuron);
 
-    public PheromoneMatrixModifier removeConnection(NeuronID startID, NeuronID endID) {
-        return this;
-    }
-
-    public PheromoneMatrixModifier addNeuron(NeuronID startID, NeuronID endID) {
-        return this;
-    }
-
-    public PheromoneMatrixModifier removeNeuron(NeuronID startID, NeuronID endID) {
-        return this;
-    }
-
+    PheromoneMatrixModifier removeNeuron(NeuronID neuron);
 }

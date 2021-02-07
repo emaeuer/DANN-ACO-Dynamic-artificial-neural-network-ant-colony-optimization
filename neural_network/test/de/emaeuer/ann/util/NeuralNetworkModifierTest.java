@@ -59,6 +59,8 @@ public class NeuralNetworkModifierTest {
         NeuronID newNeuron = new NeuronID(1, 0);
         NeuronID output = new NeuronID(2, 0);
 
+        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
+
         // check general updates
         assertEquals(3, nn.getDepth());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(input).size());
@@ -92,6 +94,8 @@ public class NeuralNetworkModifierTest {
 
         NeuronID newNeuron = new NeuronID(2, 0);
         output = new NeuronID(3, 0);
+
+        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
 
         // check general updates
         assertEquals(4, nn.getDepth());
@@ -127,6 +131,9 @@ public class NeuralNetworkModifierTest {
                 .splitConnection(hiddenOne, hiddenTwo);
 
         NeuronID newNeuron = new NeuronID(1, 2);
+
+        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
+
         // check general updates
         assertEquals(3, nn.getDepth());
         assertEquals(2, nn.getOutgoingConnectionsOfNeuron(hiddenOne).size());
@@ -158,6 +165,9 @@ public class NeuralNetworkModifierTest {
                 .splitConnection(hiddenOne, hiddenOne);
 
         NeuronID newNeuron = new NeuronID(1, 1);
+
+        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
+
         // check general updates
         assertEquals(3, nn.getDepth());
         assertEquals(2, nn.getOutgoingConnectionsOfNeuron(hiddenOne).size());
@@ -188,6 +198,9 @@ public class NeuralNetworkModifierTest {
                 .splitConnection(input, output);
 
         NeuronID newNeuron = new NeuronID(1, 1);
+
+        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
+
         // check general updates
         assertEquals(3, nn.getDepth());
         assertEquals(2, nn.getOutgoingConnectionsOfNeuron(input).size());
@@ -227,6 +240,9 @@ public class NeuralNetworkModifierTest {
                 .splitConnection(output, hiddenOne);
 
         NeuronID newNeuron = new NeuronID(2, 1);
+
+        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
+
         // check general updates
         assertEquals(4, nn.getDepth());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(hiddenOne).size());

@@ -13,5 +13,7 @@ public interface NeuralNetworkModifier {
     NeuralNetworkModifier addNeuron(int layerID, double bias);
 
     NeuralNetworkModifier removeNeuron(NeuronID neuron);
+
+    NeuronID getLastModifiedNeuron();
 }
 

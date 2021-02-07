@@ -1,9 +1,11 @@
 package de.emaeuer.ann.util;
 
+import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+import java.util.function.DoubleFunction;
 import java.util.stream.IntStream;
 
 public class MathUtil {
@@ -61,5 +63,14 @@ public class MathUtil {
 
     public static RealVector addElementToVector(RealVector vector) {
         return vector.append(0);
+    }
+
+    public static void modifyMatrix(RealMatrix matrix, DoubleFunction<Double> modifier) {
+        matrix.walkInRowOrder(new DefaultRealMatrixChangingVisitor() {
+            @Override
+            public double visit(int row, int column, double value) {
+                return modifier.apply(value);
+            }
+        });
     }
 }
