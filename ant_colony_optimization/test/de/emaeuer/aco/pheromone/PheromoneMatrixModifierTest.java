@@ -1,10 +1,13 @@
 package de.emaeuer.aco.pheromone;
 
+import de.emaeuer.aco.configuration.AcoConfiguration;
 import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuralNetworkBuilder;
 import de.emaeuer.ann.NeuronID;
 import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,6 +39,10 @@ public class PheromoneMatrixModifierTest {
                 .finish();
     }
 
+    private AcoConfiguration buildConfiguration() {
+        return new AcoConfiguration(Collections.emptyList());
+    }
+
     /*
      ##########################################################
      ##################### Test Methods #######################
@@ -45,7 +52,7 @@ public class PheromoneMatrixModifierTest {
     @Test
     public void testSplitForwardConnection() {
         NeuralNetwork nn = buildNeuralNetwork(1, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         // modify neural network and pheromone matrix accordingly
         NeuronID start = new NeuronID(0, 0);
@@ -76,7 +83,7 @@ public class PheromoneMatrixModifierTest {
         NeuronID end = new NeuronID(1, 0);
 
         nn.modify().addConnection(start, end, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         NeuronID intermediateNeuron = nn.modify()
                 .splitConnection(start, end)
@@ -106,7 +113,7 @@ public class PheromoneMatrixModifierTest {
         NeuronID end = new NeuronID(1, 1);
 
         nn.modify().addConnection(start, end, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         NeuronID intermediateNeuron = nn.modify()
                 .splitConnection(start, end)
@@ -138,7 +145,7 @@ public class PheromoneMatrixModifierTest {
         NeuronID end = new NeuronID(1, 0);
 
         nn.modify().addConnection(start, end, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         NeuronID intermediateNeuron = nn.modify()
                 .splitConnection(start, end)
@@ -168,7 +175,7 @@ public class PheromoneMatrixModifierTest {
         NeuronID end = new NeuronID(2, 0);
 
         nn.modify().addConnection(start, end, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         NeuronID intermediateNeuron = nn.modify()
                 .splitConnection(start, end)
@@ -198,7 +205,7 @@ public class PheromoneMatrixModifierTest {
         NeuronID end = new NeuronID(1, 0);
 
         nn.modify().addConnection(start, end, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         NeuronID intermediateNeuron = nn.modify()
                 .splitConnection(start, end)
@@ -224,7 +231,7 @@ public class PheromoneMatrixModifierTest {
     @Test
     public void testAddNeuron() {
         NeuralNetwork nn = buildNeuralNetwork(1, 1, 1);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         // modify neural network and pheromone matrix accordingly
         NeuronID lastAddedNeuron = nn.modify()
@@ -258,7 +265,7 @@ public class PheromoneMatrixModifierTest {
                 .addConnection(new NeuronID(2, 0), new NeuronID(1, 0), 1)
                 .addConnection(new NeuronID(1, 0), new NeuronID(1, 0), 1);
 
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
         neuronToRemove = nn.modify()
                 .removeNeuron(neuronToRemove)
                 .getLastModifiedNeuron();
@@ -280,7 +287,7 @@ public class PheromoneMatrixModifierTest {
         NeuralNetwork nn = buildNeuralNetwork(1, 2, 1);
 
         // modify neural network and pheromone matrix accordingly
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
         nn.modify()
                 .addConnection(new NeuronID(1, 1), new NeuronID(1, 1), 1)
                 .addConnection(new NeuronID(1, 0), new NeuronID(1, 1), 1)
@@ -310,14 +317,13 @@ public class PheromoneMatrixModifierTest {
         NeuralNetwork nn = buildNeuralNetwork(1, 2, 1);
 
         // modify neural network and pheromone matrix accordingly
-        NeuronID neuronToRemove = new NeuronID(1, 0);
         nn.modify()
                 .addConnection(new NeuronID(1, 1), new NeuronID(1, 1), 1)
                 .addConnection(new NeuronID(1, 0), new NeuronID(1, 1), 1)
                 .addConnection(new NeuronID(2, 0), new NeuronID(1, 0), 1)
                 .addConnection(new NeuronID(1, 0), new NeuronID(1, 0), 1);
 
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
         nn.modify()
                 .removeConnection(new NeuronID(1, 1), new NeuronID(1, 1))
                 .removeConnection(new NeuronID(1, 0), new NeuronID(1, 1))

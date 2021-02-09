@@ -1,6 +1,8 @@
 package de.emaeuer.aco.pheromone.impl;
 
-import de.emaeuer.aco.Decision;
+import de.emaeuer.aco.configuration.AcoConfiguration;
+import de.emaeuer.aco.configuration.AcoConfigurationKeys;
+import de.emaeuer.aco.configuration.AcoParameter;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.util.MathUtil;
@@ -8,8 +10,12 @@ import org.apache.commons.math3.linear.*;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.DoubleFunction;
 import java.util.stream.IntStream;
 
+import static de.emaeuer.aco.configuration.AcoConfigurationKeys.*;
+import static de.emaeuer.aco.configuration.AcoParameterNames.NUMBER_OF_DECISIONS;
+import static de.emaeuer.aco.configuration.AcoParameterNames.PHEROMONE;
 import static de.emaeuer.aco.pheromone.PheromoneMatrix.*;
 
 public class PheromoneMatrixLayer {
@@ -22,15 +28,18 @@ public class PheromoneMatrixLayer {
     private RealMatrix weightPheromone;
     private RealVector biasPheromone;
 
+    private AcoConfiguration configuration;
+
     /*
      ##########################################################
      ################# Methods for building ###################
      ##########################################################
     */
 
-    public static PheromoneMatrixLayer buildLayerWithSingleNeuron(NeuronID neuron) {
+    public static PheromoneMatrixLayer buildLayerWithSingleNeuron(NeuronID neuron, AcoConfiguration configuration) {
         PheromoneMatrixLayer pheromone = new PheromoneMatrixLayer();
 
+        pheromone.configuration = configuration;
         pheromone.layerIndex = neuron.getLayerIndex();
         pheromone.containedNeurons.add(neuron);
         pheromone.weightPheromone = null;
@@ -40,9 +49,10 @@ public class PheromoneMatrixLayer {
         return pheromone;
     }
 
-    public static PheromoneMatrixLayer buildForNeuralNetworkLayer(NeuralNetwork network, int layerIndex) {
+    public static PheromoneMatrixLayer buildForNeuralNetworkLayer(NeuralNetwork network, int layerIndex, AcoConfiguration configuration) {
         PheromoneMatrixLayer pheromone = new PheromoneMatrixLayer();
 
+        pheromone.configuration = configuration;
         pheromone.layerIndex = layerIndex;
         pheromone.containedNeurons.addAll(network.getNeuronsOfLayer(layerIndex));
 
@@ -53,9 +63,11 @@ public class PheromoneMatrixLayer {
     }
 
     private static void initializeBiasPheromone(PheromoneMatrixLayer pheromone) {
+        double initialPheromoneValue = pheromone.configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE);
+
         // set all bias pheromone values to the initial pheromone value
         pheromone.biasPheromone = new ArrayRealVector(pheromone.containedNeurons.size())
-                .map(v -> INITIAL_PHEROMONE_VALUE);
+                .map(v -> initialPheromoneValue);
     }
 
     private static void initializeWeightPheromone(PheromoneMatrixLayer pheromone, NeuralNetwork network, int layerIndex) {
@@ -79,10 +91,11 @@ public class PheromoneMatrixLayer {
         pheromone.weightPheromone = MatrixUtils.createRealMatrix(pheromone.containedNeurons.size(), pheromone.targetNeurons.size());
 
         // set pheromone value of all existing connections to the initial pheromone value
+        double initialPheromoneValue = pheromone.configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE);
         for (Entry<NeuronID, List<NeuronID>> outgoingConnections : connections.entrySet()) {
             int endIndex = pheromone.targetNeurons.indexOf(outgoingConnections.getKey());
             for (NeuronID start : outgoingConnections.getValue()) {
-                pheromone.weightPheromone.setEntry(start.getNeuronIndex(), endIndex, INITIAL_PHEROMONE_VALUE);
+                pheromone.weightPheromone.setEntry(start.getNeuronIndex(), endIndex, initialPheromoneValue);
             }
         }
     }
@@ -96,20 +109,45 @@ public class PheromoneMatrixLayer {
     public void updateWeightPheromone(NeuronID start, NeuronID target) {
         int targetIndex = this.targetNeurons.indexOf(target);
 
-        double oldPheromoneValue = this.weightPheromone.getEntry(start.getNeuronIndex(), targetIndex);
-        this.weightPheromone.setEntry(start.getNeuronIndex(), targetIndex, PHEROMONE_UPDATE.apply(oldPheromoneValue));
+        AcoParameter parameter = new AcoParameter();
+        double old = this.weightPheromone.getEntry(start.getNeuronIndex(), targetIndex);
+        parameter.setParameterValue(PHEROMONE, this.weightPheromone.getEntry(start.getNeuronIndex(), targetIndex));
+        parameter.setParameterValue(NUMBER_OF_DECISIONS, getNumberOfTargets(start));
+        double pheromoneValue = this.configuration.getValue(ACO_PHEROMONE_UPDATE_FUNCTION, parameter);
+
+        System.out.printf("%s to %s, %f to %f%n", start, target, old, pheromoneValue);
+
+        this.weightPheromone.setEntry(start.getNeuronIndex(), targetIndex, pheromoneValue);
     }
 
+    private double getNumberOfTargets(NeuronID start) {
+        return Arrays.stream(this.weightPheromone.getRow(start.getNeuronIndex()))
+                .filter(p -> p != 0)
+                .count();
+    }
+
+
     public void updateBiasPheromone(NeuronID neuron) {
-        double oldPheromoneValue = this.biasPheromone.getEntry(neuron.getNeuronIndex());
-        this.biasPheromone.setEntry(neuron.getNeuronIndex(), PHEROMONE_UPDATE.apply(oldPheromoneValue));
+        AcoParameter parameter = new AcoParameter();
+        parameter.setParameterValue(PHEROMONE, this.biasPheromone.getEntry(neuron.getNeuronIndex()));
+        parameter.setParameterValue(NUMBER_OF_DECISIONS, 1); // only one decision possible
+        double pheromoneValue = this.configuration.getValue(ACO_PHEROMONE_UPDATE_FUNCTION, parameter);
+
+        this.biasPheromone.setEntry(neuron.getNeuronIndex(), pheromoneValue);
     }
 
     public void dissipatePheromone() {
+        AcoParameter parameter = new AcoParameter();
+
+        DoubleFunction<Double> dissipation = p -> {
+            parameter.setParameterValue(PHEROMONE, p);
+            return this.configuration.getValue(ACO_PHEROMONE_DISSIPATION_FUNCTION, parameter);
+        };
+
         if (this.weightPheromone != null) {
-            MathUtil.modifyMatrix(this.weightPheromone, PHEROMONE_DISSIPATION);
+            MathUtil.modifyMatrix(this.weightPheromone, dissipation);
         }
-        this.biasPheromone.mapToSelf(PHEROMONE_DISSIPATION::apply);
+        this.biasPheromone.mapToSelf(dissipation::apply);
     }
 
     public RealVector getWeightPheromoneOfNeuron(int neuronID) {
@@ -142,10 +180,12 @@ public class PheromoneMatrixLayer {
     */
 
     public void addNeuron(NeuronID neuron) {
+        double initialPheromoneValue = this.configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE);
+
         this.containedNeurons.add(neuron);
         this.weightPheromone = MathUtil.addRowToMatrix(this.weightPheromone);
         this.biasPheromone = MathUtil.addElementToVector(this.biasPheromone);
-        this.biasPheromone.setEntry(neuron.getNeuronIndex(), INITIAL_PHEROMONE_VALUE);
+        this.biasPheromone.setEntry(neuron.getNeuronIndex(), initialPheromoneValue);
     }
 
     /**
@@ -194,7 +234,9 @@ public class PheromoneMatrixLayer {
                 ? this.targetNeurons.indexOf(end)
                 : addNewTargetNeuron(end);
 
-        this.weightPheromone.setEntry(start.getNeuronIndex(), endIndex, INITIAL_PHEROMONE_VALUE);
+        double initialPheromoneValue = this.configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE);
+
+        this.weightPheromone.setEntry(start.getNeuronIndex(), endIndex, initialPheromoneValue);
     }
 
     public void removeConnection(NeuronID start, NeuronID end) {
@@ -218,7 +260,7 @@ public class PheromoneMatrixLayer {
     private void removeTargetNeuronIfUnused(int targetIndex) {
         // check if column sum is 0 --> no connection from this layer to target neuron
         if (this.weightPheromone.getColumnVector(targetIndex).getL1Norm() == 0) {
-            this.weightPheromone = this.weightPheromone = this.targetNeurons.size() != 1
+            this.weightPheromone = this.targetNeurons.size() != 1
                     ? MathUtil.removeColumnFromMatrix(this.weightPheromone, targetIndex)
                     : null;
             this.targetNeurons.remove(targetIndex);

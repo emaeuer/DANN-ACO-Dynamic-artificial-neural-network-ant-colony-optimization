@@ -1,6 +1,8 @@
 package de.emaeuer.aco;
 
 import de.emaeuer.aco.colony.AcoColony;
+import de.emaeuer.aco.configuration.AcoConfiguration;
+import de.emaeuer.aco.configuration.AcoConfigurationKeys;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.optimization.OptimizationMethod;
 import de.emaeuer.optimization.Solution;
@@ -8,13 +10,10 @@ import de.emaeuer.optimization.Solution;
 import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
-import java.util.function.DoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class AcoHandler implements OptimizationMethod {
-
-    public static final double SPLIT_PROBABILITY = 0.2;
 
     private final List<AcoColony> colonies = new ArrayList<>();
 
@@ -22,17 +21,21 @@ public class AcoHandler implements OptimizationMethod {
 
     private List<DoubleSummaryStatistics> fitnessOfThisIteration;
 
-    public AcoHandler(int numberOfInputs, int numberOfOutputs, int numberOfColonies, int colonySize) {
+    private final AcoConfiguration configuration;
+
+    public AcoHandler(AcoConfiguration configuration) {
+        this.configuration = configuration;
+
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork basicNetwork = NeuralNetwork.build()
-            .inputLayer(numberOfInputs)
+            .inputLayer(configuration.getValueAsInt(AcoConfigurationKeys.NN_INPUT_LAYER_SIZE))
             .fullyConnectToNextLayer()
-            .outputLayer(numberOfOutputs)
+            .outputLayer(configuration.getValueAsInt(AcoConfigurationKeys.NN_OUTPUT_LAYER_SIZE))
             .finish();
 
         // create aco colonies
-        IntStream.range(0, numberOfColonies)
-                .mapToObj(i -> new AcoColony(basicNetwork.copy(), colonySize))
+        IntStream.range(0, configuration.getValueAsInt(AcoConfigurationKeys.ACO_NUMBER_OF_COLONIES))
+                .mapToObj(i -> new AcoColony(basicNetwork.copy(), configuration))
                 .forEach(colonies::add);
     }
 

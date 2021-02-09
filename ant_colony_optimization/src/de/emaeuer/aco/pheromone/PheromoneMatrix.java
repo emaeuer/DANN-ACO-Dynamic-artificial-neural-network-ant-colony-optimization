@@ -1,6 +1,7 @@
 package de.emaeuer.aco.pheromone;
 
 import de.emaeuer.aco.Decision;
+import de.emaeuer.aco.configuration.AcoConfiguration;
 import de.emaeuer.aco.pheromone.impl.PheromoneMatrixImpl;
 import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.NeuralNetwork;
@@ -13,16 +14,11 @@ import java.util.stream.IntStream;
 
 public interface PheromoneMatrix {
 
-    double INITIAL_PHEROMONE_VALUE = 0.1;
-
-    DoubleFunction<Double> PHEROMONE_UPDATE = d -> d * 1.2;
-    DoubleFunction<Double> PHEROMONE_DISSIPATION = d -> d * 0.9;
-
-    static PheromoneMatrix buildForNeuralNetwork(NeuralNetwork network) {
-        PheromoneMatrix pheromone = new PheromoneMatrixImpl(network.getNeuronsOfLayer(0).size());
+    static PheromoneMatrix buildForNeuralNetwork(NeuralNetwork network, AcoConfiguration configuration) {
+        PheromoneMatrix pheromone = new PheromoneMatrixImpl(network.getNeuronsOfLayer(0).size(), configuration);
 
         IntStream.range(0, network.getDepth())
-                .mapToObj(i -> PheromoneMatrixLayer.buildForNeuralNetworkLayer(network, i))
+                .mapToObj(i -> PheromoneMatrixLayer.buildForNeuralNetworkLayer(network, i, configuration))
                 .forEach(pheromone.getLayers()::add);
 
         return pheromone;
@@ -46,4 +42,5 @@ public interface PheromoneMatrix {
 
     NeuronID getTargetOfNeuronByIndex(NeuronID neuron, int targetIndex);
 
+    AcoConfiguration getConfiguration();
 }

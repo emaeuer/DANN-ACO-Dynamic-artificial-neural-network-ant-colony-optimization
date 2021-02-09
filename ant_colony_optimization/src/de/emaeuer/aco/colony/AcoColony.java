@@ -1,8 +1,9 @@
 package de.emaeuer.aco.colony;
 
-import de.emaeuer.aco.AcoHandler;
 import de.emaeuer.aco.Ant;
 import de.emaeuer.aco.Decision;
+import de.emaeuer.aco.configuration.AcoConfiguration;
+import de.emaeuer.aco.configuration.AcoConfigurationKeys;
 import de.emaeuer.aco.pheromone.PheromoneMatrix;
 import de.emaeuer.aco.util.ProgressionHandler;
 import de.emaeuer.ann.NeuralNetwork;
@@ -15,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static de.emaeuer.aco.configuration.AcoConfigurationKeys.*;
+
 public class AcoColony {
 
     private static final AtomicInteger NEXT_COLONY_NUMBER = new AtomicInteger(0);
@@ -24,20 +27,21 @@ public class AcoColony {
     private PheromoneMatrix pheromoneMatrix;
     private NeuralNetwork neuralNetwork;
 
-    private int colonySize;
-
     private final List<Ant> ants = new ArrayList<>();
 
     private Ant currentBest;
 
-    // TODO extract configuration to configuration class
-    private final ProgressionHandler stagnationChecker = new ProgressionHandler(5, 0.2);
+    private final AcoConfiguration configuration;
 
-    public AcoColony(NeuralNetwork neuralNetwork, int colonySize) {
+    private final ProgressionHandler stagnationChecker;
+
+    public AcoColony(NeuralNetwork neuralNetwork, AcoConfiguration configuration) {
+        this.configuration = configuration;
+
         this.neuralNetwork = neuralNetwork;
-        this.pheromoneMatrix = PheromoneMatrix.buildForNeuralNetwork(neuralNetwork);
+        this.pheromoneMatrix = PheromoneMatrix.buildForNeuralNetwork(neuralNetwork, configuration);
 
-        this.colonySize = colonySize;
+        this.stagnationChecker = new ProgressionHandler(configuration.getValueAsInt(ACO_PROGRESSION_ITERATIONS), configuration.getValue(ACO_PROGRESSION_THRESHOLD));
     }
 
     public List<Ant> nextIteration() {
@@ -48,7 +52,7 @@ public class AcoColony {
         }
 
         // generate solutions
-        IntStream.range(this.ants.size(), this.colonySize)
+        IntStream.range(this.ants.size(), configuration.getValueAsInt(AcoConfigurationKeys.ACO_COLONY_SIZE))
                 .mapToObj(i -> new Ant(this))
                 .peek(Ant::generateSolution)
                 .forEach(this.ants::add);
@@ -60,9 +64,12 @@ public class AcoColony {
         // TODO may replace by lambda function to change the update strategy flexible
 
         // simplest update strategy --> only best updates (take its neural network and update its solution)
+        Collections.shuffle(this.ants); // if multiple ants have the same fitness the selected one should be randomly selected
         Ant best = this.ants.stream()
                 .max(Comparator.comparingDouble(Ant::getFitness))
                 .orElseThrow(() -> new IllegalStateException("Iteration produced no solutions")); // shouldn't happen
+
+        System.out.println(this.currentBest == best);
 
         this.currentBest = best;
         applySolutionToNeuralNetwork(best.getSolution());
@@ -98,7 +105,7 @@ public class AcoColony {
 
     public void takeSolutionOf(AcoColony other) {
         this.neuralNetwork = other.neuralNetwork.copy();
-        this.pheromoneMatrix = PheromoneMatrix.buildForNeuralNetwork(this.neuralNetwork);
+        this.pheromoneMatrix = PheromoneMatrix.buildForNeuralNetwork(this.neuralNetwork, configuration);
 
         // mutate neural network
         mutateNeuralNetwork();
@@ -117,21 +124,15 @@ public class AcoColony {
                             .map(target -> new SimpleEntry<>(n, target)))
                 .collect(Collectors.toCollection(ArrayList::new));
 
+        double splitProbability = configuration.getValue(ACO_CONNECTION_SPLIT_PROBABILITY);
+
         connections.stream()
-                .filter(c -> Math.random() < AcoHandler.SPLIT_PROBABILITY)
+                .filter(c -> Math.random() < splitProbability) // TODO extract split decision to method and add parameters
                 .peek(c -> System.out.printf("Split connection from %s to %s in colony %d\n", c.getKey(), c.getValue(), this.colonyNumber))
                 .peek(c -> this.neuralNetwork.modify().splitConnection(c.getKey(), c.getValue()))
                 .forEach(c -> this.pheromoneMatrix.modify().splitConnection(c.getKey(), c.getValue(), this.neuralNetwork.modify().getLastModifiedNeuron()));
 
         this.currentBest = null;
-    }
-
-    public int getColonySize() {
-        return colonySize;
-    }
-
-    public void setColonySize(int colonySize) {
-        this.colonySize = colonySize;
     }
 
     public NeuralNetwork getNeuralNetwork() {

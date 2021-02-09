@@ -2,6 +2,8 @@ package de.emaeuer.environment.impl;
 
 import de.emaeuer.aco.AcoHandler;
 import de.emaeuer.aco.Ant;
+import de.emaeuer.aco.configuration.AcoConfiguration;
+import de.emaeuer.aco.configuration.AcoConfigurationKeys;
 import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.elements.FlappyBird;
 import de.emaeuer.environment.elements.Particle;
@@ -12,6 +14,7 @@ import de.emaeuer.environment.elements.builder.PipeBuilder;
 import de.emaeuer.environment.math.Vector2D;
 import de.emaeuer.environment.util.ForceHelper;
 import de.emaeuer.optimization.OptimizationMethod;
+import de.emaeuer.optimization.configuration.ConfigurationValue;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -60,7 +63,10 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
     @Override
     protected void initialize() {
-        this.optimization = new AcoHandler(4, 1, 5, 20);
+        AcoConfiguration configuration = new AcoConfiguration(Arrays.asList(
+                new ConfigurationValue<>(AcoConfigurationKeys.NN_INPUT_LAYER_SIZE, "4"),
+                new ConfigurationValue<>(AcoConfigurationKeys.NN_OUTPUT_LAYER_SIZE, "1")));
+        this.optimization = new AcoHandler(configuration);
     }
 
     Map<Integer, Integer[]> colors;

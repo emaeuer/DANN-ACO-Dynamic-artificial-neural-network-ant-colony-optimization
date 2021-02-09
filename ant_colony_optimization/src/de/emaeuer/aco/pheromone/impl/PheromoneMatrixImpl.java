@@ -1,6 +1,9 @@
 package de.emaeuer.aco.pheromone.impl;
 
 import de.emaeuer.aco.Decision;
+import de.emaeuer.aco.configuration.AcoConfiguration;
+import de.emaeuer.aco.configuration.AcoParameter;
+import de.emaeuer.aco.configuration.AcoParameterNames;
 import de.emaeuer.aco.pheromone.PheromoneMatrix;
 import de.emaeuer.aco.pheromone.PheromoneMatrixModifier;
 import de.emaeuer.ann.NeuronID;
@@ -10,6 +13,9 @@ import org.apache.commons.math3.linear.RealVector;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.emaeuer.aco.configuration.AcoConfigurationKeys.*;
+import static de.emaeuer.aco.configuration.AcoParameterNames.*;
+
 public class PheromoneMatrixImpl implements PheromoneMatrix {
 
     private final PheromoneMatrixModifier modifier = new PheromoneMatrixModifierImpl(this);
@@ -18,9 +24,13 @@ public class PheromoneMatrixImpl implements PheromoneMatrix {
 
     private final RealVector startPheromone;
 
-    public PheromoneMatrixImpl(int numberOfStarts) {
+    private final AcoConfiguration configuration;
+
+    public PheromoneMatrixImpl(int numberOfStarts, AcoConfiguration configuration) {
+        this.configuration = configuration;
+
         this.startPheromone = new ArrayRealVector(numberOfStarts);
-        this.startPheromone.mapAddToSelf(INITIAL_PHEROMONE_VALUE);
+        this.startPheromone.mapAddToSelf(configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE));
     }
 
     @Override
@@ -46,8 +56,12 @@ public class PheromoneMatrixImpl implements PheromoneMatrix {
     }
 
     private void updateStartPheromone(Decision decision) {
-        double pheromoneValue = this.startPheromone.getEntry(decision.neuronID().getNeuronIndex());
-        this.startPheromone.setEntry(decision.neuronID().getNeuronIndex(), PHEROMONE_UPDATE.apply(pheromoneValue));
+        AcoParameter parameter = new AcoParameter();
+        parameter.setParameterValue(NUMBER_OF_DECISIONS, this.startPheromone.getDimension());
+        parameter.setParameterValue(PHEROMONE, this.startPheromone.getEntry(decision.neuronID().getNeuronIndex()));
+        double pheromoneValue = this.configuration.getValue(ACO_PHEROMONE_UPDATE_FUNCTION, parameter);
+
+        this.startPheromone.setEntry(decision.neuronID().getNeuronIndex(), pheromoneValue);
     }
 
     private void updateWeightAndBiasPheromone(Decision startDecision, List<Decision> solution) {
@@ -55,15 +69,10 @@ public class PheromoneMatrixImpl implements PheromoneMatrix {
 
         for (Decision currentDecision : solution) {
             updateWeightPheromone(currentPosition, currentDecision.neuronID());
-            try {
-                updateBiasPheromone(currentDecision.neuronID());
-            } catch (IndexOutOfBoundsException e) {
-                e.printStackTrace();
-            }
-
-                currentPosition = currentDecision.neuronID();
-            }
+            updateBiasPheromone(currentDecision.neuronID());
+            currentPosition = currentDecision.neuronID();
         }
+    }
 
     private void updateWeightPheromone(NeuronID start, NeuronID target) {
         PheromoneMatrixLayer affectedLayer = this.pheromoneLayers.get(start.getLayerIndex());
@@ -82,8 +91,14 @@ public class PheromoneMatrixImpl implements PheromoneMatrix {
     }
 
     private void dissipatePheromone() {
+        AcoParameter parameter = new AcoParameter();
+
         // dissipate pheromone of start decision
-        this.startPheromone.mapToSelf(PHEROMONE_DISSIPATION::apply);
+        this.startPheromone.mapToSelf(p -> {
+            parameter.setParameterValue(PHEROMONE, p);
+            return this.configuration.getValue(ACO_PHEROMONE_DISSIPATION_FUNCTION, parameter);
+        });
+        System.out.println(startPheromone);
         // dissipate pheromone of all layers
         this.pheromoneLayers.forEach(PheromoneMatrixLayer::dissipatePheromone);
     }
@@ -113,6 +128,11 @@ public class PheromoneMatrixImpl implements PheromoneMatrix {
         return this.pheromoneLayers.get(neuron.getLayerIndex())
                 .getTargetNeurons()
                 .get(targetIndex);
+    }
+
+    @Override
+    public AcoConfiguration getConfiguration() {
+        return this.configuration;
     }
 
 }

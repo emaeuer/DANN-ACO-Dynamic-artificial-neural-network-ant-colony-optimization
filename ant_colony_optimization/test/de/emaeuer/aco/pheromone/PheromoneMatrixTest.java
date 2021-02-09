@@ -1,9 +1,12 @@
 package de.emaeuer.aco.pheromone;
 
+import de.emaeuer.aco.configuration.AcoConfiguration;
 import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.*;
 import de.emaeuer.ann.NeuronID;
 import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +38,10 @@ public class PheromoneMatrixTest {
                 .finish();
     }
 
+    private AcoConfiguration buildConfiguration() {
+        return new AcoConfiguration(Collections.emptyList());
+    }
+
     /*
      ##########################################################
      ##################### Test Methods #######################
@@ -44,7 +51,7 @@ public class PheromoneMatrixTest {
     @Test
     public void testFullyConnectedCreation() {
         NeuralNetwork nn = buildNeuralNetwork(2, 3);
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         // test for each neural network layer one pheromone matrix layer was created
         assertEquals(nn.getDepth(), matrix.getNumberOfLayers());
@@ -72,7 +79,7 @@ public class PheromoneMatrixTest {
                         .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 0)
                         .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 0))
                 .finish();
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         // test for each neural network layer one pheromone matrix layer was created
         assertEquals(nn.getDepth(), matrix.getNumberOfLayers());
@@ -107,7 +114,7 @@ public class PheromoneMatrixTest {
                 .addConnection(new NeuronID(2, 1), new NeuronID(1, 1), 0) // recurrent connection
                 .addConnection(new NeuronID(1, 1), new NeuronID(1, 1), 0); // direct recurrent connection
 
-        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn);
+        PheromoneMatrix matrix = PheromoneMatrix.buildForNeuralNetwork(nn, buildConfiguration());
 
         // test for each neural network layer one pheromone matrix layer was created
         assertEquals(nn.getDepth(), matrix.getNumberOfLayers());

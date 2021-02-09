@@ -49,7 +49,7 @@ public class Ant implements Solution {
         PheromoneMatrix pheromone = this.colony.getPheromoneMatrix();
 
         int neuronIndex = RandomUtil.selectRandomElementFromVector(pheromone.getStartPheromoneValues(), true);
-
+        System.out.println("Start " + neuronIndex);
         return new NeuronID(0, neuronIndex);
     }
 

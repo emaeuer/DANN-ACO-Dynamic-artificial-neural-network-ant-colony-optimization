@@ -2,7 +2,6 @@ package de.emaeuer.aco.pheromone.impl;
 
 import de.emaeuer.aco.pheromone.PheromoneMatrix;
 import de.emaeuer.aco.pheromone.PheromoneMatrixModifier;
-import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.NeuronID;
 
 import java.util.stream.IntStream;
@@ -35,7 +34,7 @@ public class PheromoneMatrixModifierImpl implements PheromoneMatrixModifier {
     }
 
     private void createNewLayerForNeuron(NeuronID neuron) {
-        PheromoneMatrixLayer layer = PheromoneMatrixLayer.buildLayerWithSingleNeuron(neuron);
+        PheromoneMatrixLayer layer = PheromoneMatrixLayer.buildLayerWithSingleNeuron(neuron, matrix.getConfiguration());
 
         // increase layer index of all following layers
         IntStream.range(neuron.getLayerIndex(), matrix.getNumberOfLayers())

@@ -1,19 +1,24 @@
 package de.emaeuer.aco.colony;
 
-import de.emaeuer.aco.AcoHandler;
 import de.emaeuer.aco.Ant;
 import de.emaeuer.aco.Decision;
+import de.emaeuer.aco.configuration.AcoConfiguration;
+import de.emaeuer.aco.configuration.AcoParameter;
 import de.emaeuer.aco.pheromone.PheromoneMatrix;
 import de.emaeuer.aco.pheromone.impl.PheromoneMatrixLayer;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuralNetworkBuilder;
 import de.emaeuer.ann.NeuronID;
-import de.emaeuer.ann.impl.NeuralNetworkImpl;
+import de.emaeuer.optimization.configuration.ConfigurationValue;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static de.emaeuer.aco.pheromone.PheromoneMatrix.*;
+import static de.emaeuer.aco.configuration.AcoConfigurationKeys.*;
+import static de.emaeuer.aco.configuration.AcoParameterNames.NUMBER_OF_DECISIONS;
+import static de.emaeuer.aco.configuration.AcoParameterNames.PHEROMONE;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AcoColonyTest {
@@ -42,6 +47,13 @@ public class AcoColonyTest {
                 .finish();
     }
 
+    private AcoConfiguration buildConfiguration(int colonySize) {
+        return new AcoConfiguration(Arrays.asList(
+                new ConfigurationValue<>(ACO_COLONY_SIZE, Integer.toString(colonySize)),
+                new ConfigurationValue<>(ACO_PHEROMONE_UPDATE_FUNCTION, "tanh(p/2)/tanh(1)", PHEROMONE)
+        ));
+    }
+
     /*
      ##########################################################
      ##################### Test Methods #######################
@@ -51,8 +63,9 @@ public class AcoColonyTest {
     @Test
     public void testBasicSolutionCreation() {
         // create colony and generate solutions
+        AcoConfiguration configuration = buildConfiguration(5);
         NeuralNetwork nn = buildNeuralNetwork(1, 1);
-        AcoColony colony = new AcoColony(nn, 5);
+        AcoColony colony = new AcoColony(nn, configuration);
 
         List<Ant> solutions = colony.nextIteration();
 
@@ -77,8 +90,9 @@ public class AcoColonyTest {
     @Test
     public void testComplexSolutionCreation() {
         // create colony and generate solutions
+        AcoConfiguration configuration = buildConfiguration(1);
         NeuralNetwork nn = buildNeuralNetwork(3, 5, 5, 4);
-        AcoColony colony = new AcoColony(nn, 1);
+        AcoColony colony = new AcoColony(nn, configuration);
 
         List<Ant> solutions = colony.nextIteration();
 
@@ -105,8 +119,9 @@ public class AcoColonyTest {
     @Test
     public void testBasicSolutionUpdate() {
         // create colony, generate solutions and update best solution
+        AcoConfiguration configuration = buildConfiguration(5);
         NeuralNetwork nn = buildNeuralNetwork(1, 1);
-        AcoColony colony = new AcoColony(nn, 5);
+        AcoColony colony = new AcoColony(nn, configuration);
 
         List<Ant> solutions = colony.nextIteration();
         Ant bestSolution = solutions.get(0);
@@ -120,7 +135,11 @@ public class AcoColonyTest {
 
         // check pheromone matrix was updated
         PheromoneMatrix matrix = colony.getPheromoneMatrix();
-        double expectedPheromone = PHEROMONE_DISSIPATION.apply(PHEROMONE_UPDATE.apply(INITIAL_PHEROMONE_VALUE));
+        AcoParameter parameter = new AcoParameter();
+        parameter.setParameterValue(PHEROMONE, configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE));
+        parameter.setParameterValue(PHEROMONE, configuration.getValue(ACO_PHEROMONE_UPDATE_FUNCTION, parameter));
+        double expectedPheromone = configuration.getValue(ACO_PHEROMONE_DISSIPATION_FUNCTION, parameter);
+
         assertEquals(expectedPheromone, matrix.getStartPheromoneValues().getEntry(0));
         assertEquals(expectedPheromone, matrix.getBiasPheromoneOfNeuron(new NeuronID(1, 0)));
         assertEquals(expectedPheromone, matrix.getWeightPheromoneOfNeuron(new NeuronID(0, 0)).getEntry(0));
@@ -129,8 +148,9 @@ public class AcoColonyTest {
     @Test
     public void testComplexSolutionUpdate() {
         // create colony and generate solutions
+        AcoConfiguration configuration = buildConfiguration(5);
         NeuralNetwork nn = buildNeuralNetwork(3, 5, 5, 4);
-        AcoColony colony = new AcoColony(nn, 5);
+        AcoColony colony = new AcoColony(nn, configuration);
 
         List<Ant> solutions = colony.nextIteration();
         Ant bestSolution = solutions.get(0);
@@ -168,8 +188,13 @@ public class AcoColonyTest {
 
         // check pheromone matrix was updated
         PheromoneMatrix matrix = colony.getPheromoneMatrix();
-        double updatedPheromone = PHEROMONE_DISSIPATION.apply(PHEROMONE_UPDATE.apply(INITIAL_PHEROMONE_VALUE));
-        double dissipatedPheromone = PHEROMONE_DISSIPATION.apply(INITIAL_PHEROMONE_VALUE);
+
+        AcoParameter parameter = new AcoParameter();
+        parameter.setParameterValue(PHEROMONE, configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE));
+        parameter.setParameterValue(PHEROMONE, configuration.getValue(ACO_PHEROMONE_UPDATE_FUNCTION, parameter));
+        double updatedPheromone = configuration.getValue(ACO_PHEROMONE_DISSIPATION_FUNCTION, parameter);
+        parameter.setParameterValue(PHEROMONE, configuration.getValue(ACO_INITIAL_PHEROMONE_VALUE));
+        double dissipatedPheromone = configuration.getValue(ACO_PHEROMONE_DISSIPATION_FUNCTION, parameter);
 
         current = decisions.get(0).neuronID();
         for (Decision decision : decisions.subList(1, decisions.size())) {
