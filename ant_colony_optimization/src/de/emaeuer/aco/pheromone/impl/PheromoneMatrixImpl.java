@@ -98,7 +98,6 @@ public class PheromoneMatrixImpl implements PheromoneMatrix {
             parameter.setParameterValue(PHEROMONE, p);
             return this.configuration.getValue(ACO_PHEROMONE_DISSIPATION_FUNCTION, parameter);
         });
-        System.out.println(startPheromone);
         // dissipate pheromone of all layers
         this.pheromoneLayers.forEach(PheromoneMatrixLayer::dissipatePheromone);
     }

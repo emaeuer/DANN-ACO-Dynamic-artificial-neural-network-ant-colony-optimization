@@ -1,5 +1,6 @@
 package de.emaeuer.aco.colony;
 
+import de.emaeuer.aco.AcoHandler;
 import de.emaeuer.aco.Ant;
 import de.emaeuer.aco.Decision;
 import de.emaeuer.aco.configuration.AcoConfiguration;
@@ -8,6 +9,8 @@ import de.emaeuer.aco.pheromone.PheromoneMatrix;
 import de.emaeuer.aco.util.ProgressionHandler;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -19,6 +22,8 @@ import java.util.stream.IntStream;
 import static de.emaeuer.aco.configuration.AcoConfigurationKeys.*;
 
 public class AcoColony {
+
+    private final static Logger LOG = LogManager.getLogger(AcoColony.class);
 
     private static final AtomicInteger NEXT_COLONY_NUMBER = new AtomicInteger(0);
 
@@ -69,11 +74,12 @@ public class AcoColony {
                 .max(Comparator.comparingDouble(Ant::getFitness))
                 .orElseThrow(() -> new IllegalStateException("Iteration produced no solutions")); // shouldn't happen
 
-        System.out.println(this.currentBest == best);
-
         this.currentBest = best;
         applySolutionToNeuralNetwork(best.getSolution());
         this.pheromoneMatrix.updatePheromone(best.getSolution());
+
+        int antID = this.colonyNumber * this.ants.size() + this.ants.indexOf(best);
+        LOG.info("Ant {} updated in colony {} with a fitness of {}", antID, getColonyNumber(), best.getFitness());
 
         // check for stagnation of fitness and mutate
         checkAndHandleStagnation();
@@ -92,6 +98,7 @@ public class AcoColony {
     private void checkAndHandleStagnation() {
         this.stagnationChecker.addFitnessScore(getCurrentFitness());
         if (this.stagnationChecker.doesStagnate()) {
+            LOG.info("Detected stagnation of fitness in ACO-Colony {}", getColonyNumber());
             mutateNeuralNetwork();
             this.stagnationChecker.resetProgression();
         }
@@ -128,7 +135,7 @@ public class AcoColony {
 
         connections.stream()
                 .filter(c -> Math.random() < splitProbability) // TODO extract split decision to method and add parameters
-                .peek(c -> System.out.printf("Split connection from %s to %s in colony %d\n", c.getKey(), c.getValue(), this.colonyNumber))
+                .peek(c -> LOG.info("Modifying neural network and pheromone matrix of ACO-Colony {} by inserting connection from {} to {}", getColonyNumber(), c.getKey(), c.getValue()))
                 .peek(c -> this.neuralNetwork.modify().splitConnection(c.getKey(), c.getValue()))
                 .forEach(c -> this.pheromoneMatrix.modify().splitConnection(c.getKey(), c.getValue(), this.neuralNetwork.modify().getLastModifiedNeuron()));
 

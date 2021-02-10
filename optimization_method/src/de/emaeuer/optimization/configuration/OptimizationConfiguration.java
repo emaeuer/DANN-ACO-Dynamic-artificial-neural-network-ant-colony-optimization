@@ -34,7 +34,25 @@ public abstract class OptimizationConfiguration<T extends ConfigurationKey, S ex
         return Double.valueOf(getValue(key)).intValue();
     }
 
-    protected Map<T, ConfigurationValue<T>> getConfigurations() {
+    public Map<T, ConfigurationValue<T>> getConfigurations() {
         return this.configurations;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        int maxKeyLength = configurations.keySet()
+                .stream()
+                .map(k -> k.toString().length())
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        this.configurations.entrySet()
+                .stream()
+                .map(e -> String.format("%-" + maxKeyLength + "s = %s", e.getKey(), e.getValue().toString()))
+                .forEach(builder::append);
+
+        return builder.toString();
     }
 }

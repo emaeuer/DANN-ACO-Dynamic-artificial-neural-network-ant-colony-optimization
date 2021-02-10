@@ -27,12 +27,16 @@ public class ConfigurationValue<T extends ConfigurationKey> implements java.util
     private final T key;
     private Expression function;
 
+    private String functionStr;
+
     public ConfigurationValue(T key, String functionExpression, OptimizationParameterNames... variables) {
         this.key = key;
         setFunction(functionExpression, variables);
     }
 
     public void setFunction(String functionExpression, OptimizationParameterNames... variables) {
+        this.functionStr = functionExpression;
+
         String[] parameters = Arrays.stream(variables)
                 .distinct()
                 .map(OptimizationParameterNames::getName)
@@ -57,5 +61,10 @@ public class ConfigurationValue<T extends ConfigurationKey> implements java.util
 
     public T getKey() {
         return key;
+    }
+
+    @Override
+    public String toString() {
+        return this.functionStr;
     }
 }

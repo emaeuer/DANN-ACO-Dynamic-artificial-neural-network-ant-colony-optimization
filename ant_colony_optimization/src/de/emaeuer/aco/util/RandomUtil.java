@@ -30,7 +30,9 @@ public class RandomUtil {
     public static int selectRandomElementFromVector(RealVector vector, boolean invertedProbabilities) {
         if (invertedProbabilities) {
             double sum = vector.getL1Norm();
-            vector = vector.map(v -> v == 0 ? 0 : 1 - (v / sum)); // 0 stays 0
+            vector = vector.map(v -> v == 0
+                    ? 0
+                    : 1 - ((v / sum) == 1 ? 0 : v / sum)); // 0 stays 0
         }
 
         return selectRandomElementFromVector(vector);

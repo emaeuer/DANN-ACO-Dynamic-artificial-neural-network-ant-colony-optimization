@@ -6,6 +6,8 @@ import de.emaeuer.aco.configuration.AcoConfigurationKeys;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.optimization.OptimizationMethod;
 import de.emaeuer.optimization.Solution;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class AcoHandler implements OptimizationMethod {
+
+    private final static Logger LOG = LogManager.getLogger(AcoHandler.class);
 
     private final List<AcoColony> colonies = new ArrayList<>();
 
@@ -25,6 +29,8 @@ public class AcoHandler implements OptimizationMethod {
 
     public AcoHandler(AcoConfiguration configuration) {
         this.configuration = configuration;
+
+        logConfiguration();
 
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork basicNetwork = NeuralNetwork.build()
@@ -39,9 +45,29 @@ public class AcoHandler implements OptimizationMethod {
                 .forEach(colonies::add);
     }
 
+    private void logConfiguration() {
+        LOG.info("Created ACO-Handler with following configuration:");
+
+        int maxKeyLength = this.configuration.getConfigurations()
+                .keySet()
+                .stream()
+                .map(k -> k.toString().length())
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        this.configuration.getConfigurations()
+                .entrySet()
+                .stream()
+                .map(e -> String.format("%-" + maxKeyLength + "s = %s", e.getKey(), e.getValue().toString()))
+                .forEach(LOG::info);
+    }
+
     @Override
     public List<Solution> generateSolutions() {
         this.generationCounter++;
+
+        LOG.info("Generating solutions for iteration {}", generationCounter);
+
         return this.colonies.stream()
                 .map(AcoColony::nextIteration)
                 .flatMap(List::stream)
@@ -64,10 +90,10 @@ public class AcoHandler implements OptimizationMethod {
             best = colony.getCurrentFitness() > best.getCurrentFitness() ? colony : best;
         }
 
-        System.out.printf("Generation %d [ %.1f : %.1f ]%n", this.generationCounter, worst.getCurrentFitness(), best.getCurrentFitness());
-
         // best is a lot better than worst --> worst gets solution of best
+        // TODO threshold for overtake in configuration and add time during overtakes
         if (worst.getCurrentFitness() * 10 < best.getCurrentFitness()) {
+            LOG.info("ACO-Colony {} takes the solution of {} because it is significantly worse", worst.getColonyNumber(), best.getColonyNumber());
             worst.takeSolutionOf(best);
         }
     }

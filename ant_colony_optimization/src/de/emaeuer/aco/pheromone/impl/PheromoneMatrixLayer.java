@@ -115,8 +115,6 @@ public class PheromoneMatrixLayer {
         parameter.setParameterValue(NUMBER_OF_DECISIONS, getNumberOfTargets(start));
         double pheromoneValue = this.configuration.getValue(ACO_PHEROMONE_UPDATE_FUNCTION, parameter);
 
-        System.out.printf("%s to %s, %f to %f%n", start, target, old, pheromoneValue);
-
         this.weightPheromone.setEntry(start.getNeuronIndex(), targetIndex, pheromoneValue);
     }
 
