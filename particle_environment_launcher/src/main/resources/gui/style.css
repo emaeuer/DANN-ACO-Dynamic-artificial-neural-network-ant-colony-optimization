@@ -1,0 +1,163 @@
+@font-face {
+    font-family: 'Roboto';
+    src: url('Roboto-Light.ttf');
+}
+
+* {
+    -background-paint: #eeeeee;
+    -card-background-paint: #ffffff;
+    -hover-icon-paint: #ffffff;
+    -shown-item-paint: #eeeeee;
+    -icon-paint: #a7a7a7;
+    -separator-paint: #a7a7a7;
+    -bar-paint: #303030;
+}
+
+.root {
+    -fx-background-color: -background-paint;
+    -fx-font-family: "Roboto Light";
+}
+
+.tool_bar {
+    -fx-background-color: -bar-paint;
+}
+
+.bar_button {
+    -fx-background-color: -icon-paint;
+    -size: 25px;
+    -fx-min-height: -size;
+    -fx-min-width: -size;
+    -fx-max-height: -size;
+    -fx-max-width: -size;
+    -fx-background-insets: 0, 0, 0, 0;
+}
+
+.bar_button:focused {
+    -fx-focus-color: transparent;
+    -fx-background-insets: 0, 0, 0, 0;
+}
+
+.bar_button:hover {
+    -fx-background-color: -hover-icon-paint;
+}
+
+.play_button {
+    -fx-shape: "M8.5,8.64L13.77,12L8.5,15.36V8.64M6.5,5V19L17.5,12";
+}
+
+.play_button:playing {
+    -fx-background-color: #00aa00;
+}
+
+.stop_button {
+    -fx-shape: "M14,19H18V5H14M6,19H10V5H6V19Z";
+}
+
+.stop_button:paused {
+    -fx-background-color: #aa0000;
+}
+
+.restart_button {
+    -fx-shape: "M13,3A9,9 0 0,0 4,12H1L4.89,15.89L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z";
+}
+
+.faster_button {
+    -fx-shape: "M6,9.83L8.17,12L6,14.17V9.83M4,5V19L11,12M20,5H18V19H20M13,9.83L15.17,12L13,14.17V9.83M11,5V19L18,12";
+}
+
+.slower_button {
+    -fx-shape: "M18,14.17L15.83,12L18,9.83V14.17M20,19V5L13,12M4,19H6V5H4M11,14.17L8.83,12L11,9.83V14.17M13,19V5L6,12";
+}
+
+.multi_button {
+    -fx-shape: "M18.6,6.62C21.58,6.62 24,9 24,12C24,14.96 21.58,17.37 18.6,17.37C17.15,17.37 15.8,16.81 14.78,15.8L12,13.34L9.17,15.85C8.2,16.82 6.84,17.38 5.4,17.38C2.42,17.38 0,14.96 0,12C0,9.04 2.42,6.62 5.4,6.62C6.84,6.62 8.2,7.18 9.22,8.2L12,10.66L14.83,8.15C15.8,7.18 17.16,6.62 18.6,6.62M7.8,14.39L10.5,12L7.84,9.65C7.16,8.97 6.31,8.62 5.4,8.62C3.53,8.62 2,10.13 2,12C2,13.87 3.53,15.38 5.4,15.38C6.31,15.38 7.16,15.03 7.8,14.39M16.2,9.61L13.5,12L16.16,14.35C16.84,15.03 17.7,15.38 18.6,15.38C20.47,15.38 22,13.87 22,12C22,10.13 20.47,8.62 18.6,8.62C17.69,8.62 16.84,8.97 16.2,9.61Z";
+}
+
+.multi_button:active {
+    -fx-shape: "M10,7V9H12V17H14V7H10Z";
+}
+
+.plot_button {
+    -fx-shape: "M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V3H4V17.54L9.5,8L16,11.78Z";
+}
+
+.setting_button {
+    -fx-shape: "M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.21,15.05 2.27,14.78 2.46,14.63L4.57,12.97L4.5,12L4.57,11L2.46,9.37C2.27,9.22 2.21,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.79,8.95 21.73,9.22 21.54,9.37L19.43,11L19.5,12L19.43,13L21.54,14.63C21.73,14.78 21.79,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10M11.25,4L10.88,6.61C9.68,6.86 8.62,7.5 7.85,8.39L5.44,7.35L4.69,8.65L6.8,10.2C6.4,11.37 6.4,12.64 6.8,13.8L4.68,15.36L5.43,16.66L7.86,15.62C8.63,16.5 9.68,17.14 10.87,17.38L11.24,20H12.76L13.13,17.39C14.32,17.14 15.37,16.5 16.14,15.62L18.57,16.66L19.32,15.36L17.2,13.81C17.6,12.64 17.6,11.37 17.2,10.2L19.31,8.65L18.56,7.35L16.15,8.39C15.38,7.5 14.32,6.86 13.12,6.62L12.75,4H11.25Z";
+}
+
+.log_button {
+    -fx-shape: "M5,3C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V5C21,3.89 20.11,3 19,3H5M5,5H19V19H5V5M7,7V9H17V7H7M7,11V13H17V11H7M7,15V17H14V15H7Z";
+}
+
+.plot_button:shown, .setting_button:shown, .log_button:shown {
+    -fx-background-color: -shown-item-paint;
+}
+
+.separator *.line {
+    -fx-border-color: -separator-paint;
+    -fx-border-width: 1;
+}
+
+.log_text, .log_text .content {
+    -fx-background-insets: 0;
+    -fx-background-color: -card-background-paint;
+}
+
+.side_panel {
+    -fx-background-color: -background-paint;
+}
+
+.side_panel_scroll, .side_panel_scroll > .viewport {
+    -fx-background-color: -background-paint;
+    -fx-border: none;
+}
+
+.input_box {
+    -fx-background-color: #d7d7d7;
+    -fx-background-radius: 4px 4px 0 0;
+    -fx-border-radius: 4px 4px 0 0;
+    -fx-padding: 4 8 4 8;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #5d5d5d;
+}
+
+.input_box:hover {
+    -fx-background-color: #c1c1c1;
+    -fx-border-color: #404040;
+}
+
+.speed_text {
+    -fx-text-fill: -icon-paint;
+    -fx-font-size: 18px;
+}
+
+.panel_title {
+    -fx-font-size: 20px;
+}
+
+.output_card {
+    -fx-background-color: -card-background-paint;
+    -fx-padding: 10;
+    -fx-font-size: 12px;
+    -fx-background-radius: 5px;
+}
+
+.output_card .card_title {
+    -fx-font-size: 16px;
+}
+
+.output_card .number_field {
+    -fx-font-size: 16px;
+}
+
+.output_card .output_plot .chart-plot-background {
+    -fx-background-color:transparent;
+}
+
+.output_plot_background {
+    -fx-background-color: -card-background-paint;
+}
+
+.text-field:invalid {
+    -fx-text-fill: RED;
+}

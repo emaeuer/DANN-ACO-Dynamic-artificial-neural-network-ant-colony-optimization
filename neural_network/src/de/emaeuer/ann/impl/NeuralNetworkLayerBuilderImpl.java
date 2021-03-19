@@ -73,6 +73,8 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
 
     @Override
     public NeuralNetworkLayerBuilderImpl addConnection(NeuronID start, NeuronID end, double weight) {
+        end = this.layer.getNeurons().get(end.getNeuronIndex());
+
         this.connections.putIfAbsent(start, new HashMap<>());
         this.connections.get(start).put(end, weight);
 

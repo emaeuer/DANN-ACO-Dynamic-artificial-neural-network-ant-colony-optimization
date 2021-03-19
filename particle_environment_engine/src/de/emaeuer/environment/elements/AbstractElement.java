@@ -1,5 +1,7 @@
 package de.emaeuer.environment.elements;
 
+import de.emaeuer.environment.elements.shape.Shape;
+import de.emaeuer.environment.elements.shape.ShapeEntity;
 import de.emaeuer.environment.force.Force;
 import de.emaeuer.environment.math.Vector2D;
 
@@ -11,7 +13,7 @@ public abstract class AbstractElement {
     private double mass;
     private double maxVelocity;
 
-    private final Form form;
+    private final Shape<? extends AbstractElement> shape;
 
     private final Vector2D size = new Vector2D();
     private final Vector2D acceleration = new Vector2D();
@@ -23,8 +25,8 @@ public abstract class AbstractElement {
 
     private final List<Force> permanentForces = new ArrayList<>();
 
-    protected AbstractElement(Form form) {
-        this.form = form;
+    protected AbstractElement(Shape<? extends AbstractElement> shape) {
+        this.shape = shape;
     }
 
     public void step() {
@@ -92,9 +94,11 @@ public abstract class AbstractElement {
         this.borderColor = color;
     }
 
-    public Form getForm() {
-        return form;
+    protected Shape<? extends AbstractElement> getShape() {
+        return this.shape;
     }
+
+    public abstract List<ShapeEntity> getShapesOfElement();
 
     public Vector2D getSize() {
         return size;

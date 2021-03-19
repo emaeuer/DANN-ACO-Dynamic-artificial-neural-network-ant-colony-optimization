@@ -48,10 +48,13 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
         NeuralNetworkLayerImpl layer = this.nn.getLayers()
                 .get(start.getLayerIndex() + Integer.signum(layerDistance));
 
-        NeuronID newEnd = new NeuronID(layer.getLayerIndex(), layer.getNumberOfNeurons());
-        layer.modify()
-                .addNeuron(0)
-                .addConnection(start, newEnd, this.nn.getWeightOfConnection(start, end));
+        layer.modify().addNeuron(0);
+
+        // new neuron is last in the respective layer
+        NeuronID newEnd = layer.getNeurons().get(layer.getNumberOfNeurons() - 1);
+
+        layer.modify().addConnection(start, newEnd, this.nn.getWeightOfConnection(start, end));
+
         return newEnd;
     }
 
@@ -61,7 +64,7 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
         // use max(0, layerDistance) because for a recurrent connection (-1) the start and not the output layer should be shifted
         double connectionWeight = this.nn.getWeightOfConnection(start, end);
         NeuralNetworkLayerImpl layer = addNewLayerAtPosition(start.getLayerIndex() + Math.max(0, layerDistance), start, connectionWeight);
-        return new NeuronID(layer.getLayerIndex(), 0); // neuron is only neuron of this layer
+        return layer.getNeurons().get(0); // neuron is only neuron of this layer
     }
 
     /**
@@ -136,6 +139,25 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
                 .removeNeuron(neuron);
 
         this.lastModifiedNeuron = neuron;
+
+        return this;
+    }
+
+    @Override
+    public NeuralNetworkModifier setWeightOfConnection(NeuronID startID, NeuronID endID, double weight) {
+        NeuronID start = getReferenceToCorrespondingNeuronID(startID);
+        NeuronID end = getReferenceToCorrespondingNeuronID(endID);
+
+        this.nn.setWeightOfConnection(start, end, weight);
+
+        return this;
+    }
+
+    @Override
+    public NeuralNetworkModifier setBiasOfNeuron(NeuronID neuronID, double bias) {
+        NeuronID neuron = getReferenceToCorrespondingNeuronID(neuronID);
+
+        this.nn.setBiasOfNeuron(neuron, bias);
 
         return this;
     }

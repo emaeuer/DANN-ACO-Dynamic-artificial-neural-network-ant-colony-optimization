@@ -74,6 +74,8 @@ public class NeuralNetworkLayerModifier {
             throw new IllegalStateException(String.format("The connection from neuron %s to %s already exists", start, end));
         }
 
+        end = this.layer.getNeurons().get(end.getNeuronIndex());
+
         if (!this.layer.getInputNeurons().contains(start)) {
             // this layer doesn't already have connections to the start neuron --> add it to input neurons and new column to matrix
             this.layer.getInputNeurons().add(start);

@@ -1,0 +1,11 @@
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextArea?>
+
+<?import javafx.scene.control.Label?>
+<VBox spacing="10" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="de.emaeuer.gui.controller.LogController" styleClass="side_panel">
+    <Label text="Logged notifications" styleClass="panel_title" />
+    <VBox styleClass="output_card">
+        <TextArea fx:id="logText" editable="false" styleClass="log_text" prefRowCount="1000"/>
+    </VBox>
+</VBox>

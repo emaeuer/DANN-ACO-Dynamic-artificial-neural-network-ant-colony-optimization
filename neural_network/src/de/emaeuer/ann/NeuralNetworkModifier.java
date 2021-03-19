@@ -1,5 +1,6 @@
 package de.emaeuer.ann;
 
+import de.emaeuer.ann.impl.NeuralNetworkLayerModifier;
 import de.emaeuer.ann.impl.NeuralNetworkModifierImpl;
 
 public interface NeuralNetworkModifier {
@@ -13,6 +14,10 @@ public interface NeuralNetworkModifier {
     NeuralNetworkModifier addNeuron(int layerID, double bias);
 
     NeuralNetworkModifier removeNeuron(NeuronID neuron);
+
+    NeuralNetworkModifier setWeightOfConnection(NeuronID startID, NeuronID endID, double weight);
+
+    NeuralNetworkModifier setBiasOfNeuron(NeuronID neuronID, double bias);
 
     NeuronID getLastModifiedNeuron();
 }

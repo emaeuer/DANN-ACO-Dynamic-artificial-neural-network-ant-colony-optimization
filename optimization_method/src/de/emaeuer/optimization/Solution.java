@@ -1,12 +1,15 @@
 package de.emaeuer.optimization;
 
+import de.emaeuer.ann.NeuralNetwork;
 import org.apache.commons.math3.linear.RealVector;
 
 public interface Solution {
 
-    public abstract RealVector process(RealVector input);
+    RealVector process(RealVector input);
 
-    public double getFitness();
+    double getFitness();
 
-    public void setFitness(double fitness);
+    void setFitness(double fitness);
+
+    NeuralNetwork getNeuralNetwork();
 }

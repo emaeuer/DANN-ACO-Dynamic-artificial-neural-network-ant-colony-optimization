@@ -1,58 +1,86 @@
 package de.emaeuer.optimization.configuration;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.configuration.DefaultConfiguration;
+import de.emaeuer.configuration.value.*;
+import de.emaeuer.optimization.OptimizationMethodNames;
+import de.emaeuer.optimization.aco.configuration.AcoParameter;
+import de.emaeuer.optimization.factory.OptimizationConfigFactory;
 
-public abstract class OptimizationConfiguration<T extends ConfigurationKey, S extends OptimizationParameterNames> {
+import java.util.function.BiConsumer;
 
-    private final Map<T, ConfigurationValue<T>> configurations = new HashMap<>();
+public enum OptimizationConfiguration implements DefaultConfiguration<OptimizationConfiguration> {
+    NN_INPUT_LAYER_SIZE("Neural network input layer size", new IntegerConfigurationValue(1, 1, Integer.MAX_VALUE)),
+    NN_OUTPUT_LAYER_SIZE("Neural network output layer size", new IntegerConfigurationValue(1, 1, Integer.MAX_VALUE)),
 
-    public OptimizationConfiguration(List<ConfigurationValue<T>> configurations) {
-        getConfigurations().putAll(getDefaultConfiguration());
-        // overwrite default values
-        configurations
-                .forEach(c -> getConfigurations().put(c.getKey(), c));
+    OPTIMIZATION_PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0.2)),
+    OPTIMIZATION_PROGRESSION_ITERATIONS("Threshold for number of iterations without progress", new IntegerConfigurationValue(5, 1, Integer.MAX_VALUE)),
+    OPTIMIZATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.ACO))),
+    OPTIMIZATION_METHOD_NAME("The name of the optimization method", new StringConfigurationValue("ACO", OptimizationMethodNames.getNames()),
+            (v, h) -> {
+                OptimizationMethodNames methodName = OptimizationMethodNames.valueOf(v.getStringRepresentation());
+                ConfigurationHandler<?> configuration = OptimizationConfigFactory.createOptimizationConfiguration(methodName);
+                h.setValue(OptimizationConfiguration.OPTIMIZATION_CONFIGURATION, new EmbeddedConfiguration<>(configuration));
+            });
 
+    private final String name;
+    private final AbstractConfigurationValue<?> defaultValue;
+    private final Class<? extends AbstractConfigurationValue<?>> type;
+    private final BiConsumer<AbstractConfigurationValue<?>, ConfigurationHandler<OptimizationConfiguration>> changeAction;
+
+    OptimizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue) {
+        this.defaultValue = defaultValue;
+        //noinspection unchecked no safe way to cast generic
+        this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
+        this.name = name;
+        this.changeAction = null;
     }
 
-    protected abstract Map<T, ConfigurationValue<T>> getDefaultConfiguration();
-
-    public void setValue(ConfigurationValue<T> value) {
-        this.configurations.put(value.getKey(), value);
+    OptimizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue, BiConsumer<AbstractConfigurationValue<?>, ConfigurationHandler<OptimizationConfiguration>> changeAction) {
+        this.defaultValue = defaultValue;
+        //noinspection unchecked no safe way to cast generic
+        this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
+        this.name = name;
+        this.changeAction = changeAction;
     }
 
-    public double getValue(T key, OptimizationParameter<S> parameters) {
-        return this.configurations.get(key).apply(parameters);
-    }
-
-    public double getValue(T key) {
-        return this.configurations.get(key).apply(null);
-    }
-
-    public int getValueAsInt(T key) {
-        return Double.valueOf(getValue(key)).intValue();
-    }
-
-    public Map<T, ConfigurationValue<T>> getConfigurations() {
-        return this.configurations;
+    OptimizationConfiguration(String name, Class<?> type) {
+        this.defaultValue = null;
+        //noinspection unchecked no safe way to cast generic
+        this.type = (Class<? extends AbstractConfigurationValue<?>>) type;
+        this.name = name;
+        this.changeAction = null;
     }
 
     @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
+    public String getName() {
+        return this.name;
+    }
 
-        int maxKeyLength = configurations.keySet()
-                .stream()
-                .map(k -> k.toString().length())
-                .max(Integer::compareTo)
-                .orElse(0);
+    @Override
+    public AbstractConfigurationValue<?> getDefaultValue() {
+        return this.defaultValue;
+    }
 
-        this.configurations.entrySet()
-                .stream()
-                .map(e -> String.format("%-" + maxKeyLength + "s = %s", e.getKey(), e.getValue().toString()))
-                .forEach(builder::append);
+    @Override
+    public Class<? extends AbstractConfigurationValue<?>> getValueType() {
+        return this.type;
+    }
 
-        return builder.toString();
+    @Override
+    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<OptimizationConfiguration> handler) {
+        if (refreshNecessary()) {
+            changeAction.accept(newValue, handler);
+        }
+    }
+
+    @Override
+    public boolean refreshNecessary() {
+        return this.changeAction != null;
+    }
+
+    @Override
+    public String getKeyName() {
+        return name();
     }
 }

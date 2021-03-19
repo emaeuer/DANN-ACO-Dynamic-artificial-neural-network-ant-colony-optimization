@@ -12,6 +12,11 @@ public final class NeuronID {
         this.neuronIndex = neuronIndex;
     }
 
+    public NeuronID(NeuronID other) {
+        this.layerIndex = other.layerIndex;
+        this.neuronIndex = other.neuronIndex;
+    }
+
     public int getLayerIndex() {
         return layerIndex;
     }

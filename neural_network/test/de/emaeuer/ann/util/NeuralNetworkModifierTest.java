@@ -269,6 +269,44 @@ public class NeuralNetworkModifierTest {
         assertEquals(0, nn.getBiasOfNeuron(newNeuron));
     }
 
+    @Test
+    public void testMultipleSplit() {
+        NeuralNetwork nn = buildNeuralNetwork(4, 1);
+
+        nn.modify()
+                .splitConnection(new NeuronID(0, 0), new NeuronID(1, 0))
+                .splitConnection(new NeuronID(0, 2), new NeuronID(2, 0))
+                .splitConnection(new NeuronID(0, 2), new NeuronID(1, 1));
+
+        // check general updates
+        assertEquals(4, nn.getDepth());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(0, 0)).size());
+        assertEquals(0, nn.getIncomingConnectionsOfNeuron(new NeuronID(0, 0)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(0, 1)).size());
+        assertEquals(0, nn.getIncomingConnectionsOfNeuron(new NeuronID(0, 1)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(0, 2)).size());
+        assertEquals(0, nn.getIncomingConnectionsOfNeuron(new NeuronID(0, 2)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(0, 3)).size());
+        assertEquals(0, nn.getIncomingConnectionsOfNeuron(new NeuronID(0, 3)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(1, 0)).size());
+        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(1, 0)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(2, 0)).size());
+        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(2, 0)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(2, 1)).size());
+        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(2, 1)).size());
+        assertEquals(0, nn.getOutgoingConnectionsOfNeuron(new NeuronID(3, 0)).size());
+        assertEquals(4, nn.getIncomingConnectionsOfNeuron(new NeuronID(3, 0)).size());
+
+        // check connection start and end
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 0), new NeuronID(2, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 1), new NeuronID(3, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 2), new NeuronID(1, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 3), new NeuronID(3, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(1, 0), new NeuronID(2, 1)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(2, 0), new NeuronID(3, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(2, 1), new NeuronID(3, 0)));
+    }
+
     /*
      ##########################################################
      #################### Helper Methods ######################

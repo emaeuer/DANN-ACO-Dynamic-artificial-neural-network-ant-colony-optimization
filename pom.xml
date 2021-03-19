@@ -11,10 +11,10 @@
 
     <modules>
         <module>neural_network</module>
-        <module>ant_colony_optimization</module>
         <module>optimization_method</module>
-        <module>particle_environment_gui</module>
         <module>particle_environment_engine</module>
+        <module>execution_state</module>
+        <module>particle_environment_launcher</module>
     </modules>
 
     <build>
@@ -45,5 +45,7 @@
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
     </properties>
+
+
 
 </project>

@@ -1,11 +1,13 @@
 package de.emaeuer.environment;
 
-import de.emaeuer.environment.elements.Particle;
-import de.emaeuer.environment.util.EnvironmentHelper;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.chart.XYChart.Series;
+import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.environment.configuration.EnvironmentConfiguration;
+import de.emaeuer.environment.elements.AbstractElement;
+import de.emaeuer.optimization.OptimizationMethod;
+import de.emaeuer.optimization.configuration.OptimizationConfiguration;
+import de.emaeuer.optimization.configuration.OptimizationState;
+import de.emaeuer.optimization.factory.OptimizationMethodFactory;
+import de.emaeuer.state.StateHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,94 +15,58 @@ import java.util.function.BiConsumer;
 
 public abstract class AbstractEnvironment {
 
-    private final IntegerProperty particleNumber = new SimpleIntegerProperty();
+    private final double width = 800;
+    private final double height = 800;
 
-    private final DoubleProperty width = new SimpleDoubleProperty(800);
-    private final DoubleProperty height = new SimpleDoubleProperty(800);
+    private final List<AbstractElement> particles = new ArrayList<>();
 
-    private final List<Particle> particles = new ArrayList<>();
+    private final BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy;
 
-    private final ListProperty<Series<Integer, Double>> fitnessData = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private OptimizationMethod optimization;
 
-    private final BiConsumer<Particle, AbstractEnvironment> borderStrategy;
-
-    public AbstractEnvironment(int particleNumber) {
-        this(particleNumber, EnvironmentHelper.GO_TO_OTHER_SIDE);
-    }
-
-    public AbstractEnvironment(int particleNumber, BiConsumer<Particle, AbstractEnvironment> borderStrategy) {
+    public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
         this.borderStrategy = borderStrategy;
-        setParticleNumber(particleNumber);
 
-        initialize();
+        initialize(configuration, state);
 
         initializeParticles();
     }
 
-    protected abstract void initialize();
+    protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
+        //noinspection unchecked
+        ConfigurationHandler<OptimizationConfiguration> optimizationConfig = configuration.getValue(EnvironmentConfiguration.OPTIMIZATION_CONFIGURATION, ConfigurationHandler.class);
+        this.optimization = OptimizationMethodFactory.createMethodForConfig(optimizationConfig, state);
+    }
 
     protected abstract void initializeParticles();
 
-    protected abstract void updateFitness();
-
-    protected abstract void restart();
+    public abstract void restart();
 
     public void update() {
         this.particles.stream()
-                .peek(Particle::step)
-                .forEach(p -> this.borderStrategy.accept(p, this));
+                .peek(AbstractElement::step)
+                .forEach(this::checkBorderCase);
+    }
+
+    private void checkBorderCase(AbstractElement particle) {
+        if (this.borderStrategy != null) {
+            this.borderStrategy.accept(particle, this);
+        }
     }
 
     public double getWidth() {
-        return width.get();
-    }
-
-    public DoubleProperty widthProperty() {
         return width;
     }
 
-    public void setWidth(double width) {
-        this.width.set(width);
-    }
-
     public double getHeight() {
-        return height.get();
-    }
-
-    public DoubleProperty heightProperty() {
         return height;
     }
 
-    public void setHeight(double height) {
-        this.height.set(height);
-    }
-
-    public int getParticleNumber() {
-        return particleNumber.get();
-    }
-
-    public IntegerProperty particleNumberProperty() {
-        return particleNumber;
-    }
-
-    public void setParticleNumber(int particleNumber) {
-        this.particleNumber.set(particleNumber);
-    }
-
-    public List<Particle> getParticles() {
+    public List<AbstractElement> getParticles() {
         return particles;
     }
 
-    public ListProperty<Series<Integer, Double>> getFitnessData() {
-        return fitnessData;
+    protected OptimizationMethod getOptimization() {
+        return optimization;
     }
-
-    public ListProperty<Series<Integer, Double>> fitnessDataProperty() {
-        return fitnessData;
-    }
-
-    public void setFitnessData(ObservableList<Series<Integer, Double>> fitnessData) {
-        this.fitnessData.set(fitnessData);
-    }
-
 }
