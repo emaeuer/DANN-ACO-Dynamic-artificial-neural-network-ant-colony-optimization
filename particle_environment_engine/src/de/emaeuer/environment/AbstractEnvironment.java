@@ -43,6 +43,10 @@ public abstract class AbstractEnvironment {
     public abstract void restart();
 
     public void update() {
+        if (isRestartNecessary()) {
+            return;
+        }
+
         this.particles.stream()
                 .peek(AbstractElement::step)
                 .forEach(this::checkBorderCase);
@@ -69,4 +73,10 @@ public abstract class AbstractEnvironment {
     protected OptimizationMethod getOptimization() {
         return optimization;
     }
+
+    public boolean isOptimizationFinished() {
+        return this.optimization.isOptimizationFinished();
+    }
+
+    public abstract boolean isRestartNecessary();
 }

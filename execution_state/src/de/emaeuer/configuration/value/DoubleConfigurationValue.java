@@ -9,9 +9,17 @@ public class DoubleConfigurationValue extends AbstractConfigurationValue<Double>
     private static final long serialVersionUID = 5302338981317095576L;
 
     private double value;
+    private final double min;
+    private final double max;
 
     public DoubleConfigurationValue(double value) {
+        this(value, Double.MIN_VALUE, Double.MAX_VALUE);
+    }
+
+    public DoubleConfigurationValue(double value, double min, double max) {
         super(Double.toString(value));
+        this.min = min;
+        this.max = max;
     }
 
     @Override
@@ -38,4 +46,11 @@ public class DoubleConfigurationValue extends AbstractConfigurationValue<Double>
         return new DoubleConfigurationValue(this.value);
     }
 
+    public double getMin() {
+        return this.min;
+    }
+
+    public double getMax() {
+        return this.max;
+    }
 }

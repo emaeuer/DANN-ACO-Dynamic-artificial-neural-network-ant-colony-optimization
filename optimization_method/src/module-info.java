@@ -12,4 +12,5 @@ module optimization {
     requires org.apache.logging.log4j;
     requires org.jgrapht.core;
     requires com.google.common;
+    requires neat.anji;
 }

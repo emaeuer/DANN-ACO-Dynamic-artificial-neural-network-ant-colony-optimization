@@ -31,6 +31,8 @@ public class PacoHandler extends OptimizationMethod {
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
 
+    private PacoAnt bestOfLastIteration;
+
     public PacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
@@ -50,12 +52,16 @@ public class PacoHandler extends OptimizationMethod {
     protected List<? extends Solution> generateSolutions() {
         this.currentAnts.clear();
 
+        if (this.bestOfLastIteration != null && configuration.getValue(PACO_KEEP_BEST, Boolean.class)) {
+            this.currentAnts.add(this.bestOfLastIteration);
+        }
+
         // if pheromone matrix is empty create the necessary number of ants to fill the population completely
         int antsPerIteration = this.pheromone.getPopulation().isEmpty()
                 ? this.configuration.getValue(PACO_POPULATION_SIZE, Integer.class)
                 : this.configuration.getValue(PACO_ANTS_PER_ITERATION, Integer.class);
 
-        IntStream.range(0, antsPerIteration)
+        IntStream.range(this.currentAnts.size(), antsPerIteration)
                 .mapToObj(i -> this.pheromone.createNeuralNetworkForPheromone())
                 .map(PacoAnt::new)
                 .forEach(this.currentAnts::add);
@@ -85,6 +91,7 @@ public class PacoHandler extends OptimizationMethod {
             // copy best to prevent further modification because of references in pheromone matrix
             PacoAnt bestCopy = new PacoAnt(bestOfThisIteration.getNeuralNetwork().copy());
             setCurrentlyBestSolution(bestOfThisIteration);
+            this.bestOfLastIteration = bestOfThisIteration;
         }
 
         super.update();

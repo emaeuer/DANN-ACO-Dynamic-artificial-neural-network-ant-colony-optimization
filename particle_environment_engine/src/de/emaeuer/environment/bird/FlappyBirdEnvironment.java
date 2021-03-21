@@ -114,16 +114,17 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
         this.pipes.clear();
         initializeParticles();
-        setAreAllBirdsDead(false);
+        this.areAllBirdsDead = false;
     }
 
     @Override
     public void update() {
-        if (areAllBirdsDead()) {
+        super.update();
+
+        if (isRestartNecessary()) {
             return;
         }
 
-        super.update();
         updatePipes();
 
         // increment scores and check if at least one bird lives (ignore this.bestParticle)
@@ -146,7 +147,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
         }
 
         getParticles().removeAll(deadBirds);
-        setAreAllBirdsDead(getParticles().isEmpty());
+        this.areAllBirdsDead = getParticles().isEmpty();
     }
 
     private void updatePipes() {
@@ -215,15 +216,13 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
                 .build();
     }
 
+    @Override
+    public boolean isRestartNecessary() {
+        return this.areAllBirdsDead;
+    }
+
     public List<Pipe> getPipes() {
         return pipes;
     }
 
-    public boolean areAllBirdsDead() {
-        return areAllBirdsDead;
-    }
-
-    public void setAreAllBirdsDead(boolean areAllBirdsDead) {
-        this.areAllBirdsDead = areAllBirdsDead;
-    }
 }

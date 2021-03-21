@@ -1,7 +1,6 @@
 package de.emaeuer.optimization;
 
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.aco.configuration.AcoConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.util.GraphHelper;
@@ -11,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
@@ -33,6 +33,8 @@ public abstract class OptimizationMethod {
     private Solution currentlyBestSolution;
 
     private final ProgressionHandler progressionHandler;
+
+    private boolean optimizationFinished = false;
 
     protected OptimizationMethod(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         this.configuration = configuration;
@@ -63,6 +65,11 @@ public abstract class OptimizationMethod {
     }
 
     public List<? extends Solution> nextIteration() {
+        // do nothing if the optimization finished (maximum fitness or max number of evaluations reached)
+        if (this.optimizationFinished) {
+            return Collections.emptyList();
+        }
+
         this.generalState.addNewValue(OptimizationState.ITERATION, this.generationCounter);
         this.generationCounter++;
 
@@ -76,6 +83,11 @@ public abstract class OptimizationMethod {
     }
 
     public void update() {
+        // do nothing if the optimization finished (maximum fitness or max number of evaluations reached)
+        if (this.optimizationFinished) {
+            return;
+        }
+
         updateFitnessScore();
         updateBestSolution();
 
@@ -83,6 +95,13 @@ public abstract class OptimizationMethod {
         if (this.progressionHandler.doesStagnate()) {
             handleProgressionStagnation();
         }
+
+        checkOptimizationFinished();
+    }
+
+    protected void checkOptimizationFinished() {
+        this.optimizationFinished |= this.maxFitness >= this.configuration.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_FITNESS_SCORE, Double.class);
+        this.optimizationFinished |= this.evaluationCounter >= this.configuration.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS, Integer.class);
     }
 
     protected void handleProgressionStagnation() {
@@ -119,5 +138,9 @@ public abstract class OptimizationMethod {
         if (currentBest != null && currentBest.getFitness() > this.maxFitness) {
             this.currentlyBestSolution = currentBest;
         }
+    }
+
+    public boolean isOptimizationFinished() {
+        return optimizationFinished;
     }
 }

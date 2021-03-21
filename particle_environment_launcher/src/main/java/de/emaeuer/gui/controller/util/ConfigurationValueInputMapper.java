@@ -78,6 +78,7 @@ public class ConfigurationValueInputMapper {
     private static Node createIntegerInput(DefaultConfiguration<?> config, IntegerConfigurationValue value, Runnable action, ConfigurationHandler<?> configurationHandler) {
         Spinner<Integer> spinner = new Spinner<>(value.getMin(), value.getMax(), Integer.parseInt(value.getStringRepresentation()));
         spinner.valueProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
+        spinner.setEditable(true);
 
         if (config.refreshNecessary()) {
             spinner.valueProperty().addListener((v, o, n) -> action.run());

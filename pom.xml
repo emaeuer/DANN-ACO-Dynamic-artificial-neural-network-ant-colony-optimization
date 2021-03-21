@@ -15,6 +15,7 @@
         <module>particle_environment_engine</module>
         <module>execution_state</module>
         <module>particle_environment_launcher</module>
+        <module>neat_anji</module>
     </modules>
 
     <build>
