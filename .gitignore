@@ -72,3 +72,6 @@ fabric.properties
 /temp/
 /.idea/
 *.class
+*.html
+*.ttf
+log4j2.xml

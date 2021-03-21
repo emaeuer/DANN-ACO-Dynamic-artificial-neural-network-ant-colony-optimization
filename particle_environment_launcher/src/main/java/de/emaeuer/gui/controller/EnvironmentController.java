@@ -21,7 +21,7 @@ public class EnvironmentController {
     @FXML
     private Canvas canvas;
 
-    private EnvironmentHandler environmentHandler;
+    private EnvironmentHandler<?> environmentHandler;
 
     private AnimationTimer frameTimer;
 

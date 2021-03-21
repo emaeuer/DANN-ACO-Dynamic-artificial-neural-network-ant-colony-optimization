@@ -255,7 +255,7 @@ public class StateValueOutputMapper {
 
     // FIXME graph view ugly and method not refactored
     private void refreshGraphView(StateParameter<?> stateType, GraphStateValue graphState, String suffix) {
-        if (!graphState.changedSinceLastGet() || graphState.getValue() == null) {
+        if (!graphState.changedSinceLastGet() || graphState.getValue() == null || graphState.getValue().edgeSet().isEmpty()) {
             return;
         }
 
@@ -275,8 +275,9 @@ public class StateValueOutputMapper {
         File imgFile = new File("temp/graph.jpg");
         try {
             ImageIO.write(image, "JPG", imgFile);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            return;
         }
 
         try (FileInputStream in = new FileInputStream(imgFile)) {

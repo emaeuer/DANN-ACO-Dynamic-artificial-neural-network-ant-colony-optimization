@@ -33,6 +33,12 @@
         </dependency>
         <dependency>
             <groupId>de.emaeuer</groupId>
+            <artifactId>neat_anji</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.emaeuer</groupId>
             <artifactId>NeuralNetwork</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>

@@ -64,16 +64,16 @@ public class CartPoleEnvironment extends AbstractEnvironment {
         getOptimization().update();
 
         initializeParticles();
-        setAreAllBirdsDead(false);
+        this.areAllCartsDead = false;
     }
 
     @Override
     public void update() {
-        if (areAllCartsDead()) {
+        super.update();
+
+        if (isRestartNecessary()) {
             return;
         }
-
-        super.update();
 
         // increment scores and check if at least one bird lives (ignore this.bestParticle)
         List<Cart> deadCarts = new ArrayList<>();
@@ -95,14 +95,11 @@ public class CartPoleEnvironment extends AbstractEnvironment {
         }
 
         getParticles().removeAll(deadCarts);
-        setAreAllBirdsDead(getParticles().isEmpty());
+        this.areAllCartsDead = getParticles().isEmpty();
     }
 
-    public boolean areAllCartsDead() {
+    @Override
+    public boolean isRestartNecessary() {
         return areAllCartsDead;
-    }
-
-    private void setAreAllBirdsDead(boolean allDead) {
-        this.areAllCartsDead = allDead;
     }
 }

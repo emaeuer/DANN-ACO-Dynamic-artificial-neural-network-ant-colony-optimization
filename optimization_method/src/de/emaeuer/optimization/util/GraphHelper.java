@@ -22,6 +22,10 @@ public class GraphHelper {
                 .weighted(true)
                 .buildGraph();
 
+        if (nn == null) {
+            return graph;
+        }
+
         for (int i = 0; i < nn.getDepth(); i++) {
             List<NeuronID> neuronsOfLayer = nn.getNeuronsOfLayer(i);
             for (NeuronID start : neuronsOfLayer) {

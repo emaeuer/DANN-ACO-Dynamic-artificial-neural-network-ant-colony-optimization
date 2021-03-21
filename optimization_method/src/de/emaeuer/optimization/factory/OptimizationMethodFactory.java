@@ -6,6 +6,7 @@ import de.emaeuer.optimization.OptimizationMethodNames;
 import de.emaeuer.optimization.aco.AcoHandler;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
+import de.emaeuer.optimization.neat.NeatHandler;
 import de.emaeuer.optimization.paco.PacoHandler;
 import de.emaeuer.state.StateHandler;
 
@@ -28,7 +29,7 @@ public class OptimizationMethodFactory {
     }
 
     private static OptimizationMethod createNEAT(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
-        return null;
+        return new NeatHandler(config, state);
     }
 
     private static OptimizationMethod createPACO(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
