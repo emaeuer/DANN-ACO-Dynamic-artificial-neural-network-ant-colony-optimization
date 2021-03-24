@@ -89,7 +89,6 @@ public abstract class OptimizationMethod {
         }
 
         updateFitnessScore();
-        updateBestSolution();
 
         this.progressionHandler.addFitnessScore(this.maxFitness);
         if (this.progressionHandler.doesStagnate()) {
@@ -119,7 +118,7 @@ public abstract class OptimizationMethod {
     }
 
     protected void updateBestSolution() {
-        this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.transformToAdjacencyList(this.currentlyBestSolution.getNeuralNetwork()));
+        this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.transformToConnectionList(this.currentlyBestSolution.getNeuralNetwork()));
     }
 
     protected abstract DoubleSummaryStatistics getFitnessOfIteration();
@@ -137,6 +136,7 @@ public abstract class OptimizationMethod {
     protected void setCurrentlyBestSolution(Solution currentBest) {
         if (currentBest != null && currentBest.getFitness() > this.maxFitness) {
             this.currentlyBestSolution = currentBest;
+            updateBestSolution();
         }
     }
 

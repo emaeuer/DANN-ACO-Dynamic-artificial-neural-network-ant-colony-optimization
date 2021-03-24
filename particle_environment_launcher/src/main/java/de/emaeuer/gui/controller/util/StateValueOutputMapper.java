@@ -1,11 +1,13 @@
 package de.emaeuer.gui.controller.util;
 
-import com.mxgraph.layout.mxCircleLayout;
-import com.mxgraph.layout.mxIGraphLayout;
-import com.mxgraph.util.mxCellRenderer;
+import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
+import com.brunomnsilva.smartgraph.graph.Edge;
+import com.brunomnsilva.smartgraph.graph.Graph;
+import com.brunomnsilva.smartgraph.graphview.*;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.StateParameter;
 import de.emaeuer.state.value.*;
+import de.emaeuer.state.value.GraphStateValue.Connection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -15,20 +17,12 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import org.jgrapht.Graph;
-import org.jgrapht.ext.JGraphXAdapter;
-import org.jgrapht.graph.DefaultWeightedEdge;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -36,7 +30,9 @@ import java.util.Map.Entry;
 
 public class StateValueOutputMapper {
 
-    private final Map<String, Node> visualRepresentations = new HashMap<>();
+    private static final Logger LOG = LogManager.getLogger(StateValueOutputMapper.class);
+
+    private final Map<String, Object> visualRepresentations = new HashMap<>();
     private final StateHandler<?> state;
 
     private final List<VBox> newContent = new ArrayList<>();
@@ -253,46 +249,70 @@ public class StateValueOutputMapper {
     // Methods for handling graph data
     // *********************************************
 
-    // FIXME graph view ugly and method not refactored
+    // FIXME nodes in graph lay on top of each other
     private void refreshGraphView(StateParameter<?> stateType, GraphStateValue graphState, String suffix) {
-        if (!graphState.changedSinceLastGet() || graphState.getValue() == null || graphState.getValue().edgeSet().isEmpty()) {
+        if (!graphState.changedSinceLastGet() || graphState.getValue() == null || graphState.getValue().isEmpty()) {
             return;
         }
 
-        String mapIdentifier = createMapIdentifier(stateType, suffix);
+        String mapIdentifier = createMapIdentifier(stateType, suffix + ".view");
         if (!this.visualRepresentations.containsKey(mapIdentifier)) {
             createGraphView(stateType, suffix);
         }
 
-        ImageView view = (ImageView) this.visualRepresentations.get(mapIdentifier);
+        //noinspection unchecked if creation works properly issues with casting not possible
+        GraphView<String, Double> graphView = (GraphView<String, Double>) this.visualRepresentations.get(mapIdentifier);
+        //noinspection unchecked if creation works properly issues with casting not possible
+        Graph<String, Double> graph = (Graph<String, Double>) this.visualRepresentations.get(createMapIdentifier(stateType, suffix + ".graph"));
 
-        Graph<String, DefaultWeightedEdge> graph = graphState.getValue();
-        JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = new JGraphXAdapter<>(graph);
-        mxIGraphLayout layout = new mxCircleLayout(graphAdapter);
-        layout.execute(graphAdapter.getDefaultParent());
+        // completely reset the graph --> update would be possible but harder to implement and may not save time
+        graph.edges().forEach(graph::removeEdge);
+        graph.vertices().forEach(graph::removeVertex);
 
-        BufferedImage image = mxCellRenderer.createBufferedImage(graphAdapter, null, 2, Color.WHITE, true, null);
-        File imgFile = new File("temp/graph.jpg");
-        try {
-            ImageIO.write(image, "JPG", imgFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
+        Set<String> existingVertices = new HashSet<>();
+
+        for (Connection connection : graphState.getValue()) {
+            if (existingVertices.add(connection.start())) {
+                graph.insertVertex(connection.start());
+            };
+            if (existingVertices.add(connection.target())) {
+                graph.insertVertex(connection.target());
+            }
+            Edge<Double, String> edge = graph.insertEdge(connection.start(), connection.target(), connection.weight());
+            graphView.setStyle(edge, getEdgeStyle(connection.weight()));
         }
 
-        try (FileInputStream in = new FileInputStream(imgFile)) {
-            Image img = new Image(in);
-            view.setImage(img);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        graphView.update();
+    }
+
+    private String getEdgeStyle(double weight) {
+        int red = (int) Math.round(-127 * weight + 127);
+        int green = (int) Math.round(127 * weight + 127);
+        int blue = (int) Math.round(-127 * Math.abs(weight) + 127);
+
+        System.out.println(weight + String.format("-fx-stroke: rgb(%d, %d, %d);", red, green, blue));
+        return String.format("-fx-stroke: rgb(%d, %d, %d);", red, green, blue);
     }
 
     private void createGraphView(StateParameter<?> stateType, String suffix) {
-        ImageView view = new ImageView();
+        SmartGraphProperties properties = null;
+        try (FileInputStream input = new FileInputStream("particle_environment_launcher/src/main/resources/gui/graph/smartgraph.properties")) {
+            properties = new SmartGraphProperties(input);
+        } catch (IOException e) {
+           LOG.warn("Failed to load graph configuration using default one", e);
+        }
 
-        this.visualRepresentations.put(createMapIdentifier(stateType, suffix), view);
-        this.newContent.add(createCard(stateType, view));
+        Graph<String, Double> graph = new DigraphEdgeList<>();
+        GraphView<String, Double> graphView = new GraphView<>(graph, properties, null, this.getClass().getResource("/gui/graph/graph.css").toExternalForm());
+
+        this.visualRepresentations.put(createMapIdentifier(stateType, suffix + ".view"), graphView);
+        this.visualRepresentations.put(createMapIdentifier(stateType, suffix + ".graph"), graph);
+        this.newContent.add(createCard(stateType, graphView));
+
+        graphView.setMinWidth(250);
+        graphView.setMinHeight(250);
+
+        graphView.init();
     }
 
     // *********************************************

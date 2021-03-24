@@ -8,5 +8,4 @@ module execution.state {
     requires nitrite;
     requires exp4j;
     requires org.apache.logging.log4j;
-    requires org.jgrapht.core;
 }

@@ -7,9 +7,8 @@ module particle.environment.gui {
     requires org.apache.logging.log4j;
     requires optimization;
     requires execution.state;
-    requires org.jgrapht.core;
-    requires org.jgrapht.ext;
-    requires java.desktop;
+    requires JavaFXSmartGraph;
+    requires java.logging;
 
     exports de.emaeuer to javafx.graphics;
     exports de.emaeuer.logging to org.apache.logging.log4j.core;
