@@ -1,10 +1,13 @@
 package de.emaeuer.gui.controller;
 
 import javafx.css.PseudoClass;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import org.w3c.dom.events.Event;
 
 public class GuiController {
 
@@ -22,9 +25,6 @@ public class GuiController {
 
     @FXML
     private Button pauseButton;
-
-    @FXML
-    private Button entityModeButton;
 
     @FXML
     private EnvironmentController environmentAreaController;
@@ -56,13 +56,21 @@ public class GuiController {
 
         this.environmentAreaController.configurationProperty().bind(this.configurationPanelController.configurationProperty());
         this.environmentAreaController.stateProperty().bind(this.statePanelController.stateProperty());
-
         this.environmentAreaController.restartedProperty().addListener((v, o, n) -> handleEnvironmentRestart(n));
+        this.environmentAreaController.finishedProperty().addListener((v, o, n) -> handleEnvironmentEnd(n));
+        this.playButton.disableProperty().bind(this.environmentAreaController.finishedProperty());
     }
 
     private void handleEnvironmentRestart(boolean restarted) {
         if (restarted) {
             this.statePanelController.refreshPanel();
+        }
+    }
+
+    private void handleEnvironmentEnd(boolean isFinished) {
+        if (isFinished) {
+            // handle end
+            pauseEnvironment();
         }
     }
 
@@ -130,8 +138,13 @@ public class GuiController {
     }
 
     @FXML
-    public void changeMultiEntityMode() {
+    public void changeMultiEntityMode(ActionEvent e) {
         this.environmentAreaController.toggleEntityMode();
-        this.entityModeButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("active"), this.environmentAreaController.isSingleEntityMode());
+        ((Node) e.getSource()).pseudoClassStateChanged(PseudoClass.getPseudoClass("active"), this.environmentAreaController.isSingleEntityMode());
+    }
+
+    public void switchDisplayMode(ActionEvent e) {
+        this.environmentAreaController.toggleVisualMode();
+        ((Node) e.getSource()).pseudoClassStateChanged(PseudoClass.getPseudoClass("active"), !this.environmentAreaController.isVisualMode());
     }
 }

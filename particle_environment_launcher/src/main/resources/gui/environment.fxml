@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.layout.*?>
-
 <?import javafx.scene.canvas.Canvas?>
 
-<Canvas xmlns="http://javafx.com/javafx"
-        xmlns:fx="http://javafx.com/fxml"
-        fx:controller="de.emaeuer.gui.controller.EnvironmentController"
-        fx:id="canvas"
-        focusTraversable="true"
-        HBox.hgrow="NEVER"/>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Label?>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="de.emaeuer.gui.controller.EnvironmentController"
+           stylesheets="@style.css"
+           HBox.hgrow="NEVER">
+
+    <Canvas fx:id="canvas" focusTraversable="true"/>
+
+    <VBox alignment="CENTER" spacing="2" fx:id="nonVisualPanel" visible="false">
+        <Label text="Optimization in progress - Visual output disabled" fx:id="nonVisualTitle"/>
+        <VBox minHeight="20" maxHeight="20"/>
+        <Label text="Finished number of iterations" />
+        <ProgressBar prefWidth="300" progress="0" fx:id="evaluationProgress"/>
+        <VBox minHeight="20" maxHeight="20"/>
+        <Label text="Reached fitness"/>
+        <ProgressBar prefWidth="300" progress="0" fx:id="fitnessProgress"/>
+    </VBox>
+
+</StackPane>

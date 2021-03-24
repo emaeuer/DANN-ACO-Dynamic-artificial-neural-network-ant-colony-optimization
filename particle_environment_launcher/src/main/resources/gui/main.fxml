@@ -19,7 +19,8 @@
             <Button styleClass="bar_button, faster_button" onAction="#increaseEnvironmentSpeed"/>
             <Label styleClass="speed_text" fx:id="speedDisplay"/>
             <Button styleClass="bar_button, slower_button" onAction="#decreaseEnvironmentSpeed"/>
-            <Button styleClass="bar_button, multi_button" onAction="#changeMultiEntityMode" fx:id="entityModeButton"/>
+            <Button styleClass="bar_button, multi_button" onAction="#changeMultiEntityMode"/>
+            <Button styleClass="bar_button, image_button" onAction="#switchDisplayMode"/>
 
             <Separator maxWidth="40" styleClass="separator"/>
 

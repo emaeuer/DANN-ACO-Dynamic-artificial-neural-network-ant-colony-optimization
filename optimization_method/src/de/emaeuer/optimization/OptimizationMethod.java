@@ -143,4 +143,16 @@ public abstract class OptimizationMethod {
     public boolean isOptimizationFinished() {
         return optimizationFinished;
     }
+
+    public double getMaxFitness() {
+        return maxFitness;
+    }
+
+    public double getFitnessThreshold() {
+        return this.configuration.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_FITNESS_SCORE, Double.class);
+    }
+
+    public int getEvaluationThreshold() {
+        return this.configuration.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS, Integer.class);
+    }
 }

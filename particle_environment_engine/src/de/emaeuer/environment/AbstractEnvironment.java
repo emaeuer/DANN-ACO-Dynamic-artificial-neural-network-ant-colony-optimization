@@ -79,4 +79,21 @@ public abstract class AbstractEnvironment {
     }
 
     public abstract boolean isRestartNecessary();
+
+    public double getMaxFitness() {
+        return this.optimization.getMaxFitness();
+    }
+
+    public double getFitnessThreshold() {
+        return this.optimization.getFitnessThreshold();
+    }
+
+    public int getNumberOfEvaluations() {
+        return this.optimization.getEvaluationCounter();
+    }
+
+    public int getEvaluationThreshold() {
+        return this.optimization.getEvaluationThreshold();
+    }
+
 }
