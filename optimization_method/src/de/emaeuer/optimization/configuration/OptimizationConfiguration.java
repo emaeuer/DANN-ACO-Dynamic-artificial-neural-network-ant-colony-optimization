@@ -1,5 +1,6 @@
 package de.emaeuer.optimization.configuration;
 
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.*;
@@ -10,9 +11,7 @@ import de.emaeuer.optimization.factory.OptimizationConfigFactory;
 import java.util.function.BiConsumer;
 
 public enum OptimizationConfiguration implements DefaultConfiguration<OptimizationConfiguration> {
-    NN_INPUT_LAYER_SIZE("Neural network input layer size", new IntegerConfigurationValue(1, 1, Integer.MAX_VALUE)),
-    NN_OUTPUT_LAYER_SIZE("Neural network output layer size", new IntegerConfigurationValue(1, 1, Integer.MAX_VALUE)),
-
+    OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION("Neural network configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(NeuralNetworkConfiguration.class))),
     OPTIMIZATION_MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE)),
     OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS("Maximal number of evaluations", new IntegerConfigurationValue(20000, 10, Integer.MAX_VALUE)),
     OPTIMIZATION_PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0.2)),

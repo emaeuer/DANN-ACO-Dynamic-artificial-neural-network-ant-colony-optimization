@@ -1,8 +1,11 @@
 package de.emaeuer.ann.impl;
 
+import de.emaeuer.ann.ActivationFunction;
 import de.emaeuer.ann.LayerType;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuralNetworkBuilder;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
+import de.emaeuer.configuration.ConfigurationHandler;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 
 import java.util.function.Consumer;
@@ -18,6 +21,34 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
     private boolean nextFullyConnected = false;
 
     private int necessaryModificationFlag = 0b11;
+
+    private ConfigurationHandler<NeuralNetworkConfiguration> configuration = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+
+    @Override
+    public NeuralNetworkBuilder<NeuralNetworkLayerBuilderImpl> configure(ConfigurationHandler<NeuralNetworkConfiguration> configuration) {
+//        this.inputActivationFunction = ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION, String.class));
+//        this.hiddenActivationFunction = ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION, String.class));
+//        this.outputActivationFunction = ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION, String.class));
+//
+//        inputLayer(configuration.getValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, Integer.class));
+//        fullyConnectToNextLayer();
+//        outputLayer(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, Integer.class));
+
+        this.configuration = configuration;
+
+        return this;
+    }
+
+    @Override
+    public NeuralNetworkBuilderImpl inputLayer() {
+        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = b -> b
+            .activationFunction(ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION, String.class)))
+            .maxWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class))
+            .minWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class))
+            .numberOfNeurons(configuration.getValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, Integer.class));
+
+        return inputLayer(defaultModifier);
+    }
 
     @Override
     public NeuralNetworkBuilderImpl inputLayer(int size) {
@@ -74,6 +105,13 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
             throw new IllegalStateException("Can't add hidden layer after the output layer");
         }
 
+        Consumer<NeuralNetworkLayerBuilderImpl> modifierFromConfig = b -> b
+                .activationFunction(ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION, String.class)))
+                .maxWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class))
+                .minWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class));
+        // apply configuration modifier first because external modifier should overwrite values if set
+        modifier = modifierFromConfig.andThen(modifier);
+
         NeuralNetworkLayerBuilderImpl builder = configureLayer(modifier, HIDDEN);
 
         try {
@@ -83,6 +121,17 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
         }
 
         return this;
+    }
+
+    @Override
+    public NeuralNetworkBuilder<NeuralNetworkLayerBuilderImpl> outputLayer() {
+        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = b -> b
+            .activationFunction(ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION, String.class)))
+            .maxWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class))
+            .minWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class))
+            .numberOfNeurons(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, Integer.class));
+
+        return outputLayer(defaultModifier);
     }
 
     @Override
@@ -122,7 +171,9 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
     }
 
     private NeuralNetworkLayerBuilderImpl configureLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier, LayerType p) {
+        // set default activation function may be overridden by modifier
         NeuralNetworkLayerBuilderImpl builder = NeuralNetworkLayerImpl.build();
+
         modifier = modifier.andThen(b -> b.neuralNetwork(this.nn)
                 .layerID(this.nn.getLayers().size())
                 .layerType(p));

@@ -81,7 +81,11 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
         // add placeholder at the position of the new layer so that the indexing after shifting still works
         this.nn.getLayers().add(position, null);
 
+        NeuralNetworkLayerImpl startLayer = this.nn.getLayer(start.getLayerIndex());
+
         NeuralNetworkLayerImpl newLayer = NeuralNetworkLayerImpl.build()
+                .maxWeight(startLayer.getMaxWeight())
+                .minWeight(startLayer.getMinWeight())
                 .numberOfNeurons(1)
                 .layerType(LayerType.HIDDEN)
                 .neuralNetwork(this.nn)

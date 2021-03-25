@@ -1,5 +1,7 @@
 package de.emaeuer.optimization.neat.mapping;
 
+import de.emaeuer.ann.ActivationFunction;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
@@ -21,15 +23,6 @@ public class ConfigurationPropertyMapper {
             put(enumToKey(OptimizationConfiguration.OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS), "num.generations");
             put(enumToKey(NeatConfiguration.POPULATION_SIZE), "popul.size");
             put(enumToKey(NeatConfiguration.TOPOLOGY_MUTATION_CLASSIC), "topology.mutation.classic");
-//            put(, "add.connection.mutation.rate");
-//            put(, "remove.connection.mutation.rate");
-//            put(, "remove.connection.max.weight");
-//            put(, "add.neuron.mutation.rate");
-//            put(, "prune.mutation.rate");
-//            put(, "weight.mutation.rate");
-//            put(, "weight.mutation.std.dev");
-            put(enumToKey(NeatConfiguration.WEIGHT_MAX), "weight.max");
-            put(enumToKey(NeatConfiguration.WEIGHT_MIN), "weight.min");
             put(enumToKey(NeatConfiguration.SURVIVAL_RATE), "survival.rate");
             put(enumToKey(NeatConfiguration.ELITISM), "selector.elitism");
             put(enumToKey(NeatConfiguration.WEIGHTED_SELECTOR), "selector.roulette");
@@ -38,13 +31,13 @@ public class ConfigurationPropertyMapper {
             put(enumToKey(NeatConfiguration.CHROM_COMPAT_DISJOINT_COEFF), "chrom.compat.disjoint.coeff");
             put(enumToKey(NeatConfiguration.CHROM_COMPAT_COMMON_COEFF), "chrom.compat.common.coeff");
             put(enumToKey(NeatConfiguration.SPECIATION_THRESHOLD), "speciation.threshold");
-            put(enumToKey(NeatConfiguration.INITIAL_TOPOLOGY_FULLY_CONNECTED), "initial.topology.fully.connected");
-            put(enumToKey(NeatConfiguration.INITIAL_TOPOLOGY_NUM_HIDDEN_NEURONS), "initial.topology.num.hidden.neurons");
-            put(enumToKey(NeatConfiguration.INITIAL_TOPOLOGY_ACTIVATION), "initial.topology.activation");
-            put(enumToKey(NeatConfiguration.INITIAL_TOPOLOGY_ACTIVATION_INPUT), "initial.topology.activation.input");
-            put(enumToKey(NeatConfiguration.INITIAL_TOPOLOGY_ACTIVATION_OUTPUT), "initial.topology.activation.output");
-            put(enumToKey(OptimizationConfiguration.NN_INPUT_LAYER_SIZE), "stimulus.size");
-            put(enumToKey(OptimizationConfiguration.NN_OUTPUT_LAYER_SIZE), "response.size");
+            put(enumToKey(NeuralNetworkConfiguration.WEIGHT_MAX), "weight.max");
+            put(enumToKey(NeuralNetworkConfiguration.WEIGHT_MIN), "weight.min");
+            put(enumToKey(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION), "initial.topology.activation");
+            put(enumToKey(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION), "initial.topology.activation.input");
+            put(enumToKey(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION), "initial.topology.activation.output");
+            put(enumToKey(NeuralNetworkConfiguration.INPUT_LAYER_SIZE), "stimulus.size");
+            put(enumToKey(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE), "response.size");
         }
     };
 
@@ -53,6 +46,8 @@ public class ConfigurationPropertyMapper {
         private static final long serialVersionUID = 1194318741990855812L;
 
         {
+            put("initial.topology.fully.connected", true);
+            put("initial.topology.num.hidden.neurons", 0);
             put("persistence.class", "com.anji.persistence.FilePersistence");
             put("persistence.base.dir", "temp/");
             put("persist.all", false);
@@ -61,6 +56,16 @@ public class ConfigurationPropertyMapper {
             put("id.file", "temp/id.xml");
             put("neat.id.file", "temp/neatid.xml");
             put("presentation.dir", "temp/");
+        }
+    };
+
+    private static final Map<String, String> VALUE_MAPPING = new HashMap<>() {
+        {
+            put(ActivationFunction.IDENTITY.name(), "linear");
+            put(ActivationFunction.RELU.name(), "linear");
+            put(ActivationFunction.TANH.name(), "tanh");
+            put(ActivationFunction.SIGMOID.name(), "sigmoid");
+            put(ActivationFunction.LINEAR_UNTIL_SATURATION.name(), "clamped-linear");
         }
     };
 
@@ -78,6 +83,7 @@ public class ConfigurationPropertyMapper {
         }
 
         addNeatConfigurations(properties, configuration);
+        addNeuralNetworkConfiguration(properties, configuration);
         properties.putAll(DEFAULT_VALUES);
 
         return properties;
@@ -90,6 +96,19 @@ public class ConfigurationPropertyMapper {
             String keyString = enumToKey(key);
             if (KEY_MAPPINGS.containsKey(keyString)) {
                 properties.setProperty(KEY_MAPPINGS.get(keyString), neatConfiguration.getValue(key, Object.class).toString());
+            }
+        }
+    }
+
+    private static void addNeuralNetworkConfiguration(Properties properties, ConfigurationHandler<OptimizationConfiguration> configuration) {
+        ConfigurationHandler<NeuralNetworkConfiguration> nnConfiguration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION);
+
+        for (NeuralNetworkConfiguration key : nnConfiguration.getConfigurationValues().keySet()) {
+            String keyString = enumToKey(key);
+            if (KEY_MAPPINGS.containsKey(keyString)) {
+                String value = nnConfiguration.getValue(key, Object.class).toString();
+                value = VALUE_MAPPING.getOrDefault(value, value);
+                properties.setProperty(KEY_MAPPINGS.get(keyString), value);
             }
         }
     }

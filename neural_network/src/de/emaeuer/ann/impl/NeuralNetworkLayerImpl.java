@@ -1,5 +1,6 @@
 package de.emaeuer.ann.impl;
 
+import de.emaeuer.ann.ActivationFunction;
 import de.emaeuer.ann.LayerType;
 import de.emaeuer.ann.NeuronID;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -8,7 +9,6 @@ import org.apache.commons.math3.linear.RealVector;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.DoubleFunction;
 import java.util.stream.Collectors;
 
 public class NeuralNetworkLayerImpl {
@@ -17,7 +17,7 @@ public class NeuralNetworkLayerImpl {
 
     private int layerIndex;
 
-    private DoubleFunction<Double> activationFunction;
+    private ActivationFunction activationFunction;
 
     private RealMatrix weights;
     private RealVector bias;
@@ -32,6 +32,9 @@ public class NeuralNetworkLayerImpl {
     private final Map<NeuronID, List<NeuronID>> outgoingConnections = new HashMap<>();
 
     private final NeuralNetworkLayerModifier modifier = new NeuralNetworkLayerModifier(this);
+
+    private double maxWeight = Double.MAX_VALUE;
+    private double minWeight = -Double.MAX_VALUE;
 
     public static NeuralNetworkLayerBuilderImpl build() {
         return new NeuralNetworkLayerBuilderImpl();
@@ -57,7 +60,7 @@ public class NeuralNetworkLayerImpl {
             case INPUT -> vector;
             case OUTPUT, HIDDEN -> this.weights.operate(vector)
                     .add(this.bias)
-                    .map(this.activationFunction::apply);
+                    .map(this.activationFunction.getActivationFunction()::apply);
         };
 
         this.activation = output;
@@ -121,6 +124,9 @@ public class NeuralNetworkLayerImpl {
         if (isInputLayer()) {
             throw new IllegalStateException("Can't change bias of input layer neuron");
         }
+
+        bias = Math.max(this.minWeight, Math.min(this.maxWeight, bias));
+
         this.bias.setEntry(inLayerID, bias);
     }
 
@@ -153,6 +159,8 @@ public class NeuralNetworkLayerImpl {
             throw new IllegalArgumentException(String.format("The connection from %s to %s doesn't exist", start, end));
         }
 
+        weight = Math.max(this.minWeight, Math.min(this.maxWeight, weight));
+
         this.weights.setEntry(end.getNeuronIndex(), indexOfInput, weight);
     }
 
@@ -160,11 +168,11 @@ public class NeuralNetworkLayerImpl {
         return this.modifier;
     }
 
-    public DoubleFunction<Double> getActivationFunction() {
+    public ActivationFunction getActivationFunction() {
         return this.activationFunction;
     }
 
-    public void setActivationFunction(DoubleFunction<Double> activationFunction) {
+    public void setActivationFunction(ActivationFunction activationFunction) {
         this.activationFunction = activationFunction;
     }
 
@@ -247,6 +255,8 @@ public class NeuralNetworkLayerImpl {
         copy.setBias(this.bias == null ? null : this.bias.copy());
         copy.setNeuralNetwork(copyNn);
         copy.setActivation(new ArrayRealVector(this.getNumberOfNeurons())); // activations are not copied
+        copy.setMaxWeight(this.maxWeight);
+        copy.setMinWeight(this.minWeight);
         // don't set activation because copy returns a neural network in the initial state
 
         copyNeuronCollection(existingNeurons, this.neuronsOfLayer, copy.neuronsOfLayer);
@@ -279,5 +289,21 @@ public class NeuralNetworkLayerImpl {
 
             target.put(neuron, connectionsCopy);
         }
+    }
+
+    public double getMaxWeight() {
+        return maxWeight;
+    }
+
+    public void setMaxWeight(double value) {
+        this.maxWeight = value;
+    }
+
+    public double getMinWeight() {
+        return minWeight;
+    }
+
+    public void setMinWeight(double value) {
+        this.minWeight = value;
     }
 }

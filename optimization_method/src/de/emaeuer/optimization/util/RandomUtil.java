@@ -1,5 +1,6 @@
 package de.emaeuer.optimization.util;
 
+import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.RealVector;
 

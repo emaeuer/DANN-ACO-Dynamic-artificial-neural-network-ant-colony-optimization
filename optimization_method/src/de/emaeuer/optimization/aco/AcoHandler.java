@@ -1,5 +1,6 @@
 package de.emaeuer.optimization.aco;
 
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.optimization.Solution;
@@ -42,10 +43,11 @@ public class AcoHandler extends OptimizationMethod {
 
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork basicNetwork = NeuralNetwork.build()
-            .inputLayer(generalConfig.getValue(OptimizationConfiguration.NN_INPUT_LAYER_SIZE, Integer.class))
-            .fullyConnectToNextLayer()
-            .outputLayer(generalConfig.getValue(OptimizationConfiguration.NN_OUTPUT_LAYER_SIZE, Integer.class))
-            .finish();
+                .configure(ConfigurationHelper.extractEmbeddedConfiguration(generalConfig, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION))
+                .inputLayer()
+                .fullyConnectToNextLayer()
+                .outputLayer()
+                .finish();
 
         // create aco colonies
         IntStream.range(0, configuration.getValue(ACO_NUMBER_OF_COLONIES, Integer.class))
@@ -68,7 +70,7 @@ public class AcoHandler extends OptimizationMethod {
         AcoColony worst = this.colonies.get(0);
         AcoColony best = this.colonies.get(0);
 
-        for (AcoColony colony: this.colonies) {
+        for (AcoColony colony : this.colonies) {
             updateFitnessState(colony);
             worst = colony.getCurrentFitness() < worst.getCurrentFitness() ? colony : worst;
             best = colony.getCurrentFitness() > best.getCurrentFitness() ? colony : best;
@@ -100,11 +102,11 @@ public class AcoHandler extends OptimizationMethod {
         }
 
         DoubleSummaryStatistics fitnessScores = colony.getIterationStatistic();
-        this.state.addNewValue(AcoState.FITNESS_OF_ALL_COLONIES, new AbstractMap.SimpleEntry<>(colonyKey, new Double[] {(double) getEvaluationCounter(), fitnessScores.getMax()}));
-        series.newValue(new AbstractMap.SimpleEntry<>(TOTAL_MAX, new Double[] {(double) getEvaluationCounter(), colony.getBestScore()}));
-        series.newValue(new AbstractMap.SimpleEntry<>(MAX, new Double[] {(double) getEvaluationCounter(), fitnessScores.getMax()}));
-        series.newValue(new AbstractMap.SimpleEntry<>(MIN, new Double[] {(double) getEvaluationCounter(), fitnessScores.getMin()}));
-        series.newValue(new AbstractMap.SimpleEntry<>(AVERAGE, new Double[] {(double) getEvaluationCounter(), fitnessScores.getAverage()}));
+        this.state.addNewValue(AcoState.FITNESS_OF_ALL_COLONIES, new AbstractMap.SimpleEntry<>(colonyKey, new Double[]{(double) getEvaluationCounter(), fitnessScores.getMax()}));
+        series.newValue(new AbstractMap.SimpleEntry<>(TOTAL_MAX, new Double[]{(double) getEvaluationCounter(), colony.getBestScore()}));
+        series.newValue(new AbstractMap.SimpleEntry<>(MAX, new Double[]{(double) getEvaluationCounter(), fitnessScores.getMax()}));
+        series.newValue(new AbstractMap.SimpleEntry<>(MIN, new Double[]{(double) getEvaluationCounter(), fitnessScores.getMin()}));
+        series.newValue(new AbstractMap.SimpleEntry<>(AVERAGE, new Double[]{(double) getEvaluationCounter(), fitnessScores.getAverage()}));
     }
 
     @Override

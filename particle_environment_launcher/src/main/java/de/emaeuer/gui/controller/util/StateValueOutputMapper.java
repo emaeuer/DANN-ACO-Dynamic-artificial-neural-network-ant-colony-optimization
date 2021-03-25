@@ -290,7 +290,6 @@ public class StateValueOutputMapper {
         int green = (int) Math.round(127 * weight + 127);
         int blue = (int) Math.round(-127 * Math.abs(weight) + 127);
 
-        System.out.println(weight + String.format("-fx-stroke: rgb(%d, %d, %d);", red, green, blue));
         return String.format("-fx-stroke: rgb(%d, %d, %d);", red, green, blue);
     }
 

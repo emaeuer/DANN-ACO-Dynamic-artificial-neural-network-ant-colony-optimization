@@ -8,7 +8,6 @@ import org.apache.commons.math3.linear.RealVector;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.DoubleFunction;
 import java.util.stream.IntStream;
 
 public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder {
@@ -22,11 +21,11 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
     private int necessaryModificationFlag = 0b1111;
 
     public NeuralNetworkLayerBuilderImpl() {
-        layer.setActivationFunction(ActivationFunctions.IDENTITY);
+        layer.setActivationFunction(ActivationFunction.IDENTITY);
     }
 
     @Override
-    public NeuralNetworkLayerBuilderImpl activationFunction(DoubleFunction<Double> function) {
+    public NeuralNetworkLayerBuilderImpl activationFunction(ActivationFunction function) {
         layer.setActivationFunction(function);
         return this;
     }
@@ -96,6 +95,18 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
             throw new IllegalArgumentException("Invalid bias vector (dimension doesn't match number of neurons in this layer");
         }
         this.layer.setBias(bias);
+        return this;
+    }
+
+    @Override
+    public NeuralNetworkLayerBuilderImpl maxWeight(double value) {
+        this.layer.setMaxWeight(value);
+        return this;
+    }
+
+    @Override
+    public NeuralNetworkLayerBuilderImpl minWeight(double value) {
+        this.layer.setMinWeight(value);
         return this;
     }
 

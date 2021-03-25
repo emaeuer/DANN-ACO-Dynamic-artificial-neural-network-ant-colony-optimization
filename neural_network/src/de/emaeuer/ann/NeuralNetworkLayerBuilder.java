@@ -1,14 +1,12 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.impl.NeuralNetworkLayerImpl;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.List;
-import java.util.function.DoubleFunction;
 
 public interface NeuralNetworkLayerBuilder {
 
-    NeuralNetworkLayerBuilder activationFunction(DoubleFunction<Double> function);
+    NeuralNetworkLayerBuilder activationFunction(ActivationFunction function);
 
     NeuralNetworkLayerBuilder numberOfNeurons(int number);
 
@@ -18,4 +16,7 @@ public interface NeuralNetworkLayerBuilder {
 
     NeuralNetworkLayerBuilder bias(RealVector bias);
 
+    NeuralNetworkLayerBuilder maxWeight(double value);
+
+    NeuralNetworkLayerBuilder minWeight(double value);
 }

@@ -7,8 +7,6 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class NeuralNetworkTest {
@@ -56,13 +54,13 @@ public class NeuralNetworkTest {
         NeuralNetworkImpl nn = (NeuralNetworkImpl) NeuralNetwork.build()
                 .inputLayer(2)
                 .hiddenLayer(b -> b.numberOfNeurons(2)
-                        .activationFunction(ActivationFunctions.RELU)
+                        .activationFunction(ActivationFunction.RELU)
                         .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 1)
                         .addConnection(new NeuronID(0, 0), new NeuronID(1, 1), -1)
                         .addConnection(new NeuronID(0, 1), new NeuronID(1, 0), -1)
                         .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 1))
                 .outputLayer(b -> b.numberOfNeurons(1)
-                        .activationFunction(ActivationFunctions.RELU)
+                        .activationFunction(ActivationFunction.RELU)
                         .addConnection(new NeuronID(1, 0), new NeuronID(2, 0), 1)
                         .addConnection(new NeuronID(1, 1), new NeuronID(2, 0), 1))
                 .finish();

@@ -1,6 +1,7 @@
 package de.emaeuer.optimization.paco;
 
 import de.emaeuer.ann.NeuralNetwork;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.optimization.OptimizationMethod;
@@ -38,9 +39,10 @@ public class PacoHandler extends OptimizationMethod {
 
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork baseNetwork = NeuralNetwork.build()
-                .inputLayer(configuration.getValue(OptimizationConfiguration.NN_INPUT_LAYER_SIZE, Integer.class))
+                .configure(ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION))
+                .inputLayer()
                 .fullyConnectToNextLayer()
-                .outputLayer(configuration.getValue(OptimizationConfiguration.NN_OUTPUT_LAYER_SIZE, Integer.class))
+                .outputLayer()
                 .finish();
 
         this.pheromone = new PopulationBasedPheromone(this.configuration, baseNetwork);

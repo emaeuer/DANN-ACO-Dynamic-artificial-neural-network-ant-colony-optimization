@@ -15,15 +15,7 @@ public enum NeatConfiguration implements DefaultConfiguration<NeatConfiguration>
     SPECIATION_THRESHOLD("compatibility threshold used to determine whether two individuals belong to the same species", new DoubleConfigurationValue(0.2, 0.1, 1.0)),
     ELITISM("Fittest individuals from species are copied unchanged into the next generation", new BooleanConfigurationValue(true)),
     ELITISM_MIN_SPECIE_SIZE("Minimum number of individuals a specie must contain for its fittest member to be copied unchanged into the next generation", new IntegerConfigurationValue(1, 1, 5)),
-    WEIGHTED_SELECTOR("Determines whether or not roulette selection is used", new BooleanConfigurationValue(false)),
-    // TODO following topology related configurations maybe should be in OptimizationConfiguration
-    WEIGHT_MAX("Upper bound for connection weights", new DoubleConfigurationValue(1, 1, 500)),
-    WEIGHT_MIN("Lower bound for connection weights", new DoubleConfigurationValue(-1, -500, -1)),
-    INITIAL_TOPOLOGY_FULLY_CONNECTED("Begin with all input nodes being fully connected", new BooleanConfigurationValue(true)),
-    INITIAL_TOPOLOGY_NUM_HIDDEN_NEURONS("Number of hidden nodes in the starting topology", new IntegerConfigurationValue(0, 0, Integer.MAX_VALUE)),
-    INITIAL_TOPOLOGY_ACTIVATION("Activation function of hidden neurons", new StringConfigurationValue("sigmoid", "linear", "sigmoid", "evsail-sigmoid", "tanh", "tanh-cubic", "step", "signed", "clamped-linear", "signed-clamped-linear")),
-    INITIAL_TOPOLOGY_ACTIVATION_INPUT("Activation function of input neurons", new StringConfigurationValue("sigmoid", "linear", "sigmoid", "evsail-sigmoid", "tanh", "tanh-cubic", "step", "signed", "clamped-linear", "signed-clamped-linear")),
-    INITIAL_TOPOLOGY_ACTIVATION_OUTPUT("Activation function of hidden neurons", new StringConfigurationValue("sigmoid", "linear", "sigmoid", "evsail-sigmoid", "tanh", "tanh-cubic", "step", "signed", "clamped-linear", "signed-clamped-linear"));
+    WEIGHTED_SELECTOR("Determines whether or not roulette selection is used", new BooleanConfigurationValue(false));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;
