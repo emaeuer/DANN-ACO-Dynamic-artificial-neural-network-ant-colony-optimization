@@ -113,6 +113,14 @@ public class PopulationBasedPheromone {
         }
     }
 
+    public NeuralNetwork createNeuralNetworkForGlobalBest() {
+        if (this.population.isEmpty()) {
+            return null;
+        }
+        PacoAnt populationBest = this.population.peekLast();
+        return populationBest.getNeuralNetwork().copy();
+    }
+
     public NeuralNetwork createNeuralNetworkForPheromone() {
         // start with base neural network to guarantee that every input has a (in-)direct effect on every output
         NeuralNetwork nn = prepareBaseNetwork();
