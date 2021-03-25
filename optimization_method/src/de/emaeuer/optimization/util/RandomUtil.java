@@ -52,12 +52,27 @@ public class RandomUtil {
         return new NormalDistribution(mean, deviation).sample();
     }
 
+    public static double getBetaDistributedValue(double mean, double deviation) {
+        mean = (mean + 1) / 2;
+        double normal = mean * (1 - mean) / Math.pow(deviation, 2);
+        double alpha = mean * normal;
+        double beta = (1 - mean) * normal;
+
+        return new BetaDistribution(alpha, beta).sample() * 2 - 1;
+    }
+
     public static int getNextInt(int min, int max) {
         return RNG.nextInt(max - min) + min;
     }
 
     public static double getNextDouble(double min, double max) {
         return RNG.nextDouble() * (max - min) + min;
+    }
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 100; i++) {
+            System.out.println(getBetaDistributedValue(-0.99, 0.04));
+        }
     }
 
 }

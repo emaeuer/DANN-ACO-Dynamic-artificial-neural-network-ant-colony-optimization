@@ -6,8 +6,8 @@ import de.emaeuer.ann.NeuronID;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.pheromone.PopulationBasedPheromone;
-import de.emaeuer.optimization.paco.pheromone.PopulationBasedPheromone.FitnessValue;
+import de.emaeuer.optimization.paco.pheromone.AbstractPopulationBasedPheromone.FitnessValue;
+import de.emaeuer.optimization.paco.pheromone.FitnessPopulationBasedPheromone;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class PopulationBasedPheromoneTest {
 
     @Test
     public void testAddSolutionsPopulationSizeNotReached() {
-        PopulationBasedPheromone pheromone = new PopulationBasedPheromone(buildConfiguration(2), null);
+        FitnessPopulationBasedPheromone pheromone = new FitnessPopulationBasedPheromone(buildConfiguration(2), null);
 
         // create test data
         NeuralNetwork nnA = buildNeuralNetwork(2, 2);
@@ -113,7 +113,7 @@ public class PopulationBasedPheromoneTest {
 
     @Test
     public void testAddSolutionsPopulationSizeReached() {
-        PopulationBasedPheromone pheromone = new PopulationBasedPheromone(buildConfiguration(2), null);
+        FitnessPopulationBasedPheromone pheromone = new FitnessPopulationBasedPheromone(buildConfiguration(2), null);
 
         // create test data
         NeuralNetwork nnA = buildNeuralNetwork(2, 2);

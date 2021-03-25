@@ -12,7 +12,8 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     PACO_DEVIATION_FUNCTION("Function to calculate deviation", new ExpressionConfigurationValue("tanh((s/p+0.2) / 2)", PacoParameter.class)),
     PACO_ADDITIONAL_CONNECTION_PROBABILITY_FUNCTION("Function to calculate the probability for an additional connection", new ExpressionConfigurationValue("0.7(n / p) + 0.1", PacoParameter.class)),
     PACO_SPLIT_PROBABILITY_FUNCTION("Function to calculate split probability of a connection", new ExpressionConfigurationValue("1/s * v", PacoParameter.class)),
-    PACO_KEEP_BEST("Keep best ant for next iteration", new BooleanConfigurationValue(false));
+    PACO_KEEP_BEST("Keep best ant for next iteration", new BooleanConfigurationValue(false)),
+    REMOVE_WORST("Remove the worst (true) / oldest (false) and", new BooleanConfigurationValue(true));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;

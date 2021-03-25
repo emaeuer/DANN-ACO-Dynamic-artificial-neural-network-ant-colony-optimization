@@ -9,7 +9,9 @@ import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.pheromone.PopulationBasedPheromone;
+import de.emaeuer.optimization.paco.pheromone.AbstractPopulationBasedPheromone;
+import de.emaeuer.optimization.paco.pheromone.AgePopulationBasedPheromone;
+import de.emaeuer.optimization.paco.pheromone.FitnessPopulationBasedPheromone;
 import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +28,7 @@ public class PacoHandler extends OptimizationMethod {
 
     private final static Logger LOG = LogManager.getLogger(PacoHandler.class);
 
-    private final PopulationBasedPheromone pheromone;
+    private final AbstractPopulationBasedPheromone pheromone;
 
     private final List<PacoAnt> currentAnts = new ArrayList<>();
 
@@ -45,7 +47,11 @@ public class PacoHandler extends OptimizationMethod {
                 .outputLayer()
                 .finish();
 
-        this.pheromone = new PopulationBasedPheromone(this.configuration, baseNetwork);
+        if (this.configuration.getValue(REMOVE_WORST, Boolean.class)) {
+            this.pheromone = new FitnessPopulationBasedPheromone(this.configuration, baseNetwork);
+        } else {
+            this.pheromone = new AgePopulationBasedPheromone(this.configuration, baseNetwork);
+        }
     }
 
     @Override
