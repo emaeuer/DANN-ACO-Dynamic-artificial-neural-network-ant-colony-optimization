@@ -4,6 +4,7 @@ import com.google.common.collect.*;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
+import de.emaeuer.ann.util.NeuralNetworkUtil.Connection;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationVariablesBuilder;
 import de.emaeuer.optimization.paco.PacoAnt;
@@ -14,6 +15,7 @@ import de.emaeuer.optimization.util.RandomUtil;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
 import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.PACO_SPLIT_PROBABILITY_FUNCTION;
@@ -28,8 +30,11 @@ public abstract class AbstractPopulationBasedPheromone {
 
     private final NeuralNetwork baseNetwork;
 
-    // sorted set of all ants of this population
+    // collection containing all ants of this population sorted according to remove strategy
     private final Collection<PacoAnt> population;
+
+    // ranked collection of the ants of this population
+    private final TreeSet<PacoAnt> sortedPopulation = new TreeSet<>(Comparator.comparingDouble(PacoAnt::getFitness));
 
     // a two dimensional table which saves all weights that were assigned to a connection by an ant of this population
     // bag is used to allow duplicates and efficient remove/ add operations
@@ -49,26 +54,23 @@ public abstract class AbstractPopulationBasedPheromone {
     protected abstract Collection<PacoAnt> getEmptyPopulation();
 
     public void addAntToPopulation(PacoAnt ant) {
-        if (this.populationSize > this.population.size()) { // if the population is not completely populated add the ant regardless of its fitness
-            this.population.add(ant);
-            addAnt(ant);
-        } else if (this.populationSize <= this.population.size()) { // if the population is completely populated add ant only if it is better than the worst
+        // if the population is completely populated an ant has to be removed before a new one is added
+        if (this.populationSize <= this.population.size()) {
             removeAnt();
-            population.add(ant);
-            addAnt(ant);
         }
-
+        addAnt(ant);
     }
 
     protected abstract PacoAnt removeAndGetAnt();
 
     private void removeAnt() {
         PacoAnt ant = removeAndGetAnt();
+        this.sortedPopulation.remove(ant);
 
         // remove all weights of this ant
-        Iterator<NeuralNetworkUtil.Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
+        Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
-            NeuralNetworkUtil.Connection next = connections.next();
+            Connection next = connections.next();
             Collection<FitnessPopulationBasedPheromone.FitnessValue> values = this.weightPheromone.get(next.start(), next.end());
             Objects.requireNonNull(values).remove(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
             if (values.isEmpty()) {
@@ -92,10 +94,13 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     private void addAnt(PacoAnt ant) {
+        population.add(ant);
+        this.sortedPopulation.add(ant);
+
         // add all weights of this ant
-        Iterator<NeuralNetworkUtil.Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
+        Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
-            NeuralNetworkUtil.Connection next = connections.next();
+            Connection next = connections.next();
 
             if (!this.weightPheromone.contains(next.start(), next.end())) {
                 this.weightPheromone.put(next.start(), next.end(), LinkedHashMultiset.create());
@@ -127,33 +132,58 @@ public abstract class AbstractPopulationBasedPheromone {
     protected abstract PacoAnt getBestAntOfPopulation();
 
     public NeuralNetwork createNeuralNetworkForPheromone() {
-        // start with base neural network to guarantee that every input has a (in-)direct effect on every output
-        NeuralNetwork nn = prepareBaseNetwork();
+        // select random ant from this population and use its neural network as prototype
+        NeuralNetwork prototype = getPrototypeNeuralNetwork();
 
-        addAdditionalConnectionsToNetwork(nn);
+        // modify prototype depending on other values of this population
+        adjustWeights(prototype);
+        adjustBias(prototype);
+        addAdditionalConnection(prototype);
 
-        return nn;
+        return prototype;
     }
 
-    /**
-     * Iterate over all neurons and connections of the the neural network to calculate a new weight/ bias derived from the current pheromone
-     *
-     * @return a neural network with adjusted weights and biases derived from the prototype of the paco handler
-     */
-    private NeuralNetwork prepareBaseNetwork() {
-        NeuralNetwork nn = this.baseNetwork.copy();
+    protected NeuralNetwork getPrototypeNeuralNetwork() {
+        // if no knowledge exists start with base network
+        if (this.population.isEmpty()) {
+            return this.baseNetwork.copy();
+        }
 
+        // (rank / sum ranks) is the selection probability for each element
+        // TODO use int instead
+        double[] rankValues = IntStream.rangeClosed(1, this.sortedPopulation.size())
+                .mapToDouble(v -> v)
+                .toArray();
+
+        int selectedIndex = RandomUtil.selectRandomElementFromVector(rankValues);
+
+        // start from the end because they have a higher selection probability
+        Iterator<PacoAnt> antIterator = this.sortedPopulation.descendingIterator();
+        for (int i = this.sortedPopulation.size() - 1; i != selectedIndex && antIterator.hasNext(); i--) {
+            // iterate until selected ant is reached
+            antIterator.next();
+        }
+
+        return Objects.requireNonNull(antIterator.next()).getNeuralNetwork().copy();
+    }
+
+    protected void adjustWeights(NeuralNetwork nn) {
         NeuralNetworkUtil.iterateNeuralNetworkConnections(nn).forEachRemaining(c -> calculateWeightValue(nn, c));
-        NeuralNetworkUtil.iterateNeurons(nn).forEachRemaining(n -> calculateBiasValue(nn, n));
-
-        return nn;
     }
 
-    private void addAdditionalConnectionsToNetwork(NeuralNetwork nn) {
-        List<NeuronID> possibleSources = new ArrayList<>(this.biasPheromone.keySet());
+    protected void adjustBias(NeuralNetwork nn) {
+        NeuralNetworkUtil.iterateNeurons(nn).forEachRemaining(n -> calculateBiasValue(nn, n));
+    }
+
+    protected void addAdditionalConnection(NeuralNetwork nn) {
+        List<NeuronID> possibleSources = IntStream.range(0, nn.getDepth())
+                .mapToObj(nn::getNeuronsOfLayer)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
         // input neurons can be sources but not targets
         List<NeuronID> possibleTargets =  possibleSources.stream()
-                .filter(Predicate.not(this.baseNetwork::isInputNeuron))
+                .filter(Predicate.not(nn::isInputNeuron))
                 .collect(Collectors.toList());
 
         for (NeuronID source : possibleSources) {
@@ -172,15 +202,15 @@ public abstract class AbstractPopulationBasedPheromone {
 
                     if (RandomUtil.getNextDouble(0, 1) < selectionProbability) {
                         nn.modify().addConnection(source, target, 0);
-                        calculateWeightValue(nn, new NeuralNetworkUtil.Connection(source, target, 0));
+                        calculateWeightValue(nn, new Connection(source, target, 0));
                     }
                 }
             }
         }
     }
 
-    private void calculateWeightValue(NeuralNetwork nn, NeuralNetworkUtil.Connection connection) {
-        double weight = calculateNewValueDependingOnPopulationKnowledge(this.weightPheromone.get(connection.start(), connection.end()));
+    private void calculateWeightValue(NeuralNetwork nn, Connection connection) {
+        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), this.weightPheromone.get(connection.start(), connection.end()));
 
         nn.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
     }
@@ -191,70 +221,54 @@ public abstract class AbstractPopulationBasedPheromone {
             return;
         }
 
-        double bias = calculateNewValueDependingOnPopulationKnowledge(this.biasPheromone.get(neuron));
+        double bias = calculateNewValueDependingOnPopulationKnowledge(nn.getBiasOfNeuron(neuron), this.biasPheromone.get(neuron));
 
         nn.modify().setBiasOfNeuron(neuron, bias);
     }
 
-    private double calculateNewValueDependingOnPopulationKnowledge(Collection<FitnessPopulationBasedPheromone.FitnessValue> populationValues) {
+    private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<FitnessPopulationBasedPheromone.FitnessValue> populationValues) {
         double value;
 
         if (populationValues == null || populationValues.isEmpty()) {
             // choose value randomly because no knowledge exists
             value = RandomUtil.getNextDouble(-1, 1);
         } else {
-            // choose value depending on existing knowledge from an normal distribution
-            double mean = selectMeanFromKnowledge(populationValues);
-            double deviation = calculateDeviation(populationValues, mean);
+            double deviation = calculateDeviation(populationValues, srcValue);
 
             // select new value if it is out of bounds
             do {
-                value = RandomUtil.getNormalDistributedValue(mean, deviation);
+                value = RandomUtil.getNormalDistributedValue(srcValue, deviation);
             } while (value < -1 || value > 1);
         }
 
         return value;
     }
 
-    private double selectMeanFromKnowledge(Collection<FitnessPopulationBasedPheromone.FitnessValue> populationValues) {
-        List<FitnessPopulationBasedPheromone.FitnessValue> listOfValues = new ArrayList<>(populationValues);
-
-        double[] fitnessDistribution = listOfValues.stream()
-                .mapToDouble(FitnessPopulationBasedPheromone.FitnessValue::fitness)
-                .toArray();
-
-        int selectedIndex = RandomUtil.selectRandomElementFromVector(fitnessDistribution);
-        return listOfValues.get(selectedIndex).value();
-    }
-
     private double calculateDeviation(Collection<FitnessPopulationBasedPheromone.FitnessValue> populationValues, double mean) {
-        double sumOfSquares = populationValues.stream()
+        double sumOfDifferences = populationValues.stream()
                 .mapToDouble(FitnessPopulationBasedPheromone.FitnessValue::value)
                 .map(d -> Math.abs(mean - d))
-                .map(d -> Math.pow(d, 2))
                 .sum();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
                 .with(PacoParameter.POPULATION_SIZE, this.populationSize)
                 .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
-                .with(PacoParameter.SUM_OF_SQUARES_FROM_MEAN, sumOfSquares)
+                .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
                 .getVariables();
-
-        System.out.print(sumOfSquares + " ");
 
         return this.configuration.getValue(PACO_DEVIATION_FUNCTION, Double.class, variables);
     }
 
     public void increaseComplexity() {
-        NeuralNetworkUtil.Connection connectionToSplit = determineConnectionToSplit();
+        Connection connectionToSplit = determineConnectionToSplit();
         splitConnection(connectionToSplit);
     }
 
-    private NeuralNetworkUtil.Connection determineConnectionToSplit() {
-        List<NeuralNetworkUtil.Connection> splitProbabilities = getBaseConnectionsWithSplitProbabilities();
+    private Connection determineConnectionToSplit() {
+        List<Connection> splitProbabilities = getBaseConnectionsWithSplitProbabilities();
 
         double[] probabilityVector = splitProbabilities.stream()
-                .mapToDouble(NeuralNetworkUtil.Connection::weight)
+                .mapToDouble(Connection::weight)
                 .toArray();
 
         System.out.println(Arrays.toString(probabilityVector));
@@ -265,12 +279,12 @@ public abstract class AbstractPopulationBasedPheromone {
         return splitProbabilities.get(selectedIndex);
     }
 
-    private List<NeuralNetworkUtil.Connection> getBaseConnectionsWithSplitProbabilities() {
-        List<NeuralNetworkUtil.Connection> splitProbabilities = new ArrayList<>();
-        Iterator<NeuralNetworkUtil.Connection> baseConnections = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork);
+    private List<Connection> getBaseConnectionsWithSplitProbabilities() {
+        List<Connection> splitProbabilities = new ArrayList<>();
+        Iterator<Connection> baseConnections = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork);
 
         while (baseConnections.hasNext()) {
-            NeuralNetworkUtil.Connection baseConnection = baseConnections.next();
+            Connection baseConnection = baseConnections.next();
             Collection<FitnessPopulationBasedPheromone.FitnessValue> populationValues = Objects.requireNonNull(this.weightPheromone.get(baseConnection.start(), baseConnection.end()));
 
             double averageWeight = populationValues.stream()
@@ -287,19 +301,19 @@ public abstract class AbstractPopulationBasedPheromone {
             Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
                     .with(PacoParameter.POPULATION_SIZE, this.populationSize)
                     .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
-                    .with(PacoParameter.SUM_OF_SQUARES_FROM_MEAN, sumOfSquares)
+                    .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfSquares)
                     .with(PacoParameter.VALUE, averageWeight)
                     .getVariables();
 
             double splitProbability = this.configuration.getValue(PACO_SPLIT_PROBABILITY_FUNCTION, Double.class, variables);
 
-            splitProbabilities.add(new NeuralNetworkUtil.Connection(baseConnection.start(), baseConnection.end(), splitProbability));
+            splitProbabilities.add(new Connection(baseConnection.start(), baseConnection.end(), splitProbability));
         }
 
         return splitProbabilities;
     }
 
-    private void splitConnection(NeuralNetworkUtil.Connection connection) {
+    private void splitConnection(Connection connection) {
         System.out.printf("Splitting connection form %s to %s%n", connection.start(), connection.end());
 
         // create copy of neuron ids because they are modified in the split method

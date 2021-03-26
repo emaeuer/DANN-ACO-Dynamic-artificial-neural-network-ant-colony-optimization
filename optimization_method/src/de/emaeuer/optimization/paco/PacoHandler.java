@@ -72,13 +72,13 @@ public class PacoHandler extends OptimizationMethod {
                 .map(PacoAnt::new)
                 .forEach(this.currentAnts::add);
 
-
+        System.out.println("Number of ants: " + currentAnts.size());
         return this.currentAnts;
     }
 
     @Override
     public void update() {
-        PacoAnt bestOfThisIteration;
+        PacoAnt bestOfThisIteration = null;
         if (this.pheromone.getPopulation().isEmpty()) {
             // initially all ant update regardless of the fitness to fill the population
             bestOfThisIteration = this.currentAnts.stream()
@@ -86,12 +86,17 @@ public class PacoHandler extends OptimizationMethod {
                     .max(Comparator.comparingDouble(PacoAnt::getFitness))
                     .orElse(null);
         } else {
-            bestOfThisIteration = this.currentAnts.stream()
-                    .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .skip(this.currentAnts.size() - this.configuration.getValue(PACO_UPDATES_PER_ITERATION, Integer.class))
-                    .peek(this.pheromone::addAntToPopulation)
-                    .max(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .orElse(null);
+            try {
+
+                bestOfThisIteration = this.currentAnts.stream()
+                        .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
+                        .skip(this.currentAnts.size() - this.configuration.getValue(PACO_UPDATES_PER_ITERATION, Integer.class))
+                        .peek(this.pheromone::addAntToPopulation)
+                        .max(Comparator.comparingDouble(PacoAnt::getFitness))
+                        .orElse(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         if (bestOfThisIteration != null) {
