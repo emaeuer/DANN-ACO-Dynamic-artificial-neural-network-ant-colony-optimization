@@ -42,6 +42,7 @@ public class PacoHandler extends OptimizationMethod {
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork baseNetwork = NeuralNetwork.build()
                 .configure(ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION))
+                .implicitBias()
                 .inputLayer()
                 .fullyConnectToNextLayer()
                 .outputLayer()

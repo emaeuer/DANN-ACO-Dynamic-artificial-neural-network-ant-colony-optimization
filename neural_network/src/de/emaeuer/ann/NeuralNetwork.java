@@ -42,4 +42,6 @@ public interface NeuralNetwork {
     boolean isOutputNeuron(NeuronID currentNeuron);
 
     boolean isInputNeuron(NeuronID currentNeuron);
+
+    boolean usesExplicitBias();
 }

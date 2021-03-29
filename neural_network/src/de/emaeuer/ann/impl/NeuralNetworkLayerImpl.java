@@ -58,14 +58,24 @@ public class NeuralNetworkLayerImpl {
         // the activation of the input layer is the external input vector
         RealVector output = switch (type) {
             case INPUT -> vector;
-            case OUTPUT, HIDDEN -> this.weights.operate(vector)
-                    .add(this.bias)
-                    .map(this.activationFunction.getActivationFunction()::apply);
+            case OUTPUT, HIDDEN -> applyWeightsBiasAndActivation(vector);
         };
 
         this.activation = output;
         return output;
     }
+
+    private RealVector applyWeightsBiasAndActivation(RealVector vector) {
+        RealVector weightedResult = weights.operate(vector);
+
+        // bias is optional and can be realized by the use of an on neuron and its weights
+        if (this.bias != null) {
+            weightedResult = weightedResult.add(this.bias);
+        }
+
+        return weightedResult.map(this.activationFunction.getActivationFunction()::apply);
+    }
+
 
     private RealVector buildInputVector() {
         return new ArrayRealVector(this.inputNeurons.stream()
@@ -269,6 +279,7 @@ public class NeuralNetworkLayerImpl {
 
     private void copyNeuronCollection(Map<NeuronID, NeuronID> existingNeurons, List<NeuronID> source, List<NeuronID> target) {
         // copies the neuron or uses an already existing object if present
+        // map is used instead of set to easily retrieve the exact reference of the existing neuron
         source.stream()
                 .map(n -> existingNeurons.getOrDefault(n, new NeuronID(n.getLayerIndex(), n.getNeuronIndex())))
                 .peek(n -> existingNeurons.putIfAbsent(n, n))

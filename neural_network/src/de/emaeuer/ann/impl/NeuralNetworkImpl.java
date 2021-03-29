@@ -12,8 +12,15 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     private final NeuralNetworkModifierImpl modifier = new NeuralNetworkModifierImpl(this);
 
+    private boolean usesExplicitBias = true;
+
     @Override
     public RealVector process(RealVector input) {
+        if (!usesExplicitBias()) {
+            // append 1 as activation of on neuron which represents the bias neuron
+            input = input.append(1);
+        }
+
         RealVector output = this.layers.get(0).process(input);
         for (int i = 1; i < this.layers.size(); i++) {
             output = this.layers.get(i).process();
@@ -99,6 +106,8 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public NeuralNetwork copy() {
         NeuralNetworkImpl copy = new NeuralNetworkImpl();
+        copy.usesExplicitBias = this.usesExplicitBias;
+
         // saves already created/ copied neurons to prevent duplication of neurons
         Map<NeuronID, NeuronID> existingNeurons = new HashMap<>();
 
@@ -131,5 +140,13 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         return inputLayer.getLayerIndex() == neuron.getLayerIndex() && inputLayer.getNumberOfNeurons() > neuron.getNeuronIndex();
     }
 
+    @Override
+    public boolean usesExplicitBias() {
+        return this.usesExplicitBias;
+    }
+
+    public void setUsesExplicitBias(boolean value) {
+        this.usesExplicitBias = value;
+    }
 
 }

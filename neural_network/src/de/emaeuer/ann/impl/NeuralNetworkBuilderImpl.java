@@ -26,33 +26,26 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
 
     @Override
     public NeuralNetworkBuilder<NeuralNetworkLayerBuilderImpl> configure(ConfigurationHandler<NeuralNetworkConfiguration> configuration) {
-//        this.inputActivationFunction = ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION, String.class));
-//        this.hiddenActivationFunction = ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION, String.class));
-//        this.outputActivationFunction = ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION, String.class));
-//
-//        inputLayer(configuration.getValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, Integer.class));
-//        fullyConnectToNextLayer();
-//        outputLayer(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, Integer.class));
-
         this.configuration = configuration;
-
         return this;
     }
 
     @Override
     public NeuralNetworkBuilderImpl inputLayer() {
-        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = b -> b
-            .activationFunction(ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION, String.class)))
-            .maxWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class))
-            .minWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class))
-            .numberOfNeurons(configuration.getValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, Integer.class));
+        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = getDefaultModifierFromConfiguration(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION);
+
+        // add additional neuron if bias is implicit
+        if (!this.nn.usesExplicitBias()) {
+            defaultModifier = defaultModifier.andThen(b -> b.numberOfNeurons(configuration.getValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, Integer.class) + 1));
+        }
 
         return inputLayer(defaultModifier);
     }
 
     @Override
     public NeuralNetworkBuilderImpl inputLayer(int size) {
-        return inputLayer(b -> b.numberOfNeurons(size));
+        // add additional neuron if bias is implicit
+        return inputLayer(b -> b.numberOfNeurons(size + (this.nn.usesExplicitBias() ? 0 : 1)));
     }
 
     /**
@@ -60,9 +53,9 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
      * if present the layer type, the layer id and the neural network of the neural
      * network layer builder.
      *
-     * @throws IllegalStateException if this method was called previously
      * @param modifier for a neural network layer builder
      * @return this builder
+     * @throws IllegalStateException if this method was called previously
      */
     @Override
     public NeuralNetworkBuilderImpl inputLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
@@ -85,7 +78,8 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
 
     @Override
     public NeuralNetworkBuilderImpl hiddenLayer(int size) {
-        return hiddenLayer(b -> b.numberOfNeurons(size));
+        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = getDefaultModifierFromConfiguration(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION);
+        return hiddenLayer(defaultModifier.andThen(b -> b.numberOfNeurons(size)));
     }
 
     /**
@@ -93,9 +87,9 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
      * if present the layer type, the layer id and the neural network of the neural
      * network layer builder.
      *
-     * @throws IllegalStateException if this method was called before inputLayer or after outputLayer
      * @param modifier for a neural network layer builder
      * @return this builder
+     * @throws IllegalStateException if this method was called before inputLayer or after outputLayer
      */
     @Override
     public NeuralNetworkBuilderImpl hiddenLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
@@ -125,13 +119,8 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
 
     @Override
     public NeuralNetworkBuilder<NeuralNetworkLayerBuilderImpl> outputLayer() {
-        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = b -> b
-            .activationFunction(ActivationFunction.valueOf(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION, String.class)))
-            .maxWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class))
-            .minWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class))
-            .numberOfNeurons(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, Integer.class));
-
-        return outputLayer(defaultModifier);
+        Consumer<NeuralNetworkLayerBuilderImpl> defaultModifier = getDefaultModifierFromConfiguration(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION);
+        return outputLayer(defaultModifier.andThen(b -> b.numberOfNeurons(configuration.getValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, Integer.class))));
     }
 
     @Override
@@ -144,10 +133,10 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
      * if present the layer type, the layer id and the neural network of the neural
      * network layer builder.
      *
-     * @throws IllegalStateException if this method was called previously or before inputLayer
-     * @throws  IllegalArgumentException if the modifier doesn't contain connection definitions or fullyConnectToNextLayer was called before
      * @param modifier for a neural network layer builder
      * @return this builder
+     * @throws IllegalStateException    if this method was called previously or before inputLayer
+     * @throws IllegalArgumentException if the modifier doesn't contain connection definitions or fullyConnectToNextLayer was called before
      */
     @Override
     public NeuralNetworkBuilderImpl outputLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
@@ -182,6 +171,13 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
         return builder;
     }
 
+    private Consumer<NeuralNetworkLayerBuilderImpl> getDefaultModifierFromConfiguration(NeuralNetworkConfiguration activationFunction) {
+        return b -> b
+                .activationFunction(ActivationFunction.valueOf(configuration.getValue(activationFunction, String.class)))
+                .maxWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class))
+                .minWeight(configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class));
+    }
+
     private Consumer<NeuralNetworkLayerBuilderImpl> checkAndFullyConnectToPreviousLayer(Consumer<NeuralNetworkLayerBuilderImpl> modifier) {
         if (this.nn.getDepth() == 0) {
             // fully connected isn't possible for input layer
@@ -202,6 +198,12 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
     @Override
     public NeuralNetworkBuilderImpl fullyConnectToNextLayer() {
         this.nextFullyConnected = true;
+        return this;
+    }
+
+    @Override
+    public NeuralNetworkBuilderImpl implicitBias() {
+        this.nn.setUsesExplicitBias(false);
         return this;
     }
 

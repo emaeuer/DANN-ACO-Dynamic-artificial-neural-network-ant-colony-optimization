@@ -83,13 +83,15 @@ public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
 
         NeuralNetworkLayerImpl startLayer = this.nn.getLayer(start.getLayerIndex());
 
-        NeuralNetworkLayerImpl newLayer = NeuralNetworkLayerImpl.build()
+        NeuralNetworkLayerBuilderImpl builder = NeuralNetworkLayerImpl.build();
+
+        NeuralNetworkLayerImpl newLayer = builder
+                .neuralNetwork(this.nn)
+                .layerType(LayerType.HIDDEN)
                 .maxWeight(startLayer.getMaxWeight())
                 .minWeight(startLayer.getMinWeight())
-                .numberOfNeurons(1)
-                .layerType(LayerType.HIDDEN)
-                .neuralNetwork(this.nn)
                 .layerID(position)
+                .numberOfNeurons(1)
                 .addConnection(start, new NeuronID(position, 0), connectionWeight)
                 .finish();
 

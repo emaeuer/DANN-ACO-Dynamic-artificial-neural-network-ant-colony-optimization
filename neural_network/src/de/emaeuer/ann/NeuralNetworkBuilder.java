@@ -27,5 +27,7 @@ public interface NeuralNetworkBuilder<T extends NeuralNetworkLayerBuilder> {
 
     NeuralNetworkBuilder<T> fullyConnectToNextLayer();
 
+    NeuralNetworkBuilder<T> implicitBias();
+
     NeuralNetwork finish();
 }

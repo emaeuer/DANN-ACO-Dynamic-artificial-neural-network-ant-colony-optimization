@@ -93,14 +93,6 @@ public class PopulationBasedPheromoneTest {
         assertSame(antA, population.get(1));
         assertSame(antB, population.get(0));
 
-        // check bias pheromone was updated
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(0, 0)));
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(0, 1)));
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(1, 0)),
-                new FitnessValue(100, 3), new FitnessValue(90, -4));
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(1, 1)),
-                new FitnessValue(100, 4), new FitnessValue(90, -5));
-
         // check weight pheromone was updated
         assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 0), new NeuronID(1, 0)),
                 new FitnessValue(100, 1), new FitnessValue(90, -1));
@@ -160,14 +152,6 @@ public class PopulationBasedPheromoneTest {
         List<PacoAnt> population = new ArrayList<>(pheromone.getPopulation());
         assertSame(antC, population.get(1));
         assertSame(antA, population.get(0));
-
-        // check bias pheromone was updated
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(0, 0)));
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(0, 1)));
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(1, 0)),
-                new FitnessValue(100, 3), new FitnessValue(110, 13));
-        assertContainsAll(pheromone.getBiasPheromone().get(new NeuronID(1, 1)),
-                new FitnessValue(100, 4), new FitnessValue(110, 14));
 
         // check weight pheromone was updated
         assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 0), new NeuronID(1, 0)),

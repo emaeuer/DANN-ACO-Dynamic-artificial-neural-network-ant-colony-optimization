@@ -38,7 +38,10 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
 
         this.necessaryModificationFlag &= 0b0111;
         // don't initialize weights of layer here because the connections and type of the layer can still change
-        this.layer.setBias(new ArrayRealVector(number));
+        // no bias necessary if it is realized implicitly
+        if (this.layer.getNeuralNetwork() == null || this.layer.getNeuralNetwork().usesExplicitBias()) {
+            this.layer.setBias(new ArrayRealVector(number));
+        }
         // the initial activation of each neuron is 0
         this.layer.setActivation(new ArrayRealVector(number));
 
@@ -60,6 +63,11 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
         Objects.requireNonNull(neuralNetwork);
         this.necessaryModificationFlag &= 0b1101;
         this.layer.setNeuralNetwork((NeuralNetworkImpl) neuralNetwork);
+
+        if (!neuralNetwork.usesExplicitBias()) {
+            this.layer.setBias(null);
+        }
+
         return this;
     }
 
@@ -93,7 +101,10 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
     public NeuralNetworkLayerBuilderImpl bias(RealVector bias) {
         if (bias.getDimension() != this.layer.getNumberOfNeurons()) {
             throw new IllegalArgumentException("Invalid bias vector (dimension doesn't match number of neurons in this layer");
+        } else if (!this.layer.getNeuralNetwork().usesExplicitBias()) {
+            throw new UnsupportedOperationException("Neurons in a neural network with implicit bias don't have a bias vector");
         }
+
         this.layer.setBias(bias);
         return this;
     }

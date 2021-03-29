@@ -40,9 +40,6 @@ public abstract class AbstractPopulationBasedPheromone {
     // bag is used to allow duplicates and efficient remove/ add operations
     private final Table<NeuronID, NeuronID, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> weightPheromone = HashBasedTable.create();
 
-    // a one dimensional map which saves all biases that were assigned to a neuron by an ant of this population
-    private final Map<NeuronID, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> biasPheromone = new HashMap<>();
-
     public AbstractPopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         this.configuration = configuration;
         this.populationSize = this.configuration.getValue(PACO_POPULATION_SIZE, Integer.class);
@@ -77,20 +74,6 @@ public abstract class AbstractPopulationBasedPheromone {
                 this.weightPheromone.remove(next.start(), next.end());
             }
         }
-
-        // remove all biases of this ant
-        Iterator<NeuronID> neurons = NeuralNetworkUtil.iterateNeurons(ant.getNeuralNetwork());
-        while (neurons.hasNext()) {
-            NeuronID next = neurons.next();
-            // ignore unmodifiable input neurons
-            if (!ant.getNeuralNetwork().isInputNeuron(next)) {
-                Collection<FitnessPopulationBasedPheromone.FitnessValue> values = this.biasPheromone.get(next);
-                values.remove(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), ant.getNeuralNetwork().getBiasOfNeuron(next)));
-                if (values.isEmpty()) {
-                    this.biasPheromone.remove(next);
-                }
-            }
-        }
     }
 
     private void addAnt(PacoAnt ant) {
@@ -106,17 +89,6 @@ public abstract class AbstractPopulationBasedPheromone {
                 this.weightPheromone.put(next.start(), next.end(), LinkedHashMultiset.create());
             }
             Objects.requireNonNull(this.weightPheromone.get(next.start(), next.end())).add(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
-        }
-
-        // add all biases of this ant
-        Iterator<NeuronID> neurons = NeuralNetworkUtil.iterateNeurons(ant.getNeuralNetwork());
-        while (neurons.hasNext()) {
-            NeuronID next = neurons.next();
-            // ignore unmodifiable input neurons
-            if (!ant.getNeuralNetwork().isInputNeuron(next)) {
-                this.biasPheromone.putIfAbsent(next, LinkedHashMultiset.create());
-                this.biasPheromone.get(next).add(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), ant.getNeuralNetwork().getBiasOfNeuron(next)));
-            }
         }
     }
 
@@ -137,7 +109,6 @@ public abstract class AbstractPopulationBasedPheromone {
 
         // modify prototype depending on other values of this population
         adjustWeights(prototype);
-        adjustBias(prototype);
         addAdditionalConnection(prototype);
 
         return prototype;
@@ -169,10 +140,6 @@ public abstract class AbstractPopulationBasedPheromone {
 
     protected void adjustWeights(NeuralNetwork nn) {
         NeuralNetworkUtil.iterateNeuralNetworkConnections(nn).forEachRemaining(c -> calculateWeightValue(nn, c));
-    }
-
-    protected void adjustBias(NeuralNetwork nn) {
-        NeuralNetworkUtil.iterateNeurons(nn).forEachRemaining(n -> calculateBiasValue(nn, n));
     }
 
     protected void addAdditionalConnection(NeuralNetwork nn) {
@@ -213,17 +180,6 @@ public abstract class AbstractPopulationBasedPheromone {
         double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), this.weightPheromone.get(connection.start(), connection.end()));
 
         nn.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
-    }
-
-    private void calculateBiasValue(NeuralNetwork nn, NeuronID neuron) {
-        // ignore unmodifiable input neurons
-        if (nn.isInputNeuron(neuron)) {
-            return;
-        }
-
-        double bias = calculateNewValueDependingOnPopulationKnowledge(nn.getBiasOfNeuron(neuron), this.biasPheromone.get(neuron));
-
-        nn.modify().setBiasOfNeuron(neuron, bias);
     }
 
     private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<FitnessPopulationBasedPheromone.FitnessValue> populationValues) {
@@ -314,6 +270,7 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     private void splitConnection(Connection connection) {
+        // TODO log instead of print
         System.out.printf("Splitting connection form %s to %s%n", connection.start(), connection.end());
 
         // create copy of neuron ids because they are modified in the split method
@@ -327,7 +284,6 @@ public abstract class AbstractPopulationBasedPheromone {
         // clear the complete knowledge archive
         this.population.clear();
         this.weightPheromone.clear();
-        this.biasPheromone.clear();
 
         // rebuild the knowledge archive from the modified neural networks
         // TODO may remove random ants to increase exploration (either from hole population or just from the corresponding input to the output)
@@ -340,10 +296,6 @@ public abstract class AbstractPopulationBasedPheromone {
 
     public Table<NeuronID, NeuronID, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> getWeightPheromone() {
         return weightPheromone;
-    }
-
-    public Map<NeuronID, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> getBiasPheromone() {
-        return biasPheromone;
     }
 
     public int getPopulationSize() {
