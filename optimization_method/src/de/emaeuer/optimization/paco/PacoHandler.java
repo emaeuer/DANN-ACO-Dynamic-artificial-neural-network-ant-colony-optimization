@@ -59,27 +59,26 @@ public class PacoHandler extends OptimizationMethod {
     protected List<? extends Solution> generateSolutions() {
         this.currentAnts.clear();
 
-        if (!this.pheromone.getPopulation().isEmpty() && configuration.getValue(PACO_KEEP_BEST, Boolean.class)) {
+        if (!this.pheromone.getPopulation().isEmpty() && configuration.getValue(KEEP_BEST, Boolean.class)) {
             this.currentAnts.add(new PacoAnt(this.pheromone.createNeuralNetworkForGlobalBest()));
         }
 
         // if pheromone matrix is empty create the necessary number of ants to fill the population completely
         int antsPerIteration = this.pheromone.getPopulation().isEmpty()
-                ? this.configuration.getValue(PACO_POPULATION_SIZE, Integer.class)
-                : this.configuration.getValue(PACO_ANTS_PER_ITERATION, Integer.class);
+                ? this.configuration.getValue(POPULATION_SIZE, Integer.class)
+                : this.configuration.getValue(ANTS_PER_ITERATION, Integer.class);
 
         IntStream.range(this.currentAnts.size(), antsPerIteration)
                 .mapToObj(i -> this.pheromone.createNeuralNetworkForPheromone())
                 .map(PacoAnt::new)
                 .forEach(this.currentAnts::add);
 
-        System.out.println("Number of ants: " + currentAnts.size());
         return this.currentAnts;
     }
 
     @Override
     public void update() {
-        PacoAnt bestOfThisIteration = null;
+        PacoAnt bestOfThisIteration;
         if (this.pheromone.getPopulation().isEmpty()) {
             // initially all ant update regardless of the fitness to fill the population
             bestOfThisIteration = this.currentAnts.stream()
@@ -87,23 +86,19 @@ public class PacoHandler extends OptimizationMethod {
                     .max(Comparator.comparingDouble(PacoAnt::getFitness))
                     .orElse(null);
         } else {
-            try {
-
-                bestOfThisIteration = this.currentAnts.stream()
-                        .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
-                        .skip(this.currentAnts.size() - this.configuration.getValue(PACO_UPDATES_PER_ITERATION, Integer.class))
-                        .peek(this.pheromone::addAntToPopulation)
-                        .max(Comparator.comparingDouble(PacoAnt::getFitness))
-                        .orElse(null);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            bestOfThisIteration = this.currentAnts.stream()
+                    .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
+                    .skip(this.currentAnts.size() - this.configuration.getValue(UPDATES_PER_ITERATION, Integer.class))
+                    .peek(this.pheromone::addAntToPopulation)
+                    .max(Comparator.comparingDouble(PacoAnt::getFitness))
+                    .orElse(null);
         }
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix
             PacoAnt bestCopy = new PacoAnt(bestOfThisIteration.getNeuralNetwork().copy());
-            setCurrentlyBestSolution(bestOfThisIteration);
+            bestCopy.setFitness(bestOfThisIteration.getFitness());
+            setCurrentlyBestSolution(bestCopy);
         }
 
         super.update();

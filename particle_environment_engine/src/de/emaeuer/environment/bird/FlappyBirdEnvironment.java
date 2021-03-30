@@ -108,13 +108,14 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
     @Override
     public void restart() {
+        randomGenerator = new Random(9369319);
+        this.areAllBirdsDead = false;
+        this.pipes.clear();
+
+        // prepare optimization method for next iteration
         getOptimization().update();
 
-        randomGenerator = new Random(9369319);
-
-        this.pipes.clear();
         initializeParticles();
-        this.areAllBirdsDead = false;
     }
 
     @Override

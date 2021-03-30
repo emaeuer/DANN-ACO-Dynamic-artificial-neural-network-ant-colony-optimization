@@ -6,13 +6,14 @@ import de.emaeuer.configuration.value.*;
 
 public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration> {
 
-    PACO_POPULATION_SIZE("Solution population size", new IntegerConfigurationValue(20, 1, 40)),
-    PACO_UPDATES_PER_ITERATION("Number ants that update each iteration", new IntegerConfigurationValue(2, 1, 10)),
-    PACO_ANTS_PER_ITERATION("Number of ants per iteration", new IntegerConfigurationValue(10, 1, 40)),
-    PACO_DEVIATION_FUNCTION("Function to calculate deviation", new ExpressionConfigurationValue("tanh((s/p+0.2) / 2)", PacoParameter.class)),
-    PACO_ADDITIONAL_CONNECTION_PROBABILITY_FUNCTION("Function to calculate the probability for an additional connection", new ExpressionConfigurationValue("0.7(n / p) + 0.1", PacoParameter.class)),
-    PACO_SPLIT_PROBABILITY_FUNCTION("Function to calculate split probability of a connection", new ExpressionConfigurationValue("1/s * v", PacoParameter.class)),
-    PACO_KEEP_BEST("Keep best ant for next iteration", new BooleanConfigurationValue(false)),
+    POPULATION_SIZE("Solution population size", new IntegerConfigurationValue(20, 1, 100)),
+    UPDATES_PER_ITERATION("Number ants that update each iteration", new IntegerConfigurationValue(2, 1, 10)),
+    ANTS_PER_ITERATION("Number of ants per iteration", new IntegerConfigurationValue(10, 1, 100)),
+    DEVIATION_FUNCTION("Function to calculate deviation", new ExpressionConfigurationValue("s/(p - 1) + 0.01", PacoParameter.class)),
+    ADDITIONAL_CONNECTION_PROBABILITY_FUNCTION("Function to calculate the probability for an additional connection", new ExpressionConfigurationValue("0.9((n/p)^2)*(v^2)+0.1", PacoParameter.class)),
+    REMOVE_CONNECTION_PROBABILITY_FUNCTION("Function to calculate the probability to remove a connection", new ExpressionConfigurationValue("-0.5((n/p)^2)*(v^2)+0.5", PacoParameter.class)),
+    SPLIT_PROBABILITY_FUNCTION("Function to calculate split probability of a connection", new ExpressionConfigurationValue("1/s * v", PacoParameter.class)),
+    KEEP_BEST("Keep best ant for next iteration", new BooleanConfigurationValue(false)),
     REMOVE_WORST("Remove the worst (true) / oldest (false) and", new BooleanConfigurationValue(true));
 
     private final String name;

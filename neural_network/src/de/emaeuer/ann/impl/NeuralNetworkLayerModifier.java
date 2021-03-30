@@ -103,7 +103,9 @@ public class NeuralNetworkLayerModifier {
 
     private void growWeightsBiasAndActivation() {
         this.layer.setWeights(MathUtil.addRowToMatrix(this.layer.getWeights()));
-        this.layer.setBias(MathUtil.addElementToVector(this.layer.getBias()));
+        if (this.layer.getNeuralNetwork().usesExplicitBias()) {
+            this.layer.setBias(MathUtil.addElementToVector(this.layer.getBias()));
+        }
         this.layer.setActivation(MathUtil.addElementToVector(this.layer.getActivation()));
     }
 
@@ -114,7 +116,9 @@ public class NeuralNetworkLayerModifier {
         this.layer.getNeurons().add(newNeuron);
 
         // set bias of new neuron
-        this.layer.getBias().setEntry(newNeuron.getNeuronIndex(), bias);
+        if (this.layer.getNeuralNetwork().usesExplicitBias()) {
+            this.layer.getBias().setEntry(newNeuron.getNeuronIndex(), bias);
+        }
     }
 
     private void deleteAllIncomingAndOutgoingConnectionsOfNeuron(NeuronID neuron) {

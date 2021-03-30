@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.PACO_POPULATION_SIZE;
+import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.POPULATION_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PopulationBasedPheromoneTest {
@@ -45,7 +45,7 @@ public class PopulationBasedPheromoneTest {
 
     private ConfigurationHandler<PacoConfiguration> buildConfiguration(int populationSize) {
         ConfigurationHandler<PacoConfiguration> handler = new ConfigurationHandler<>(PacoConfiguration.class);
-        handler.setValue(PACO_POPULATION_SIZE, populationSize);
+        handler.setValue(POPULATION_SIZE, populationSize);
         return handler;
     }
 
