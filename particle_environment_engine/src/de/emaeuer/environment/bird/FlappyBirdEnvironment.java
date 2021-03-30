@@ -2,6 +2,7 @@ package de.emaeuer.environment.bird;
 
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
+import de.emaeuer.environment.cartpole.elements.Cart;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.elements.AbstractElement;
@@ -135,6 +136,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
                 .filter(FlappyBird.class::isInstance)
                 .map(FlappyBird.class::cast)
                 .peek(FlappyBird::incrementScore)
+                .peek(this::checkReachedMaximumFitness)
                 .filter(FlappyBird::isDead)
                 .forEach(deadBirds::add);
 
@@ -149,6 +151,12 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
         getParticles().removeAll(deadBirds);
         this.areAllBirdsDead = getParticles().isEmpty();
+    }
+
+    private void checkReachedMaximumFitness(FlappyBird bird) {
+        if (bird.getScore() >= getMaxFitnessScore()) {
+            bird.setDead(true);
+        }
     }
 
     private void updatePipes() {

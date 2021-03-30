@@ -24,6 +24,8 @@ public abstract class AbstractEnvironment {
 
     private OptimizationMethod optimization;
 
+    private double maxFitnessScore = 1000;
+
     public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
         this.borderStrategy = borderStrategy;
 
@@ -36,6 +38,8 @@ public abstract class AbstractEnvironment {
         //noinspection unchecked
         ConfigurationHandler<OptimizationConfiguration> optimizationConfig = configuration.getValue(EnvironmentConfiguration.OPTIMIZATION_CONFIGURATION, ConfigurationHandler.class);
         this.optimization = OptimizationMethodFactory.createMethodForConfig(optimizationConfig, state);
+
+        this.maxFitnessScore = optimizationConfig.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_FITNESS_SCORE, Double.class);
     }
 
     protected abstract void initializeParticles();
@@ -94,6 +98,10 @@ public abstract class AbstractEnvironment {
 
     public int getEvaluationThreshold() {
         return this.optimization.getEvaluationThreshold();
+    }
+
+    protected double getMaxFitnessScore() {
+        return this.maxFitnessScore;
     }
 
 }

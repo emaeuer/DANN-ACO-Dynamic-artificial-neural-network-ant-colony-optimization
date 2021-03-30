@@ -82,6 +82,7 @@ public class CartPoleEnvironment extends AbstractEnvironment {
                 .filter(Cart.class::isInstance)
                 .map(Cart.class::cast)
                 .peek(Cart::incrementScore)
+                .peek(this::checkReachedMaximumFitness)
                 .filter(Cart::isDead)
                 .forEach(deadCarts::add);
 
@@ -96,6 +97,12 @@ public class CartPoleEnvironment extends AbstractEnvironment {
 
         getParticles().removeAll(deadCarts);
         this.areAllCartsDead = getParticles().isEmpty();
+    }
+
+    private void checkReachedMaximumFitness(Cart cart) {
+        if (cart.getScore() >= getMaxFitnessScore()) {
+            cart.setDead(true);
+        }
     }
 
     @Override

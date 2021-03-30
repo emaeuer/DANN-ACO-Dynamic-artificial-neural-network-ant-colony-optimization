@@ -44,10 +44,6 @@ public class Cart extends AbstractElement {
 
     @Override
     public void step() {
-        if (getScore() > 1000) {
-            setDead(true);
-        }
-
         if (isDead() || this.environment == null) {
             return;
         }
