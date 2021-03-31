@@ -101,6 +101,8 @@ public class PacoHandler extends OptimizationMethod {
             setCurrentlyBestSolution(bestCopy);
         }
 
+        this.pheromone.printStats();
+
         super.update();
     }
 

@@ -111,10 +111,11 @@ public abstract class OptimizationMethod {
         DoubleSummaryStatistics currentFitness = getFitnessOfIteration();
         this.maxFitness = Double.max(this.maxFitness, currentFitness.getMax());
 
-        this.generalState.addNewValue(OptimizationState.FITNESS, new SimpleEntry<>(TOTAL_MAX, new Double[] {(double) getEvaluationCounter(), this.maxFitness}));
-        this.generalState.addNewValue(OptimizationState.FITNESS, new SimpleEntry<>(MAX, new Double[] {(double) getEvaluationCounter(), currentFitness.getMax()}));
-        this.generalState.addNewValue(OptimizationState.FITNESS, new SimpleEntry<>(MIN, new Double[] {(double) getEvaluationCounter(), currentFitness.getMin()}));
-        this.generalState.addNewValue(OptimizationState.FITNESS, new SimpleEntry<>(AVERAGE, new Double[] {(double) getEvaluationCounter(), currentFitness.getAverage()}));
+        this.generalState.addNewValue(OptimizationState.FITNESS_VALUE, this.maxFitness);
+        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(TOTAL_MAX, new Double[] {(double) getEvaluationCounter(), this.maxFitness}));
+        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(MAX, new Double[] {(double) getEvaluationCounter(), currentFitness.getMax()}));
+        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(MIN, new Double[] {(double) getEvaluationCounter(), currentFitness.getMin()}));
+        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(AVERAGE, new Double[] {(double) getEvaluationCounter(), currentFitness.getAverage()}));
     }
 
     protected void updateBestSolution() {
@@ -154,5 +155,9 @@ public abstract class OptimizationMethod {
 
     public int getEvaluationThreshold() {
         return this.configuration.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS, Integer.class);
+    }
+
+    public int getGenerationCounter() {
+        return generationCounter;
     }
 }

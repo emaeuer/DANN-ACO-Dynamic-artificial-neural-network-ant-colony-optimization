@@ -6,6 +6,7 @@ import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.cartpole.CartPoleEnvironment;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.configuration.EnvironmentImplementations;
+import de.emaeuer.environment.xor.XorEnvironment;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
 
@@ -19,6 +20,7 @@ public class EnvironmentFactory {
         return switch (implementation) {
             case CART_POLE -> new CartPoleEnvironment(configuration, state);
             case FLAPPY_BIRD -> new FlappyBirdEnvironment(configuration, state);
+            case XOR -> new XorEnvironment(configuration, state);
         };
     }
 

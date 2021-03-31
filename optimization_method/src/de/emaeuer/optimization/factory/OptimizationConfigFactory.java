@@ -14,7 +14,7 @@ public class OptimizationConfigFactory {
         return switch (name) {
             case ACO -> new ConfigurationHandler<>(AcoConfiguration.class);
             case NEAT -> new ConfigurationHandler<>(NeatConfiguration.class);
-            case PACO -> new ConfigurationHandler<>(PacoConfiguration.class);
+            case PACO, PACO_COLONY -> new ConfigurationHandler<>(PacoConfiguration.class);
         };
     }
 

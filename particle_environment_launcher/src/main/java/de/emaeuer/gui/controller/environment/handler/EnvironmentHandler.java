@@ -4,6 +4,7 @@ import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.cartpole.CartPoleEnvironment;
 import de.emaeuer.environment.elements.AbstractElement;
+import de.emaeuer.environment.xor.XorEnvironment;
 import de.emaeuer.gui.controller.util.ShapeDrawer;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -26,6 +27,9 @@ public abstract class EnvironmentHandler<T extends AbstractEnvironment> {
         } else if (environment instanceof CartPoleEnvironment cartEnvironment) {
             //noinspection unchecked no safe way to cast generics but is checked by instanceof
             return (EnvironmentHandler<S>) new CartPoleHandler(cartEnvironment, context);
+        } else if (environment instanceof XorEnvironment xorEnvironment) {
+            //noinspection unchecked no safe way to cast generics but is checked by instanceof
+            return (EnvironmentHandler<S>) new XorHandler(xorEnvironment, context);
         }
 
         LOG.log(Level.WARN, "Failed to create environment of type {}. Reason: not implemented", environment.getClass().getSimpleName());

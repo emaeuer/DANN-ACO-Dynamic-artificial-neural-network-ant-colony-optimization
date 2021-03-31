@@ -12,6 +12,7 @@ public class EnvironmentConfigurationFactory {
         return switch (name) {
             case FLAPPY_BIRD -> new ConfigurationHandler<>(FlappyBirdConfiguration.class);
             case CART_POLE -> new ConfigurationHandler<>(CartPoleConfiguration.class);
+            case XOR -> null;
         };
     }
     

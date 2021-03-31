@@ -7,6 +7,7 @@ import de.emaeuer.optimization.aco.AcoHandler;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.neat.NeatHandler;
+import de.emaeuer.optimization.paco.ColonyPacoHandler;
 import de.emaeuer.optimization.paco.PacoHandler;
 import de.emaeuer.state.StateHandler;
 
@@ -21,6 +22,7 @@ public class OptimizationMethodFactory {
             case NEAT -> createNEAT(config, state);
             case ACO -> createACO(config, state);
             case PACO -> createPACO(config, state);
+            case PACO_COLONY -> createPacoColony(config, state);
         };
     }
 
@@ -34,5 +36,9 @@ public class OptimizationMethodFactory {
 
     private static OptimizationMethod createPACO(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
         return new PacoHandler(config, state);
+    }
+
+    private static OptimizationMethod createPacoColony(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
+        return new ColonyPacoHandler(config, state);
     }
 }

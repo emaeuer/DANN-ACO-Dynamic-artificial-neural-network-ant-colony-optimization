@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
-import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.SPLIT_PROBABILITY_FUNCTION;
 
 public abstract class AbstractPopulationBasedPheromone {
 
@@ -26,7 +25,7 @@ public abstract class AbstractPopulationBasedPheromone {
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
 
-    private final int populationSize;
+    private final int maximalPopulationSize;
 
     private final NeuralNetwork baseNetwork;
 
@@ -42,7 +41,7 @@ public abstract class AbstractPopulationBasedPheromone {
 
     public AbstractPopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         this.configuration = configuration;
-        this.populationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
+        this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
         this.baseNetwork = baseNetwork;
 
         this.population = getEmptyPopulation();
@@ -52,10 +51,14 @@ public abstract class AbstractPopulationBasedPheromone {
 
     public void addAntToPopulation(PacoAnt ant) {
         // if the population is completely populated an ant has to be removed before a new one is added
-        if (this.populationSize <= this.population.size()) {
+        if (isPopulationCompletelyPopulated()) {
             removeAnt();
         }
         addAnt(ant);
+    }
+
+    protected boolean isPopulationCompletelyPopulated() {
+        return this.maximalPopulationSize <= this.population.size();
     }
 
     protected abstract PacoAnt removeAndGetAnt();
@@ -96,9 +99,21 @@ public abstract class AbstractPopulationBasedPheromone {
         if (this.population.isEmpty()) {
             return null;
         }
-        
+
         PacoAnt populationBest = getBestAntOfPopulation();
         return populationBest.getNeuralNetwork().copy();
+    }
+
+    // TODO remove method
+    private int counter = 1;
+    public void printStats() {
+        Connection c = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork).next();
+        Objects.requireNonNull(this.weightPheromone.get(c.start(), c.end()))
+                .stream()
+                .mapToDouble(FitnessValue::value)
+                .forEach(d -> System.out.println(d + "," + counter));
+
+        counter++;
     }
 
     protected abstract PacoAnt getBestAntOfPopulation();
@@ -172,7 +187,7 @@ public abstract class AbstractPopulationBasedPheromone {
         double selectedWeightValue = selectWeightForConnection(populationValues);
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.populationSize)
+                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
                 .with(PacoParameter.NUMBER_OF_VALUES, usagesInPopulation)
                 .with(PacoParameter.VALUE, selectedWeightValue)
                 .getVariables();
@@ -208,7 +223,7 @@ public abstract class AbstractPopulationBasedPheromone {
         double usagesInPopulation = populationValues == null ? 0 : populationValues.size();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.populationSize)
+                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
                 .with(PacoParameter.NUMBER_OF_VALUES, usagesInPopulation)
                 .with(PacoParameter.VALUE, nn.getWeightOfConnection(source, target))
                 .getVariables();
@@ -251,7 +266,7 @@ public abstract class AbstractPopulationBasedPheromone {
                 .sum();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.populationSize)
+                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
                 .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
                 .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
                 .getVariables();
@@ -285,26 +300,26 @@ public abstract class AbstractPopulationBasedPheromone {
 
         while (baseConnections.hasNext()) {
             Connection baseConnection = baseConnections.next();
-            Collection<FitnessValue> populationValues = Objects.requireNonNull(this.weightPheromone.get(baseConnection.start(), baseConnection.end()));
-
-            double averageWeight = populationValues.stream()
-                    .mapToDouble(FitnessValue::value)
-                    .average()
-                    .orElse(0);
-
-            double sumOfSquares = populationValues.stream()
-                    .mapToDouble(FitnessValue::value)
-                    .map(v -> v - averageWeight)
-                    .map(v -> Math.pow(v, 2))
-                    .sum();
-
-            Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                    .with(PacoParameter.POPULATION_SIZE, this.populationSize)
-                    .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
-                    .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfSquares)
-                    .with(PacoParameter.VALUE, averageWeight)
-                    .getVariables();
-
+//            Collection<FitnessValue> populationValues = Objects.requireNonNull(this.weightPheromone.get(baseConnection.start(), baseConnection.end()));
+//
+//            double averageWeight = populationValues.stream()
+//                    .mapToDouble(FitnessValue::value)
+//                    .average()
+//                    .orElse(0);
+//
+//            double sumOfSquares = populationValues.stream()
+//                    .mapToDouble(FitnessValue::value)
+//                    .map(v -> v - averageWeight)
+//                    .map(v -> Math.pow(v, 2))
+//                    .sum();
+//
+//            Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
+//                    .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+//                    .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
+//                    .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfSquares)
+//                    .with(PacoParameter.VALUE, averageWeight)
+//                    .getVariables();
+//
 //            double splitProbability = this.configuration.getValue(SPLIT_PROBABILITY_FUNCTION, Double.class, variables);
 
             splitProbabilities.add(new Connection(baseConnection.start(), baseConnection.end(), 1));
@@ -342,7 +357,7 @@ public abstract class AbstractPopulationBasedPheromone {
         return weightPheromone;
     }
 
-    public int getPopulationSize() {
-        return populationSize;
+    public int getMaximalPopulationSize() {
+        return maximalPopulationSize;
     }
 }

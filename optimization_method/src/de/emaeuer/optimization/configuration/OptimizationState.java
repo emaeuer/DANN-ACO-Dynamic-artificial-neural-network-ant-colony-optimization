@@ -5,7 +5,8 @@ import de.emaeuer.state.value.*;
 
 public enum OptimizationState implements StateParameter<OptimizationState> {
     ITERATION("Number of iterations", NumberStateValue.class),
-    FITNESS("Fitness of current iteration", DataSeriesStateValue.class),
+    FITNESS_VALUE("Best fitness value", NumberStateValue.class),
+    FITNESS_SERIES("Fitness of current iteration", DataSeriesStateValue.class),
     IMPLEMENTATION_STATE("State of the optimization method", EmbeddedState.class),
     BEST_SOLUTION("Currently best solution", GraphStateValue.class);
 

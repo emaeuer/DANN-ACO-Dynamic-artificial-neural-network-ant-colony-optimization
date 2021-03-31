@@ -11,4 +11,5 @@ module particle.environment.engine {
     exports de.emaeuer.environment.cartpole;
     exports de.emaeuer.environment.factory;
     exports de.emaeuer.environment.elements.shape;
+    exports de.emaeuer.environment.xor;
 }
