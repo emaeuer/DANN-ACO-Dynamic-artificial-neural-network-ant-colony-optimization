@@ -16,7 +16,7 @@ public class OptimizationMethodFactory {
     private OptimizationMethodFactory() {}
 
     public static OptimizationMethod createMethodForConfig(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
-        OptimizationMethodNames method = OptimizationMethodNames.valueOf(config.getValue(OptimizationConfiguration.OPTIMIZATION_METHOD_NAME, String.class));
+        OptimizationMethodNames method = OptimizationMethodNames.valueOf(config.getValue(OptimizationConfiguration.METHOD_NAME, String.class));
 
         return switch (method) {
             case NEAT -> createNEAT(config, state);

@@ -36,14 +36,14 @@ public class AcoHandler extends OptimizationMethod {
     public AcoHandler(ConfigurationHandler<OptimizationConfiguration> generalConfig, StateHandler<OptimizationState> generalState) {
         super(generalConfig, generalState);
 
-        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(generalConfig, AcoConfiguration.class, OptimizationConfiguration.OPTIMIZATION_CONFIGURATION);
+        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(generalConfig, AcoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
 
         // register own state in optimization state
         generalState.addNewValue(OptimizationState.IMPLEMENTATION_STATE, this.state);
 
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork basicNetwork = NeuralNetwork.build()
-                .configure(ConfigurationHelper.extractEmbeddedConfiguration(generalConfig, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION))
+                .configure(ConfigurationHelper.extractEmbeddedConfiguration(generalConfig, NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
                 .inputLayer()
                 .fullyConnectToNextLayer()
                 .outputLayer()

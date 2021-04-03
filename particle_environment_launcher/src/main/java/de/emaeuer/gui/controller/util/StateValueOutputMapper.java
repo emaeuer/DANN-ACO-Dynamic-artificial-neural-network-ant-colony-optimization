@@ -111,15 +111,39 @@ public class StateValueOutputMapper {
     private Map<String, List<Double[]>> updateDataSeries(DataSeriesStateValue dataSeries, ObservableList<Series<Number, Number>> property) {
         // create copy of map to enable modification without change to original
         Map<String, List<Double[]>> seriesData = new HashMap<>(dataSeries.getValue());
+
+        if (seriesData.isEmpty()) {
+            property.clear();
+            return Collections.emptyMap();
+        }
+
         for (Series<Number, Number> series : property) {
             List<Double[]> data = seriesData.remove(series.getName());
             int seriesSize = series.getData().size();
 
-            data.subList(seriesSize, data.size())
-                    .stream()
-                    .map(p -> new XYChart.Data<Number, Number>(p[0], p[1]))
-                    .forEach(d -> series.getData().add(d));
+            // create copy of all indices which have to be refreshed
+            // copy because other series of this chart need to refresh the same indices
+            Set<Integer> indicesToRefresh = new HashSet<>(dataSeries.getIndicesToRefresh());
+
+            // add all points which are completely new use this extra loop because the indices to refresh are saved in a
+            // set without order which may mess with the order of the indices
+            if (seriesSize < data.size()) {
+                data.subList(seriesSize, data.size())
+                        .stream()
+                        .map(p -> new XYChart.Data<Number, Number>(p[0], p[1]))
+                        .forEach(d -> series.getData().add(d));
+
+                indicesToRefresh.remove(seriesSize - 1);
+            }
+
+            for (int index : indicesToRefresh) {
+                series.getData().get(index).setYValue(data.get(index)[1]);
+            }
         }
+
+        // all indices were refreshed
+        dataSeries.getIndicesToRefresh().clear();
+
         // map only contains series that were not created yet
         return seriesData;
     }
@@ -274,7 +298,7 @@ public class StateValueOutputMapper {
         for (Connection connection : graphState.getValue()) {
             if (existingVertices.add(connection.start())) {
                 graph.insertVertex(connection.start());
-            };
+            }
             if (existingVertices.add(connection.target())) {
                 graph.insertVertex(connection.target());
             }

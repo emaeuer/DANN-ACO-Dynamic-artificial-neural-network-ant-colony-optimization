@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static de.emaeuer.optimization.aco.configuration.AcoConfiguration.*;
@@ -45,7 +44,7 @@ public class AcoColony {
     private final ProgressionHandler stagnationChecker;
 
     public AcoColony(NeuralNetwork neuralNetwork, ConfigurationHandler<OptimizationConfiguration> configuration, int colonyNumber) {
-        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, AcoConfiguration.class, OptimizationConfiguration.OPTIMIZATION_CONFIGURATION);
+        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, AcoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
         this.colonyNumber = colonyNumber;
 
         this.neuralNetwork = neuralNetwork;
@@ -57,8 +56,8 @@ public class AcoColony {
                 .getVariables();
 
         this.stagnationChecker = new ProgressionHandler(
-                configuration.getValue(OptimizationConfiguration.OPTIMIZATION_PROGRESSION_ITERATIONS, Integer.class, variables),
-                configuration.getValue(OptimizationConfiguration.OPTIMIZATION_PROGRESSION_THRESHOLD, Double.class, variables));
+                configuration.getValue(OptimizationConfiguration.PROGRESSION_ITERATIONS, Integer.class, variables),
+                configuration.getValue(OptimizationConfiguration.PROGRESSION_THRESHOLD, Double.class, variables));
     }
 
     public List<AcoAnt> nextIteration() {

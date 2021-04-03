@@ -16,10 +16,7 @@ import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
@@ -28,7 +25,7 @@ public class PacoHandler extends OptimizationMethod {
 
     private final static Logger LOG = LogManager.getLogger(PacoHandler.class);
 
-    private final AbstractPopulationBasedPheromone pheromone;
+    private AbstractPopulationBasedPheromone pheromone;
 
     private final List<PacoAnt> currentAnts = new ArrayList<>();
 
@@ -37,11 +34,15 @@ public class PacoHandler extends OptimizationMethod {
     public PacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
-        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, PacoConfiguration.class, OptimizationConfiguration.OPTIMIZATION_CONFIGURATION);
+        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
 
+        initialize();
+    }
+
+    private void initialize() {
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork baseNetwork = NeuralNetwork.build()
-                .configure(ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION))
+                .configure(ConfigurationHelper.extractEmbeddedConfiguration(getOptimizationConfiguration(), NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
                 .implicitBias()
                 .inputLayer()
                 .fullyConnectToNextLayer()
@@ -56,6 +57,12 @@ public class PacoHandler extends OptimizationMethod {
     }
 
     @Override
+    protected void resetAndRestart() {
+        super.resetAndRestart();
+        initialize();
+    }
+
+    @Override
     protected List<? extends Solution> generateSolutions() {
         this.currentAnts.clear();
 
@@ -64,9 +71,10 @@ public class PacoHandler extends OptimizationMethod {
         }
 
         // if pheromone matrix is empty create the necessary number of ants to fill the population completely
-        int antsPerIteration = this.pheromone.getPopulation().isEmpty()
-                ? this.configuration.getValue(POPULATION_SIZE, Integer.class)
-                : this.configuration.getValue(ANTS_PER_ITERATION, Integer.class);
+        int antsPerIteration = this.configuration.getValue(ANTS_PER_ITERATION, Integer.class);
+        if (this.pheromone.getPopulation().size() < this.pheromone.getMaximalPopulationSize()) {
+            antsPerIteration = Math.max(this.pheromone.getMaximalPopulationSize() - this.pheromone.getPopulation().size(), antsPerIteration);
+        }
 
         IntStream.range(this.currentAnts.size(), antsPerIteration)
                 .mapToObj(i -> this.pheromone.createNeuralNetworkForPheromone())
@@ -85,6 +93,14 @@ public class PacoHandler extends OptimizationMethod {
                     .peek(this.pheromone::addAntToPopulation)
                     .max(Comparator.comparingDouble(PacoAnt::getFitness))
                     .orElse(null);
+        } else if (this.pheromone.getPopulation().size() < this.pheromone.getMaximalPopulationSize() - this.configuration.getValue(UPDATES_PER_ITERATION, Integer.class)) {
+            int skipCount = Math.max(0, this.currentAnts.size() - this.pheromone.getMaximalPopulationSize() + this.pheromone.getPopulation().size());
+            bestOfThisIteration = this.currentAnts.stream()
+                    .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
+                    .skip(skipCount)
+                    .peek(this.pheromone::addAntToPopulation)
+                    .max(Comparator.comparingDouble(PacoAnt::getFitness))
+                    .orElse(null);
         } else {
             bestOfThisIteration = this.currentAnts.stream()
                     .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
@@ -100,8 +116,6 @@ public class PacoHandler extends OptimizationMethod {
             bestCopy.setFitness(bestOfThisIteration.getFitness());
             setCurrentlyBestSolution(bestCopy);
         }
-
-        this.pheromone.printStats();
 
         super.update();
     }

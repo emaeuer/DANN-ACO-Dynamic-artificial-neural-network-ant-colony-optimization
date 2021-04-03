@@ -67,6 +67,10 @@ public abstract class AbstractPopulationBasedPheromone {
         PacoAnt ant = removeAndGetAnt();
         this.sortedPopulation.remove(ant);
 
+        removeKnowledgeOfAnt(ant);
+    }
+
+    private void removeKnowledgeOfAnt(PacoAnt ant) {
         // remove all weights of this ant
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
@@ -102,18 +106,6 @@ public abstract class AbstractPopulationBasedPheromone {
 
         PacoAnt populationBest = getBestAntOfPopulation();
         return populationBest.getNeuralNetwork().copy();
-    }
-
-    // TODO remove method
-    private int counter = 1;
-    public void printStats() {
-        Connection c = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork).next();
-        Objects.requireNonNull(this.weightPheromone.get(c.start(), c.end()))
-                .stream()
-                .mapToDouble(FitnessValue::value)
-                .forEach(d -> System.out.println(d + "," + counter));
-
-        counter++;
     }
 
     protected abstract PacoAnt getBestAntOfPopulation();
@@ -172,7 +164,7 @@ public abstract class AbstractPopulationBasedPheromone {
             for (NeuronID target : possibleTargets) {
                 if (!nn.neuronHasConnectionTo(source, target)) {
                     checkAndAddConnection(nn, source, target);
-                } else if (!this.baseNetwork.neuronHasConnectionTo(source, target)) {
+                } else if (this.baseNetwork.getOutgoingConnectionsOfNeuron(source).size() > 1) { // can be removed if alternative exists
                     // evaluate if connection should be removed
                     chekAndRemoveConnection(nn, source, target);
                 }
@@ -336,17 +328,37 @@ public abstract class AbstractPopulationBasedPheromone {
         this.population.forEach(s -> s.getNeuralNetwork().modify().splitConnection(new NeuronID(connection.start()), new NeuronID(connection.end())));
 
         this.baseNetwork.modify()
-                .splitConnection(connection.start(), connection.end());
+                .splitConnection(new NeuronID(connection.start()), new NeuronID(connection.end()));
 
         List<PacoAnt> populationCopy = new ArrayList<>(this.population);
 
         // clear the complete knowledge archive
         this.population.clear();
         this.weightPheromone.clear();
+        this.sortedPopulation.clear();
 
         // rebuild the knowledge archive from the modified neural networks
         // TODO may remove random ants to increase exploration (either from hole population or just from the corresponding input to the output)
         populationCopy.forEach(this::addAntToPopulation);
+    }
+
+    public void replaceByRandom() {
+        List<PacoAnt> newPop = this.population.stream()
+                .filter(a -> Math.random() < 0.75)
+                .collect(Collectors.toList());
+
+        // clear the complete knowledge archive
+        this.population.clear();
+        this.weightPheromone.clear();
+        this.sortedPopulation.clear();
+
+        IntStream.range(newPop.size(), getMaximalPopulationSize())
+                .mapToObj(i -> createNeuralNetworkForPheromone())
+                .map(PacoAnt::new)
+                .forEach(newPop::add);
+
+        newPop.forEach(this::addAntToPopulation);
+
     }
 
     public Collection<PacoAnt> getPopulation() {

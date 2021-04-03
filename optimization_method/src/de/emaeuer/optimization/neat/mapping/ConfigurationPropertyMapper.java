@@ -20,7 +20,7 @@ public class ConfigurationPropertyMapper {
         private static final long serialVersionUID = 3352223092752399805L;
 
         {
-            put(enumToKey(OptimizationConfiguration.OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS), "num.generations");
+            put(enumToKey(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS), "num.generations");
             put(enumToKey(NeatConfiguration.POPULATION_SIZE), "popul.size");
             put(enumToKey(NeatConfiguration.TOPOLOGY_MUTATION_CLASSIC), "topology.mutation.classic");
             put(enumToKey(NeatConfiguration.SURVIVAL_RATE), "survival.rate");
@@ -60,6 +60,9 @@ public class ConfigurationPropertyMapper {
     };
 
     private static final Map<String, String> VALUE_MAPPING = new HashMap<>() {
+        @Serial
+        private static final long serialVersionUID = -4175569077115095508L;
+
         {
             put(ActivationFunction.IDENTITY.name(), "linear");
             put(ActivationFunction.RELU.name(), "linear");
@@ -90,7 +93,7 @@ public class ConfigurationPropertyMapper {
     }
 
     private static void addNeatConfigurations(Properties properties, ConfigurationHandler<OptimizationConfiguration> configuration) {
-        ConfigurationHandler<NeatConfiguration> neatConfiguration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeatConfiguration.class, OptimizationConfiguration.OPTIMIZATION_CONFIGURATION);
+        ConfigurationHandler<NeatConfiguration> neatConfiguration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeatConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
 
         for (NeatConfiguration key : neatConfiguration.getConfigurationValues().keySet()) {
             String keyString = enumToKey(key);
@@ -101,7 +104,7 @@ public class ConfigurationPropertyMapper {
     }
 
     private static void addNeuralNetworkConfiguration(Properties properties, ConfigurationHandler<OptimizationConfiguration> configuration) {
-        ConfigurationHandler<NeuralNetworkConfiguration> nnConfiguration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeuralNetworkConfiguration.class, OptimizationConfiguration.OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION);
+        ConfigurationHandler<NeuralNetworkConfiguration> nnConfiguration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION);
 
         for (NeuralNetworkConfiguration key : nnConfiguration.getConfigurationValues().keySet()) {
             String keyString = enumToKey(key);

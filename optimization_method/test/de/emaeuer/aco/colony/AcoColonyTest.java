@@ -55,7 +55,7 @@ public class AcoColonyTest {
         acoHandler.setValue(ACO_PHEROMONE_UPDATE_FUNCTION, "p");
 
         ConfigurationHandler<OptimizationConfiguration> handler = new ConfigurationHandler<>(OptimizationConfiguration.class);
-        handler.setValue(OptimizationConfiguration.OPTIMIZATION_CONFIGURATION, acoHandler);
+        handler.setValue(OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION, acoHandler);
 
         return handler;
     }
@@ -127,7 +127,7 @@ public class AcoColonyTest {
         // create colony, generate solutions and update best solution
         ConfigurationHandler<OptimizationConfiguration> configuration = buildConfiguration(5);
         //noinspection unchecked error only possible for invalid test date
-        ConfigurationHandler<AcoConfiguration> acoConfiguration = configuration.getValue(OptimizationConfiguration.OPTIMIZATION_CONFIGURATION, ConfigurationHandler.class);
+        ConfigurationHandler<AcoConfiguration> acoConfiguration = configuration.getValue(OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION, ConfigurationHandler.class);
         NeuralNetwork nn = buildNeuralNetwork(1, 1);
         AcoColony colony = new AcoColony(nn, configuration, 0);
 
@@ -164,7 +164,7 @@ public class AcoColonyTest {
         // create colony and generate solutions
         ConfigurationHandler<OptimizationConfiguration> configuration = buildConfiguration(5);
         //noinspection unchecked error only possible for invalid test date
-        ConfigurationHandler<AcoConfiguration> acoConfiguration = configuration.getValue(OptimizationConfiguration.OPTIMIZATION_CONFIGURATION, ConfigurationHandler.class);
+        ConfigurationHandler<AcoConfiguration> acoConfiguration = configuration.getValue(OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION, ConfigurationHandler.class);
         NeuralNetwork nn = buildNeuralNetwork(3, 5, 5, 4);
         AcoColony colony = new AcoColony(nn, configuration, 0);
 

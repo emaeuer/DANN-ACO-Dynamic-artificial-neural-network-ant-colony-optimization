@@ -47,6 +47,11 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
         return state;
     }
 
+    public void resetValue(T key) {
+        // replace old value by default value
+        this.currentState.put(key, StateValueFactory.createValueForClass(key.getExpectedValueType()));
+    }
+
     public void addNewValue(T key, Object newValue) {
         AbstractStateValue<?, ?> value = this.currentState.get(key);
 
@@ -104,4 +109,5 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
     public String getCollectionName() {
         return STATE_COLLECTION;
     }
+
 }

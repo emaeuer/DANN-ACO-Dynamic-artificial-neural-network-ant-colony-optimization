@@ -55,6 +55,12 @@ public class NeatHandler extends OptimizationMethod {
     }
 
     @Override
+    protected void resetAndRestart() {
+        super.resetAndRestart();
+        initNeat(getOptimizationConfiguration());
+    }
+
+    @Override
     protected DoubleSummaryStatistics getFitnessOfIteration() {
         return this.solutions
                 .stream()
@@ -84,8 +90,8 @@ public class NeatHandler extends OptimizationMethod {
 
         setCurrentlyBestSolution(bestOfIteration);
 
-        super.update();
-
         this.population.evolve();
+
+        super.update();
     }
 }

@@ -94,4 +94,22 @@ public class NeuralNetworkUtil {
                 .iterator();
     }
 
+    public static int countHiddenNodes(NeuralNetwork neuralNetwork) {
+        // don't count neurons of input layer (i = 0) and output layer (i = depth - 1)
+        return IntStream.range(1, neuralNetwork.getDepth() - 1)
+                .mapToObj(neuralNetwork::getNeuronsOfLayer)
+                .mapToInt(List::size)
+                .sum();
+    }
+
+    public static int countConnections(NeuralNetwork neuralNetwork) {
+        // iterate over all neurons and count their outgoing connections
+        return IntStream.range(0, neuralNetwork.getDepth())
+                .mapToObj(neuralNetwork::getNeuronsOfLayer)
+                .flatMap(List::stream)
+                .map(neuralNetwork::getOutgoingConnectionsOfNeuron)
+                .mapToInt(List::size)
+                .sum();
+    }
+
 }

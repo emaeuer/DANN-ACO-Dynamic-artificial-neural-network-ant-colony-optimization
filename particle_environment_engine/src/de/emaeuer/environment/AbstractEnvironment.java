@@ -39,7 +39,7 @@ public abstract class AbstractEnvironment {
         ConfigurationHandler<OptimizationConfiguration> optimizationConfig = configuration.getValue(EnvironmentConfiguration.OPTIMIZATION_CONFIGURATION, ConfigurationHandler.class);
         this.optimization = OptimizationMethodFactory.createMethodForConfig(optimizationConfig, state);
 
-        this.maxFitnessScore = optimizationConfig.getValue(OptimizationConfiguration.OPTIMIZATION_MAX_FITNESS_SCORE, Double.class);
+        this.maxFitnessScore = optimizationConfig.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
     }
 
     protected abstract void initializeParticles();
@@ -85,7 +85,7 @@ public abstract class AbstractEnvironment {
     public abstract boolean isRestartNecessary();
 
     public double getMaxFitness() {
-        return this.optimization.getMaxFitness();
+        return this.optimization.getBestFitness();
     }
 
     public double getFitnessThreshold() {
@@ -104,4 +104,11 @@ public abstract class AbstractEnvironment {
         return this.maxFitnessScore;
     }
 
+    public int getNumberOfRuns() {
+        return this.optimization.getRunCounter();
+    }
+
+    public int getMaxNumberOfRuns() {
+        return this.optimization.getMaxNumberOfRuns();
+    }
 }

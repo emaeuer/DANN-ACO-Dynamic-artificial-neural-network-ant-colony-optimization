@@ -37,6 +37,9 @@ public class EnvironmentController {
     @FXML
     public ProgressBar fitnessProgress;
 
+    @FXML
+    public ProgressBar runProgress;
+
     private EnvironmentHandler<?> environmentHandler;
 
     private AnimationTimer frameTimer;
@@ -59,8 +62,6 @@ public class EnvironmentController {
         this.canvas.widthProperty().setValue(800);
         this.canvas.heightProperty().setValue(800);
 
-
-
         this.frameTimer = new AnimationTimer() {
             @Override
             public void handle(long l) {
@@ -76,6 +77,7 @@ public class EnvironmentController {
             this.environmentHandler = Objects.requireNonNull(
                     EnvironmentHandler.createEnvironmentHandler(EnvironmentFactory.createEnvironment(this.configuration.get(), this.state.get()), getGraphicsContext()));
 
+            this.runProgress.progressProperty().bind(this.environmentHandler.runProgressProperty());
             this.evaluationProgress.progressProperty().bind(this.environmentHandler.evaluationProgressProperty());
             this.fitnessProgress.progressProperty().bind(this.environmentHandler.fitnessProgressProperty());
 

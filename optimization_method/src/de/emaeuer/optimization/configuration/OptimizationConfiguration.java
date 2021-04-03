@@ -5,23 +5,23 @@ import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.*;
 import de.emaeuer.optimization.OptimizationMethodNames;
-import de.emaeuer.optimization.aco.configuration.AcoParameter;
 import de.emaeuer.optimization.factory.OptimizationConfigFactory;
 
 import java.util.function.BiConsumer;
 
 public enum OptimizationConfiguration implements DefaultConfiguration<OptimizationConfiguration> {
-    OPTIMIZATION_NEURAL_NETWORK_CONFIGURATION("Neural network configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(NeuralNetworkConfiguration.class))),
-    OPTIMIZATION_MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE)),
-    OPTIMIZATION_MAX_NUMBER_OF_EVALUATIONS("Maximal number of evaluations", new IntegerConfigurationValue(20000, 10, Integer.MAX_VALUE)),
-    OPTIMIZATION_PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0)),
-    OPTIMIZATION_PROGRESSION_ITERATIONS("Threshold for number of iterations without progress", new IntegerConfigurationValue(200, 1, Integer.MAX_VALUE)),
-    OPTIMIZATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.ACO))),
-    OPTIMIZATION_METHOD_NAME("The name of the optimization method", new StringConfigurationValue("ACO", OptimizationMethodNames.getNames()),
+    NEURAL_NETWORK_CONFIGURATION("Neural network configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(NeuralNetworkConfiguration.class))),
+    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE)),
+    MAX_NUMBER_OF_EVALUATIONS("Maximal number of evaluations", new IntegerConfigurationValue(20000, 10, Integer.MAX_VALUE)),
+    PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0)),
+    PROGRESSION_ITERATIONS("Threshold for number of iterations without progress", new IntegerConfigurationValue(200, 1, Integer.MAX_VALUE)),
+    NUMBER_OF_RUNS("Number of runs", new IntegerConfigurationValue(10, 1, Integer.MAX_VALUE)),
+    IMPLEMENTATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.ACO))),
+    METHOD_NAME("The name of the optimization method", new StringConfigurationValue("ACO", OptimizationMethodNames.getNames()),
             (v, h) -> {
                 OptimizationMethodNames methodName = OptimizationMethodNames.valueOf(v.getStringRepresentation());
                 ConfigurationHandler<?> configuration = OptimizationConfigFactory.createOptimizationConfiguration(methodName);
-                h.setValue(OptimizationConfiguration.OPTIMIZATION_CONFIGURATION, new EmbeddedConfiguration<>(configuration));
+                h.setValue(OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION, new EmbeddedConfiguration<>(configuration));
             });
 
     private final String name;

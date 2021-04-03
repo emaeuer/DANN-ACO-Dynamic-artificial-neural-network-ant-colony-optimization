@@ -11,6 +11,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.canvas.GraphicsContext;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +44,7 @@ public abstract class EnvironmentHandler<T extends AbstractEnvironment> {
     private final BooleanProperty singleEntityMode = new SimpleBooleanProperty();
     private final BooleanProperty optimizationFinished = new SimpleBooleanProperty();
 
+    private final DoubleProperty runProgressProperty = new SimpleDoubleProperty(0);
     private final DoubleProperty evaluationProgressProperty = new SimpleDoubleProperty(0);
     private final DoubleProperty fitnessProgressProperty = new SimpleDoubleProperty(0);
 
@@ -73,6 +75,7 @@ public abstract class EnvironmentHandler<T extends AbstractEnvironment> {
 
         this.environment.update();
 
+        this.runProgressProperty.setValue((double) this.environment.getNumberOfRuns() / this.environment.getMaxNumberOfRuns());
         this.fitnessProgressProperty.setValue(this.environment.getMaxFitness() / this.environment.getFitnessThreshold());
         this.evaluationProgressProperty.setValue((double) this.environment.getNumberOfEvaluations() / this.environment.getEvaluationThreshold());
         this.optimizationFinished.set(this.environment.isOptimizationFinished());
@@ -105,6 +108,8 @@ public abstract class EnvironmentHandler<T extends AbstractEnvironment> {
     public BooleanProperty finishedProperty() {
         return this.optimizationFinished;
     }
+
+    public DoubleProperty runProgressProperty() {return runProgressProperty;}
 
     public DoubleProperty evaluationProgressProperty() {
         return evaluationProgressProperty;

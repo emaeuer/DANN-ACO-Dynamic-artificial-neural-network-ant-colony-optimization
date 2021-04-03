@@ -16,6 +16,9 @@
     <VBox alignment="CENTER" spacing="2" fx:id="nonVisualPanel" visible="false">
         <Label text="Optimization in progress - Visual output disabled" fx:id="nonVisualTitle"/>
         <VBox minHeight="20" maxHeight="20"/>
+        <Label text="Finished number of runs" />
+        <ProgressBar prefWidth="300" progress="0" fx:id="runProgress"/>
+        <VBox minHeight="20" maxHeight="20"/>
         <Label text="Finished number of iterations" />
         <ProgressBar prefWidth="300" progress="0" fx:id="evaluationProgress"/>
         <VBox minHeight="20" maxHeight="20"/>
