@@ -63,6 +63,14 @@ public class ColonyPacoHandler extends OptimizationMethod {
     }
 
     @Override
+    protected List<? extends Solution> getCurrentSolutions() {
+        return this.colonies.stream()
+                .map(PacoHandler::getCurrentSolutions)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     protected DoubleSummaryStatistics getFitnessOfIteration() {
         DoubleSummaryStatistics statistics = new DoubleSummaryStatistics();
         this.colonies.stream()

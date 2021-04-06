@@ -127,6 +127,11 @@ public class PacoHandler extends OptimizationMethod {
     }
 
     @Override
+    protected List<? extends Solution> getCurrentSolutions() {
+        return this.currentAnts;
+    }
+
+    @Override
     protected DoubleSummaryStatistics getFitnessOfIteration() {
         return this.currentAnts
                 .stream()

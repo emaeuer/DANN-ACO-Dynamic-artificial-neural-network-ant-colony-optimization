@@ -25,7 +25,7 @@ import java.util.List;
 
 public class NeatHandler extends OptimizationMethod {
 
-    private static Logger LOG = LogManager.getLogger(NeatHandler.class);
+    private static final Logger LOG = LogManager.getLogger(NeatHandler.class);
 
     private Genotype population;
 
@@ -58,6 +58,11 @@ public class NeatHandler extends OptimizationMethod {
     public void resetAndRestart() {
         super.resetAndRestart();
         initNeat(getOptimizationConfiguration());
+    }
+
+    @Override
+    protected List<? extends Solution> getCurrentSolutions() {
+        return this.solutions;
     }
 
     @Override

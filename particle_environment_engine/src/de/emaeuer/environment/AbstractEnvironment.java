@@ -3,9 +3,6 @@ package de.emaeuer.environment;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
-import de.emaeuer.optimization.Solution;
-import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.persistence.SingletonDataExporter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +21,6 @@ public abstract class AbstractEnvironment {
 
     public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.borderStrategy = borderStrategy;
-
-        SingletonDataExporter.reset();
-        SingletonDataExporter.exportConfiguration(configuration);
-        SingletonDataExporter.addValueToExcludeFromRun(
-                OptimizationState.AVERAGE_RUN_FITNESS_SERIES,
-                OptimizationState.AVERAGE_FITNESS,
-                OptimizationState.AVERAGE_CONNECTIONS,
-                OptimizationState.AVERAGE_HIDDEN_NODES,
-                OptimizationState.AVERAGE_ITERATIONS);
 
         initialize(configuration);
     }

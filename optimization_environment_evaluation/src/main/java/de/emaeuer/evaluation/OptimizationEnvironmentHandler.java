@@ -56,6 +56,14 @@ public class OptimizationEnvironmentHandler {
             LOG.warn("The optimization state or the optimization configuration was not set");
             throw new IllegalStateException("The optimization state or the optimization configuration was not set");
         }
+
+        initDataExporter();
+    }
+
+    private void initDataExporter() {
+        SingletonDataExporter.reset();
+        SingletonDataExporter.exportConfiguration("optimization_configuration", this.optimizationConfiguration.get());
+        SingletonDataExporter.exportConfiguration("environment_configuration", this.environmentConfiguration.get());
     }
 
     private void createEnvironment() {
@@ -105,17 +113,32 @@ public class OptimizationEnvironmentHandler {
     }
 
     private void handleEnd() {
-        SingletonDataExporter.exportRunSummary(optimization.getState());
-        SingletonDataExporter.finishAndExport();
+        exportRunData();
+        exportData();
         this.finished.set(true);
     }
 
     private void handleNextRun() {
-        SingletonDataExporter.exportRunSummary(optimization.getState());
+        exportRunData();
         this.optimization.resetAndRestart();
         this.runCounter.set(this.runCounter.get() + 1);
         this.evaluationCounter.set(0);
         this.fitness.set(0);
+    }
+
+    private void exportRunData() {
+        SingletonDataExporter.addRunData(OptimizationState.CURRENT_ITERATION, optimization.getState());
+        SingletonDataExporter.addRunData(OptimizationState.CURRENT_RUN, optimization.getState());
+        SingletonDataExporter.addRunData(OptimizationState.FITNESS_VALUE, optimization.getState());
+        SingletonDataExporter.finishRun();
+    }
+
+    private void exportData() {
+        SingletonDataExporter.addData(OptimizationState.AVERAGE_ITERATIONS, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.AVERAGE_HIDDEN_NODES, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.AVERAGE_FITNESS, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.AVERAGE_CONNECTIONS, optimization.getState());
+        SingletonDataExporter.finishAndExport();
     }
 
     private void handleNextIteration() {

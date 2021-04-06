@@ -8,14 +8,14 @@ import de.emaeuer.optimization.util.GraphHelper;
 import de.emaeuer.optimization.util.ProgressionHandler;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
+import de.emaeuer.persistence.SingletonDataExporter;
 import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Collections;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class OptimizationMethod {
 
@@ -178,6 +178,8 @@ public abstract class OptimizationMethod {
     }
 
     protected void updateFitnessScore() {
+        exportFitnessValues();
+
         DoubleSummaryStatistics currentFitness = getFitnessOfIteration();
         this.bestFitness = Double.max(this.bestFitness, currentFitness.getMax());
 
@@ -190,9 +192,19 @@ public abstract class OptimizationMethod {
         this.averageHandler.addFitnessSummary(getEvaluationCounter(), currentFitness);
     }
 
+    protected void exportFitnessValues() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("evaluation", getEvaluationCounter());
+        data.put("values", getCurrentSolutions().stream().map(Solution::getFitness).collect(Collectors.toList()));
+
+        SingletonDataExporter.addRunData("fitness", data, true);
+    }
+
     protected void updateBestSolution() {
         this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.transformToConnectionList(this.currentlyBestSolution.getNeuralNetwork()));
     }
+
+    protected abstract List<? extends Solution> getCurrentSolutions();
 
     protected abstract DoubleSummaryStatistics getFitnessOfIteration();
 

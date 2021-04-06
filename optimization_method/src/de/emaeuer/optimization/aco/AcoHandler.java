@@ -88,6 +88,14 @@ public class AcoHandler extends OptimizationMethod {
         super.update();
     }
 
+    @Override
+    protected List<? extends Solution> getCurrentSolutions() {
+        return this.colonies.stream()
+                .map(AcoColony::getAnts)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
     private void updateFitnessState(AcoColony colony) {
         //noinspection unchecked safe cast for generic not possible
         Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) this.state.getValue(AcoState.COLONY_FITNESS, Map.class);

@@ -2,6 +2,7 @@ package de.emaeuer.persistence;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.AbstractStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -22,11 +23,8 @@ public class SingletonDataExporter {
 
     private static String fileName = "data.json";
 
-
-    // concurrent set
-    private static final Set<Enum<?>> KEYS_TO_EXCLUDE_FROM_RUN = ConcurrentHashMap.newKeySet();
-
     private static JSONObject root = new JSONObject();
+    private static JSONObject runRoot = new JSONObject();
 
     private SingletonDataExporter() {}
 
@@ -35,18 +33,40 @@ public class SingletonDataExporter {
         fileName = "execution_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".json";
     }
 
-    public synchronized static void exportConfiguration(ConfigurationHandler<?> configuration) {
-        root.put("configuration", JsonUtil.configurationToJSON(configuration));
+    public synchronized static void exportConfiguration(String configurationName, ConfigurationHandler<?> configuration) {
+        root.put(configurationName, JsonUtil.configurationToJSON(configuration));
     }
 
-    public synchronized static void exportRunSummary(StateHandler<?> state) {
+    public synchronized static void addRunData(Enum<?> key, StateHandler<?> handler) {
+        runRoot.put(key.name(), JsonUtil.stateValueToJson(handler.getCurrentState().getOrDefault(key, null)));
+    }
+
+    public synchronized static void addRunData(String key, Object value, boolean isArray) {
+        if (isArray) {
+            if (runRoot.isNull(key)) {
+                runRoot.put(key, new JSONArray());
+            }
+
+            JSONArray array = runRoot.getJSONArray(key);
+            array.put(value);
+        } else {
+            runRoot.put(key, value);
+        }
+    }
+
+    public synchronized static void addData(Enum<?> key, StateHandler<?> handler) {
+        root.put(key.name(), JsonUtil.stateValueToJson(handler.getCurrentState().getOrDefault(key, null)));
+    }
+
+    public synchronized static void finishRun() {
         if (root.isNull("runs")) {
             root.put("runs", new JSONArray());
         }
 
         JSONArray runArray = root.getJSONArray("runs");
 
-        runArray.put(JsonUtil.stateToJson(state, KEYS_TO_EXCLUDE_FROM_RUN));
+        runArray.put(runRoot);
+        runRoot = new JSONObject();
     }
 
     public static void finishAndExport() {
@@ -57,9 +77,4 @@ public class SingletonDataExporter {
             LOG.warn("Failed to export json file for finished execution", e);
         }
     }
-
-    public static void addValueToExcludeFromRun(Enum<?>... key) {
-        KEYS_TO_EXCLUDE_FROM_RUN.addAll(Arrays.asList(key));
-    }
-
 }

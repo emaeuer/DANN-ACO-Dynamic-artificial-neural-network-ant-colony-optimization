@@ -16,6 +16,10 @@ public class JsonUtil {
 
     private JsonUtil() {}
 
+    public static Object stateValueToJson(AbstractStateValue<?,?> value) {
+        return stateValueToJson(value, Collections.emptySet());
+    }
+
     public static Object stateToJson(StateHandler<?> state, Set<Enum<?>> keysToExcludeFromRun) {
         JSONObject representation = new JSONObject();
 
@@ -92,5 +96,4 @@ public class JsonUtil {
             return value.getStringRepresentation();
         }
     }
-
 }

@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static de.emaeuer.optimization.aco.configuration.AcoConfiguration.*;
 import static de.emaeuer.optimization.aco.configuration.AcoParameter.NUMBER_OF_DECISIONS;
@@ -196,5 +197,9 @@ public class AcoColony {
 
     public Solution getBestAnt() {
         return this.currentBest;
+    }
+
+    public List<AcoAnt> getAnts() {
+        return this.ants;
     }
 }
