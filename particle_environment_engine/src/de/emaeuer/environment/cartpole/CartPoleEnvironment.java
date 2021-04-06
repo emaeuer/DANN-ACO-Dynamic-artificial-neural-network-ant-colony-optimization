@@ -3,14 +3,12 @@ package de.emaeuer.environment.cartpole;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.AbstractEnvironment;
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.cartpole.configuration.CartPoleConfiguration;
 import de.emaeuer.environment.cartpole.elements.Cart;
 import de.emaeuer.environment.cartpole.elements.builder.CartPoleBuilder;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.math.Vector2D;
-import de.emaeuer.optimization.Solution;
-import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.state.StateHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,32 +22,26 @@ public class CartPoleEnvironment extends AbstractEnvironment {
 
     private ConfigurationHandler<CartPoleConfiguration> configuration;
 
-    public CartPoleEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
-        super(null, configuration, state);
+    public CartPoleEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
+        super(null, configuration);
     }
 
     @Override
-    protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
-        super.initialize(configuration, state);
+    protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
+        super.initialize(configuration);
         this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, CartPoleConfiguration.class, EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION);
     }
 
     @Override
-    protected void initializeParticles() {
-        getOptimization().nextIteration()
-                .stream()
+    protected void initializeParticles(List<AgentController> controllers) {
+        controllers.stream()
                 .map(this::buildCartPole)
-                .forEach(getParticles()::add);
-
-        if (getOptimization().getCurrentlyBestSolution() != null) {
-            this.bestCart = buildCartPole(getOptimization().getCurrentlyBestSolution());
-            getParticles().add(this.bestCart);
-        }
+                .forEach(getAgents()::add);
     }
 
-    private Cart buildCartPole(Solution brain) {
+    private Cart buildCartPole(AgentController controller) {
         CartPoleBuilder builder = new CartPoleBuilder()
-                .solution(brain)
+                .controller(controller)
                 .configuration(this.configuration)
                 .size(new Vector2D(100, 50))
                 .environment(this)
@@ -61,23 +53,16 @@ public class CartPoleEnvironment extends AbstractEnvironment {
 
     @Override
     public void restart() {
-        getOptimization().update();
-
-        initializeParticles();
         this.areAllCartsDead = false;
     }
 
     @Override
-    public void update() {
-        super.update();
-
-        if (isRestartNecessary()) {
-            return;
-        }
+    public void step() {
+        super.step();
 
         // increment scores and check if at least one bird lives (ignore this.bestParticle)
         List<Cart> deadCarts = new ArrayList<>();
-        getParticles().stream()
+        getAgents().stream()
                 .filter(p -> p != this.bestCart)
                 .filter(Cart.class::isInstance)
                 .map(Cart.class::cast)
@@ -87,16 +72,16 @@ public class CartPoleEnvironment extends AbstractEnvironment {
                 .forEach(deadCarts::add);
 
         if (this.bestCart != null && this.bestCart.isDead()) {
-            getParticles().remove(this.bestCart);
+            getAgents().remove(this.bestCart);
         }
 
         // terminate iteration if only this.bestParticle remains
-        if (getParticles().size() == 1 && getParticles().get(0) == this.bestCart) {
-            getParticles().clear();
+        if (getAgents().size() == 1 && getAgents().get(0) == this.bestCart) {
+            getAgents().clear();
         }
 
-        getParticles().removeAll(deadCarts);
-        this.areAllCartsDead = getParticles().isEmpty();
+        getAgents().removeAll(deadCarts);
+        this.areAllCartsDead = getAgents().isEmpty();
     }
 
     private void checkReachedMaximumFitness(Cart cart) {
@@ -106,7 +91,7 @@ public class CartPoleEnvironment extends AbstractEnvironment {
     }
 
     @Override
-    public boolean isRestartNecessary() {
+    public boolean allAgentsFinished() {
         return areAllCartsDead;
     }
 }

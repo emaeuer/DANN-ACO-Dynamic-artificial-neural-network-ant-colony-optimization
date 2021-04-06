@@ -1,9 +1,9 @@
 package de.emaeuer.environment.bird.elements.builder;
 
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.bird.elements.FlappyBird;
 import de.emaeuer.environment.elements.builder.ElementBuilder;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
-import de.emaeuer.optimization.Solution;
 
 public class FlappyBirdBuilder extends ElementBuilder<FlappyBird, FlappyBirdBuilder> {
 
@@ -34,8 +34,8 @@ public class FlappyBirdBuilder extends ElementBuilder<FlappyBird, FlappyBirdBuil
         return getThis();
     }
 
-    public FlappyBirdBuilder solution(Solution solution) {
-        getElement().setSolution(solution);
+    public FlappyBirdBuilder controller(AgentController controller) {
+        getElement().setController(controller);
         return getThis();
     }
 

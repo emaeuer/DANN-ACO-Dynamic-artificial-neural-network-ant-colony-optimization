@@ -1,5 +1,6 @@
 package de.emaeuer.environment.bird.elements;
 
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.elements.Particle;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.math.Vector2D;
@@ -15,7 +16,7 @@ public class FlappyBird extends Particle {
 
     private double score = 0;
 
-    private Solution solution;
+    private AgentController controller;
 
     private void jump() {
         // disable jump if bird is already going upwards
@@ -38,11 +39,11 @@ public class FlappyBird extends Particle {
         double yVelocity = getVelocity().getY() / getMaxVelocity();
         double nextGapHeight = this.environment.getHeightOfNextGap() / this.environment.getHeight();
         double distanceToNextPipe = this.environment.getDistanceToNextPipeEnd() / this.environment.getWidth();
-        RealVector input = new ArrayRealVector(new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe});
+        RealVector input = new ArrayRealVector();
 
         // process input and let the neural network decide when to jump
-        double output = this.solution.process(input).getEntry(0);
-        if (output > 0.9) {
+        boolean jump = this.controller.getAction(new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe}) == 1;
+        if (jump) {
             jump();
         }
 
@@ -52,8 +53,8 @@ public class FlappyBird extends Particle {
         }
     }
 
-    public void setSolution(Solution solution) {
-        this.solution = solution;
+    public void setController(AgentController controller) {
+        this.controller = controller;
     }
 
     public boolean isDead() {
@@ -73,8 +74,8 @@ public class FlappyBird extends Particle {
     }
 
     public void incrementScore() {
-        this.score += 0.1;
-        this.solution.setFitness(this.score);
+        this.score += 1;
+        this.controller.setScore(this.score);
     }
 
     public void setEnvironment(FlappyBirdEnvironment environment) {

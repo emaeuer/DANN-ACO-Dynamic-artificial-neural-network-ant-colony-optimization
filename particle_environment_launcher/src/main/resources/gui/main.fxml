@@ -13,9 +13,9 @@
             <padding>
                 <Insets top="20" left="2" right="2" bottom="20"/>
             </padding>
-            <Button styleClass="bar_button, play_button" onAction="#startEnvironment" fx:id="playButton"/>
-            <Button styleClass="bar_button, stop_button" onAction="#pauseEnvironment" fx:id="pauseButton"/>
-            <Button styleClass="bar_button, restart_button" onAction="#restartEnvironment"/>
+            <Button styleClass="bar_button, play_button" onAction="#start" fx:id="playButton"/>
+            <Button styleClass="bar_button, stop_button" onAction="#pause" fx:id="pauseButton"/>
+            <Button styleClass="bar_button, restart_button" onAction="#reset"/>
             <Button styleClass="bar_button, faster_button" onAction="#increaseEnvironmentSpeed"/>
             <Label styleClass="speed_text" fx:id="speedDisplay"/>
             <Button styleClass="bar_button, slower_button" onAction="#decreaseEnvironmentSpeed"/>

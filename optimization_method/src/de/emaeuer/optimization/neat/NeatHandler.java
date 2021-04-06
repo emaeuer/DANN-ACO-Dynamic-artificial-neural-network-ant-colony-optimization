@@ -55,7 +55,7 @@ public class NeatHandler extends OptimizationMethod {
     }
 
     @Override
-    protected void resetAndRestart() {
+    public void resetAndRestart() {
         super.resetAndRestart();
         initNeat(getOptimizationConfiguration());
     }

@@ -2,12 +2,16 @@ package de.emaeuer.gui.controller;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
-import de.emaeuer.environment.factory.EnvironmentFactory;
-import de.emaeuer.gui.controller.environment.handler.EnvironmentHandler;
+import de.emaeuer.evaluation.OptimizationEnvironmentHandler;
+import de.emaeuer.gui.controller.util.ShapeDrawer;
+import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.*;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -15,8 +19,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
-
-import java.util.Objects;
 
 public class EnvironmentController {
 
@@ -40,18 +42,19 @@ public class EnvironmentController {
     @FXML
     public ProgressBar runProgress;
 
-    private EnvironmentHandler<?> environmentHandler;
+    private final OptimizationEnvironmentHandler handler = new OptimizationEnvironmentHandler();
 
     private AnimationTimer frameTimer;
 
     private double speed = 1;
     private boolean evenFrameNumber = false;
     private boolean running = false;
+    private boolean initialStart = true;
 
-    private final ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> configuration = new SimpleObjectProperty<>();
-    private final ObjectProperty<StateHandler<OptimizationState>> state = new SimpleObjectProperty<>();
+    private final ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfiguration = new SimpleObjectProperty<>();
+    private final ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfiguration = new SimpleObjectProperty<>();
+    private final ObjectProperty<StateHandler<OptimizationState>> optimizationState = new SimpleObjectProperty<>();
 
-    private final BooleanProperty restartedProperty = new SimpleBooleanProperty();
     private final BooleanProperty singleEntityMode = new SimpleBooleanProperty(false);
     private final BooleanProperty finishedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty visualMode = new SimpleBooleanProperty(true);
@@ -59,9 +62,6 @@ public class EnvironmentController {
 
     @FXML
     public void initialize() {
-        this.canvas.widthProperty().setValue(800);
-        this.canvas.heightProperty().setValue(800);
-
         this.frameTimer = new AnimationTimer() {
             @Override
             public void handle(long l) {
@@ -70,23 +70,27 @@ public class EnvironmentController {
         };
     }
 
-    private void initializeController() {
-        if (this.configuration.isNotNull().get() && this.state.isNotNull().get()) {
-            resetEnvironment();
+    public void initializeController() {
+        if (this.environmentConfiguration.isNotNull().get() && this.optimizationConfiguration.isNotNull().get() && this.optimizationState.isNotNull().get()) {
+            this.handler.environmentConfigurationProperty().bind(this.environmentConfiguration);
+            this.handler.optimizationConfigurationProperty().bind(this.optimizationConfiguration);
+            this.handler.optimizationStateProperty().bind(this.optimizationState);
 
-            this.environmentHandler = Objects.requireNonNull(
-                    EnvironmentHandler.createEnvironmentHandler(EnvironmentFactory.createEnvironment(this.configuration.get(), this.state.get()), getGraphicsContext()));
+            this.runProgress.progressProperty().bind(Bindings.createDoubleBinding(() ->
+                            (double) this.handler.runCounterProperty().get() / this.handler.maxRunsProperty().get(),
+                    this.handler.runCounterProperty(), this.handler.maxRunsProperty()));
+            this.evaluationProgress.progressProperty().bind(Bindings.createDoubleBinding(() ->
+                            (double) this.handler.evaluationCounterProperty().get() / this.handler.maxEvaluationsProperty().get(),
+                            this.handler.evaluationCounterProperty(), this.handler.maxEvaluationsProperty()));
+            this.fitnessProgress.progressProperty().bind(Bindings.createDoubleBinding(() ->
+                    this.handler.fitnessProperty().get() / this.handler.maxFitnessProperty().get(),
+                    this.handler.fitnessProperty(), this.handler.maxFitnessProperty()));
 
-            this.runProgress.progressProperty().bind(this.environmentHandler.runProgressProperty());
-            this.evaluationProgress.progressProperty().bind(this.environmentHandler.evaluationProgressProperty());
-            this.fitnessProgress.progressProperty().bind(this.environmentHandler.fitnessProgressProperty());
+            this.canvas.setWidth(800);
+            this.canvas.setHeight(800);
 
-            this.canvas.setWidth(this.environmentHandler.getEnvironmentWidth());
-            this.canvas.setHeight(this.environmentHandler.getEnvironmentHeight());
-            this.restartedProperty.bind(this.environmentHandler.restartedProperty());
-            this.environmentHandler.singleEntityModeProperty().bind(this.singleEntityMode);
             this.finishedProperty.addListener((v,o,n) -> finished(n));
-            this.finishedProperty.bind(this.environmentHandler.finishedProperty());
+            this.finishedProperty.bind(this.handler.finishedProperty());
             this.nonVisualPanel.visibleProperty().bind(this.visualMode.not().or(this.finishedProperty));
         }
     }
@@ -99,22 +103,22 @@ public class EnvironmentController {
         }
     }
 
-    protected void resetEnvironment() {
-        getGraphicsContext().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
-        this.finishedProperty.unbind();
-        this.restartedProperty.unbind();
-
-        this.environmentHandler = null;
-
-        this.finishedProperty.set(false);
-        this.restartedProperty.set(true);
-    }
-
     protected void nextFrame() {
         // update environment multiple times to increase speed
         updateEnvironmentAccordingToSpeed();
-        environmentHandler.drawContent();
+        drawContent();
+    }
+
+    private void drawContent() {
+        getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
+
+        this.handler.getAgents()
+                .stream()
+                .limit(this.singleEntityMode.get() ? 1 : Long.MAX_VALUE)
+                .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
+
+        this.handler.getAdditionalEnvironmentElements()
+                .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
     }
 
     private void updateEnvironmentAccordingToSpeed() {
@@ -122,38 +126,33 @@ public class EnvironmentController {
 
         double floored = Math.floor(this.speed);
         for (int i = 0; i < floored; i++) {
-            environmentHandler.update();
+            this.handler.update();
         }
 
         // additional iteration every second frame if speed - floor == 0.5
         if (this.evenFrameNumber && this.speed - floored > 0) {
-            environmentHandler.update();
+            this.handler.update();
         }
     }
 
     private void nonVisualEnvironmentUpdate() {
-        if (running && this.environmentHandler.finishedProperty().not().get() && this.visualMode.not().get()) {
-            // JavaFX schedules next environment update and calls this method again for next update
-            // no concurrency because finished runnable starts next one
-            Platform.runLater(() -> {
-                // can be null if this task is called after reset
-                if (this.environmentHandler == null) {
-                    return;
-                }
-                this.environmentHandler.update();
+        // JavaFX schedules next environment update and calls this method again for next update
+        // no concurrency because finished runnable starts next one
+        Platform.runLater(() -> {
+            // can be null if this task is called after reset
+            if (running && this.handler.finishedProperty().not().get() && this.visualMode.not().get()) {
+                this.handler.update();
                 nonVisualEnvironmentUpdate();
-            });
-        }
+            }
+        });
     }
 
     public void startEnvironment() {
-        // initialization necessary if environment handler isn't initialized
-        if (this.environmentHandler == null) {
-            initializeController();
-        }
-
         if (running) {
             return;
+        } else if (initialStart) {
+            this.handler.initialize();
+            this.initialStart = false;
         }
 
         this.running = true;
@@ -166,32 +165,27 @@ public class EnvironmentController {
         }
     }
 
-    @FXML
     public void pauseEnvironment() {
-        if (this.environmentHandler == null) {
-            return;
-        }
-
         this.running = false;
         this.frameTimer.stop();
     }
 
-    @FXML
     public void restartEnvironment() {
         if (this.running) {
             pauseEnvironment();
         }
 
-        resetEnvironment();
+        this.initialStart = true;
+        this.handler.reset();
+
+        getGraphicsContext().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
-    @FXML
     public void increaseEnvironmentSpeed() {
         speed += speed >= 10 ? 0 : 0.5; // maximum speed is 10
         changeSpeedText();
     }
 
-    @FXML
     public void decreaseEnvironmentSpeed() {
         speed -= speed <= 0.5 ? 0 : 0.5; // minimum speed is 0.5
         changeSpeedText();
@@ -206,16 +200,20 @@ public class EnvironmentController {
         return canvas.getGraphicsContext2D();
     }
 
-    public ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> configurationProperty() {
-        return configuration;
+    public ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfigurationProperty() {
+        return environmentConfiguration;
     }
 
-    public ObjectProperty<StateHandler<OptimizationState>> stateProperty() {
-        return state;
+    public ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfigurationProperty() {
+        return optimizationConfiguration;
     }
 
-    public BooleanProperty restartedProperty() {
-        return this.restartedProperty;
+    public ObjectProperty<StateHandler<OptimizationState>> optimizationStateProperty() {
+        return optimizationState;
+    }
+
+    public IntegerProperty progressionProperty() {
+        return this.handler.evaluationCounterProperty();
     }
 
     public StringProperty speedProperty() {

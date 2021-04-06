@@ -57,7 +57,7 @@ public class PacoHandler extends OptimizationMethod {
     }
 
     @Override
-    protected void resetAndRestart() {
+    public void resetAndRestart() {
         super.resetAndRestart();
         initialize();
     }

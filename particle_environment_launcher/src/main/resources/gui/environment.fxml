@@ -19,7 +19,7 @@
         <Label text="Finished number of runs" />
         <ProgressBar prefWidth="300" progress="0" fx:id="runProgress"/>
         <VBox minHeight="20" maxHeight="20"/>
-        <Label text="Finished number of iterations" />
+        <Label text="Finished number of evaluations" />
         <ProgressBar prefWidth="300" progress="0" fx:id="evaluationProgress"/>
         <VBox minHeight="20" maxHeight="20"/>
         <Label text="Reached fitness"/>

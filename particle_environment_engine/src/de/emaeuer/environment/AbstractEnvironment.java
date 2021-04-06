@@ -3,11 +3,9 @@ package de.emaeuer.environment;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
-import de.emaeuer.optimization.OptimizationMethod;
-import de.emaeuer.optimization.configuration.OptimizationConfiguration;
+import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.optimization.factory.OptimizationMethodFactory;
-import de.emaeuer.state.StateHandler;
+import de.emaeuer.persistence.SingletonDataExporter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,48 +16,56 @@ public abstract class AbstractEnvironment {
     private final double width = 800;
     private final double height = 800;
 
-    private final List<AbstractElement> particles = new ArrayList<>();
+    private final List<AbstractElement> agents = new ArrayList<>();
 
     private final BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy;
 
-    private OptimizationMethod optimization;
-
     private double maxFitnessScore = 1000;
 
-    public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
+    public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.borderStrategy = borderStrategy;
 
-        initialize(configuration, state);
+        SingletonDataExporter.reset();
+        SingletonDataExporter.exportConfiguration(configuration);
+        SingletonDataExporter.addValueToExcludeFromRun(
+                OptimizationState.AVERAGE_RUN_FITNESS_SERIES,
+                OptimizationState.AVERAGE_FITNESS,
+                OptimizationState.AVERAGE_CONNECTIONS,
+                OptimizationState.AVERAGE_HIDDEN_NODES,
+                OptimizationState.AVERAGE_ITERATIONS);
 
-        initializeParticles();
+        initialize(configuration);
     }
 
-    protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
-        //noinspection unchecked
-        ConfigurationHandler<OptimizationConfiguration> optimizationConfig = configuration.getValue(EnvironmentConfiguration.OPTIMIZATION_CONFIGURATION, ConfigurationHandler.class);
-        this.optimization = OptimizationMethodFactory.createMethodForConfig(optimizationConfig, state);
 
-        this.maxFitnessScore = optimizationConfig.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
+
+    protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
+        this.maxFitnessScore = configuration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
     }
 
-    protected abstract void initializeParticles();
+    public void setControllers(List<AgentController> controllers) {
+        restart();
+        initializeParticles(controllers);
+    }
 
-    public abstract void restart();
-
-    public void update() {
-        if (isRestartNecessary()) {
-            return;
-        }
-
-        this.particles.stream()
+    public void step() {
+        this.agents.stream()
                 .peek(AbstractElement::step)
                 .forEach(this::checkBorderCase);
     }
+
+    protected abstract void initializeParticles(List<AgentController> controllers);
+
+    public abstract void restart();
 
     private void checkBorderCase(AbstractElement particle) {
         if (this.borderStrategy != null) {
             this.borderStrategy.accept(particle, this);
         }
+    }
+
+    public List<AbstractElement> getAdditionalEnvironmentElements() {
+        return new ArrayList<>();
     }
 
     public double getWidth() {
@@ -70,45 +76,13 @@ public abstract class AbstractEnvironment {
         return height;
     }
 
-    public List<AbstractElement> getParticles() {
-        return particles;
+    public List<AbstractElement> getAgents() {
+        return agents;
     }
 
-    protected OptimizationMethod getOptimization() {
-        return optimization;
-    }
-
-    public boolean isOptimizationFinished() {
-        return this.optimization.isOptimizationFinished();
-    }
-
-    public abstract boolean isRestartNecessary();
-
-    public double getMaxFitness() {
-        return this.optimization.getBestFitness();
-    }
-
-    public double getFitnessThreshold() {
-        return this.optimization.getFitnessThreshold();
-    }
-
-    public int getNumberOfEvaluations() {
-        return this.optimization.getEvaluationCounter();
-    }
-
-    public int getEvaluationThreshold() {
-        return this.optimization.getEvaluationThreshold();
-    }
+    public abstract boolean allAgentsFinished();
 
     protected double getMaxFitnessScore() {
         return this.maxFitnessScore;
-    }
-
-    public int getNumberOfRuns() {
-        return this.optimization.getRunCounter();
-    }
-
-    public int getMaxNumberOfRuns() {
-        return this.optimization.getMaxNumberOfRuns();
     }
 }

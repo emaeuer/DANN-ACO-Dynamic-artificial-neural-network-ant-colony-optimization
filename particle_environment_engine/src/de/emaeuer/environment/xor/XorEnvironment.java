@@ -2,6 +2,7 @@ package de.emaeuer.environment.xor;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.AbstractEnvironment;
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.optimization.Solution;
@@ -25,29 +26,29 @@ public class XorEnvironment extends AbstractEnvironment  {
             new XorTestData(new double[] {1, 0}, 1),
             new XorTestData(new double[] {1, 1}, 0));
 
-    private List<Solution> solutionsToEvaluate;
+    private List<AgentController> solutionsToEvaluate;
 
     private boolean restartNecessary = false;
 
-    public XorEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
-        super(null, configuration, state);
+    public XorEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
+        super(null, configuration);
     }
 
     @Override
-    protected void initializeParticles() {
+    protected void initializeParticles(List<AgentController> controllers) {
         if (this.solutionsToEvaluate == null) {
             this.solutionsToEvaluate = new ArrayList<>();
         }
 
         this.solutionsToEvaluate.clear();
-        this.solutionsToEvaluate.addAll(getOptimization().nextIteration());
+        this.solutionsToEvaluate.addAll(controllers);
     }
 
     private boolean oddIteration = true;
 
     @Override
-    public void update() {
-        super.update();
+    public void step() {
+        super.step();
 
         // only do something every second update or the gui will not update because restart necessary is always true
         this.oddIteration = !this.oddIteration;
@@ -65,24 +66,22 @@ public class XorEnvironment extends AbstractEnvironment  {
 
         // max error is 4 times an error of 2 squared
         double maxError = shuffledInput.size();
-        for (Solution solution : this.solutionsToEvaluate) {
+        for (AgentController controller : this.solutionsToEvaluate) {
             double rss = 0;
             for (XorTestData testPair : shuffledInput) {
-                ArrayRealVector input = new ArrayRealVector(2);
+                double[] input;
 
                 // also shuffle input to prevent memorisation (relevant only for 1,0 and 0,1)
                 if (Math.random() > 0.5) {
-                    input.setEntry(0, testPair.input()[0]);
-                    input.setEntry(1, testPair.input()[1]);
+                    input = new double[] {testPair.input()[0], testPair.input()[1]};
                 } else {
-                    input.setEntry(0, testPair.input()[1]);
-                    input.setEntry(1, testPair.input()[0]);
+                    input = new double[] {testPair.input()[1], testPair.input()[0]};
                 }
 
-                double result = solution.process(input).getEntry(0);
+                double result = controller.getAction(input);
                 rss += Math.pow(result - testPair.target(), 2);
             }
-            solution.setFitness((1 - (rss / maxError)) * 100);
+            controller.setScore((1 - (rss / maxError)) * 100);
         }
 
         this.restartNecessary = true;
@@ -107,15 +106,11 @@ public class XorEnvironment extends AbstractEnvironment  {
     @Override
     public void restart() {
         // prepare optimization method for next iteration
-        getOptimization().update();
-
-        initializeParticles();
-
         this.restartNecessary = false;
     }
 
     @Override
-    public boolean isRestartNecessary() {
+    public boolean allAgentsFinished() {
         // initialize already does complete iteration --> immediate restart necessary
         return restartNecessary;
     }

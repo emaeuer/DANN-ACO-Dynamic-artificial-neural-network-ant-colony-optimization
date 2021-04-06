@@ -2,7 +2,6 @@ package de.emaeuer.configuration.value;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
-import de.emaeuer.persistence.PersistenceHandler;
 
 import java.io.Serial;
 import java.util.Map;
@@ -21,10 +20,9 @@ public class EmbeddedConfiguration<S extends Enum<S> & DefaultConfiguration<S>> 
 
     @Override
     public void setValue(String value) {
-    if (this.value != null && !this.value.getName().equals(value)) {
+        if (this.value != null && !this.value.getName().equals(value)) {
             this.value = new ConfigurationHandler<>(this.value.getKeyClass());
             this.value.setName(value);
-            PersistenceHandler.loadObject(this.value);
         }
     }
 

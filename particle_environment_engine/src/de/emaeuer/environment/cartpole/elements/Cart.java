@@ -1,14 +1,12 @@
 package de.emaeuer.environment.cartpole.elements;
 
 import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.cartpole.CartPoleEnvironment;
 import de.emaeuer.environment.cartpole.configuration.CartPoleConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.elements.shape.CartShape;
 import de.emaeuer.environment.elements.shape.ShapeEntity;
-import de.emaeuer.optimization.Solution;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealVector;
 
 import java.util.List;
 
@@ -28,7 +26,6 @@ public class Cart extends AbstractElement {
 
     private double gravity;
     private double massOfPole;
-    private double massOfCart;
     private double poleLength;
     private double steeringForceMagnitude;
     private double tau;
@@ -36,7 +33,7 @@ public class Cart extends AbstractElement {
     private double thetaThreshold;
     private double xThreshold;
 
-    private Solution solution;
+    private AgentController controller;
 
     public Cart() {
         super(new CartShape());
@@ -48,14 +45,13 @@ public class Cart extends AbstractElement {
             return;
         }
 
-        // create input vector and normalize input parameters
+        // calculate the data of the agent
         double xInput = (getPosition().getX() - this.environment.getWidth() / 2 + getSize().getX() / 2) / this.xThreshold;
         double thetaInput = this.theta / this.thetaThreshold;
-        RealVector input = new ArrayRealVector(new double[]{xInput, thetaInput});
 
-        // process input and let the neural network decide the action
-        double output = this.solution.process(input).getEntry(0);
-        updateCartPoleState(output > 0.5);
+        // get the action of the agent controller
+        boolean correctLeft = this.controller.getAction(new double[]{xInput, thetaInput}) == 1;
+        updateCartPoleState(correctLeft);
 
         // check solution died
         checkDied();
@@ -86,7 +82,7 @@ public class Cart extends AbstractElement {
     public void configure(ConfigurationHandler<CartPoleConfiguration> configuration) {
         this.gravity = configuration.getValue(GRAVITY, Double.class);
         this.massOfPole = configuration.getValue(POLE_MASS, Double.class);
-        this.massOfCart = configuration.getValue(CART_MASS, Double.class);
+        setMass(configuration.getValue(CART_MASS, Double.class));
         this.poleLength = configuration.getValue(POLE_LENGTH, Double.class);
         this.steeringForceMagnitude = configuration.getValue(STEERING_FORCE, Double.class);
         this.tau = configuration.getValue(TAU, Double.class);
@@ -94,8 +90,8 @@ public class Cart extends AbstractElement {
         this.xThreshold = configuration.getValue(X_THRESHOLD, Double.class);
     }
 
-    public void setSolution(Solution solution) {
-        this.solution = solution;
+    public void setController(AgentController controller) {
+        this.controller = controller;
     }
 
     public boolean isDead() {
@@ -111,8 +107,8 @@ public class Cart extends AbstractElement {
     }
 
     public void incrementScore() {
-        this.score += 0.1;
-        this.solution.setFitness(this.score);
+        this.score += 1;
+        this.controller.setScore(this.score);
     }
 
     public void setEnvironment(CartPoleEnvironment environment) {

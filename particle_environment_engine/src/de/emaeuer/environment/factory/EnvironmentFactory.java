@@ -14,13 +14,13 @@ public class EnvironmentFactory {
 
     private EnvironmentFactory() {}
 
-    public static AbstractEnvironment createEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
+    public static AbstractEnvironment createEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         EnvironmentImplementations implementation = EnvironmentImplementations.valueOf(configuration.getValue(EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION_NAME, String.class));
 
         return switch (implementation) {
-            case CART_POLE -> new CartPoleEnvironment(configuration, state);
-            case FLAPPY_BIRD -> new FlappyBirdEnvironment(configuration, state);
-            case XOR -> new XorEnvironment(configuration, state);
+            case CART_POLE -> new CartPoleEnvironment(configuration);
+            case FLAPPY_BIRD -> new FlappyBirdEnvironment(configuration);
+            case XOR -> new XorEnvironment(configuration);
         };
     }
 

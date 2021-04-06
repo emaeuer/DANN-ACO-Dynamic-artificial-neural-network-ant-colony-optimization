@@ -1,13 +1,11 @@
 package de.emaeuer.environment.bird;
 
 import de.emaeuer.configuration.ConfigurationHelper;
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
-import de.emaeuer.environment.cartpole.elements.Cart;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.elements.AbstractElement;
-import de.emaeuer.optimization.Solution;
-import de.emaeuer.optimization.aco.AcoAnt;
 import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.bird.elements.FlappyBird;
 import de.emaeuer.environment.bird.elements.Pipe;
@@ -15,8 +13,6 @@ import de.emaeuer.environment.bird.elements.builder.FlappyBirdBuilder;
 import de.emaeuer.environment.bird.elements.builder.PipeBuilder;
 import de.emaeuer.environment.math.Vector2D;
 import de.emaeuer.environment.util.ForceHelper;
-import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.state.StateHandler;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -52,8 +48,8 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
     private Map<Integer, Integer[]> colors;
     private FlappyBird bestParticle;
 
-    public FlappyBirdEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration, StateHandler<OptimizationState> state) {
-        super(DIE_ON_BORDER, configuration, state);
+    public FlappyBirdEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
+        super(DIE_ON_BORDER, configuration);
 
         ConfigurationHandler<FlappyBirdConfiguration> implementationConfiguration =
                 ConfigurationHelper.extractEmbeddedConfiguration(configuration, FlappyBirdConfiguration.class, EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION);
@@ -64,47 +60,32 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
     }
 
     @Override
-    protected void initializeParticles() {
-        getOptimization().nextIteration()
-                .stream()
+    protected void initializeParticles(List<AgentController> controllers) {
+        controllers.stream()
                 .map(this::buildFlappyBird)
-                .forEach(getParticles()::add);
-
-        if (getOptimization().getCurrentlyBestSolution() != null) {
-            this.bestParticle = buildFlappyBird(getOptimization().getCurrentlyBestSolution());
-            getParticles().add(this.bestParticle);
-        }
+                .forEach(getAgents()::add);
     }
 
-    private FlappyBird buildFlappyBird(Solution brain) {
+    private FlappyBird buildFlappyBird(AgentController controller) {
         FlappyBirdBuilder builder = new FlappyBirdBuilder()
-                .solution(brain)
+                .controller(controller)
                 .radius(BIRD_SIZE)
                 .environment(this)
                 .setStartPosition(BIRD_X, getHeight() / 2)
                 .maxVelocity(15)
                 .addPermanentForce(ForceHelper.createBasicForce(new Vector2D(0, 2)));
 
-        assignColor(builder, brain);
+        assignColor(builder);
 
         return builder.build();
     }
 
-    private void assignColor(FlappyBirdBuilder builder, Solution brain) {
+    private void assignColor(FlappyBirdBuilder builder) {
        if (this.colors == null) {
            this.colors = new HashMap<>();
        }
 
-        // assign colors to particles
-        if (brain == getOptimization().getCurrentlyBestSolution()) {
-            builder.color(255, 215, 0);
-        } else if (brain instanceof AcoAnt ant) {
-            Random rand = new Random();
-            Integer[] color = colors.computeIfAbsent(ant.getColonyNumber(), i -> new Integer[]{rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)});
-            builder.color(color[0],color[1],color[2],0.5);
-        } else {
-            builder.color(0,0,0,0.5);
-        }
+       builder.color(0,0,0,0.5);
     }
 
     @Override
@@ -112,26 +93,17 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
         randomGenerator = new Random(9369319);
         this.areAllBirdsDead = false;
         this.pipes.clear();
-
-        // prepare optimization method for next iteration
-        getOptimization().update();
-
-        initializeParticles();
     }
 
     @Override
-    public void update() {
-        super.update();
-
-        if (isRestartNecessary()) {
-            return;
-        }
+    public void step() {
+        super.step();
 
         updatePipes();
 
         // increment scores and check if at least one bird lives (ignore this.bestParticle)
         List<FlappyBird> deadBirds = new ArrayList<>();
-        getParticles().stream()
+        getAgents().stream()
                 .filter(p -> p != this.bestParticle)
                 .filter(FlappyBird.class::isInstance)
                 .map(FlappyBird.class::cast)
@@ -141,16 +113,16 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
                 .forEach(deadBirds::add);
 
         if (this.bestParticle != null && this.bestParticle.isDead()) {
-            getParticles().remove(this.bestParticle);
+            getAgents().remove(this.bestParticle);
         }
 
         // terminate iteration if only this.bestParticle remains
-        if (getParticles().size() == 1 && getParticles().get(0) == this.bestParticle) {
-            getParticles().clear();
+        if (getAgents().size() == 1 && getAgents().get(0) == this.bestParticle) {
+            getAgents().clear();
         }
 
-        getParticles().removeAll(deadBirds);
-        this.areAllBirdsDead = getParticles().isEmpty();
+        getAgents().removeAll(deadBirds);
+        this.areAllBirdsDead = getAgents().isEmpty();
     }
 
     private void checkReachedMaximumFitness(FlappyBird bird) {
@@ -226,7 +198,14 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
     }
 
     @Override
-    public boolean isRestartNecessary() {
+    public List<AbstractElement> getAdditionalEnvironmentElements() {
+        List<AbstractElement> elements = super.getAdditionalEnvironmentElements();
+        elements.addAll(getPipes());
+        return elements;
+    }
+
+    @Override
+    public boolean allAgentsFinished() {
         return this.areAllBirdsDead;
     }
 

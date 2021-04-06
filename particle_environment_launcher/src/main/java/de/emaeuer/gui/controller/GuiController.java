@@ -53,28 +53,29 @@ public class GuiController {
 
         showSettingPanel();
 
-        this.environmentAreaController.configurationProperty().bind(this.configurationPanelController.configurationProperty());
-        this.environmentAreaController.stateProperty().bind(this.statePanelController.stateProperty());
-        this.environmentAreaController.restartedProperty().addListener((v, o, n) -> handleEnvironmentRestart(n));
+        this.environmentAreaController.environmentConfigurationProperty().bind(this.configurationPanelController.environmentConfigurationProperty());
+        this.environmentAreaController.optimizationConfigurationProperty().bind(this.configurationPanelController.optimizationConfigurationProperty());
+        this.environmentAreaController.optimizationStateProperty().bind(this.statePanelController.stateProperty());
+        this.environmentAreaController.progressionProperty().addListener((v, o, n) -> handleProgression());
         this.environmentAreaController.finishedProperty().addListener((v, o, n) -> handleEnvironmentEnd(n));
         this.playButton.disableProperty().bind(this.environmentAreaController.finishedProperty());
+
+        this.environmentAreaController.initializeController();
     }
 
-    private void handleEnvironmentRestart(boolean restarted) {
-        if (restarted) {
-            this.statePanelController.refreshPanel();
-        }
+    private void handleProgression() {
+        this.statePanelController.refreshPanel();
     }
 
     private void handleEnvironmentEnd(boolean isFinished) {
         if (isFinished) {
             // handle end
-            pauseEnvironment();
+            pause();
         }
     }
 
     @FXML
-    public void startEnvironment() {
+    public void start() {
         this.configurationPanelController.setDisable(true);
         this.environmentAreaController.startEnvironment();
 
@@ -82,14 +83,14 @@ public class GuiController {
     }
 
     @FXML
-    public void pauseEnvironment() {
+    public void pause() {
         this.environmentAreaController.pauseEnvironment();
 
         togglePlaying(false);
     }
 
     @FXML
-    public void restartEnvironment() {
+    public void reset() {
         this.configurationPanelController.setDisable(false);
         this.statePanelController.reset();
         this.environmentAreaController.restartEnvironment();

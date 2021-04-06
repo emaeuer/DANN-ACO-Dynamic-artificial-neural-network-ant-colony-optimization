@@ -2,6 +2,7 @@ package de.emaeuer.environment.cartpole.elements.builder;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
+import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.bird.elements.FlappyBird;
 import de.emaeuer.environment.bird.elements.builder.FlappyBirdBuilder;
@@ -39,8 +40,8 @@ public class CartPoleBuilder extends ElementBuilder<Cart, CartPoleBuilder> {
         return getThis();
     }
 
-    public CartPoleBuilder solution(Solution solution) {
-        getElement().setSolution(solution);
+    public CartPoleBuilder controller(AgentController controller) {
+        getElement().setController(controller);
         return getThis();
     }
 }

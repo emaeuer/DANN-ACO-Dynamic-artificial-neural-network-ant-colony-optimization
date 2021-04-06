@@ -40,6 +40,7 @@ public abstract class OptimizationMethod {
     private final RunDataHandler averageHandler;
 
     private boolean optimizationFinished = false;
+    private boolean runFinished = false;
 
     protected OptimizationMethod(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         this.configuration = configuration;
@@ -90,7 +91,7 @@ public abstract class OptimizationMethod {
 
     public void update() {
         // do nothing if the optimization finished (maximum fitness or max number of evaluations reached)
-        if (this.optimizationFinished) {
+        if (this.optimizationFinished || this.evaluationCounter == 0) {
             return;
         }
 
@@ -103,14 +104,17 @@ public abstract class OptimizationMethod {
 
         if (checkCurrentRunFinished() && checkOptimizationFinished()) {
             // optimization finished completely
+            this.runFinished = true;
             this.optimizationFinished = true;
         } else if (checkCurrentRunFinished()) {
             // only the current run finished restart new optimization
-            resetAndRestart();
+            this.runFinished = true;
         }
     }
 
-    protected void resetAndRestart() {
+    public void resetAndRestart() {
+        this.runFinished = false;
+
         this.generalState.resetValue(OptimizationState.CURRENT_ITERATION);
         this.generalState.resetValue(OptimizationState.FITNESS_VALUE);
         this.generalState.resetValue(OptimizationState.FITNESS_SERIES);
@@ -163,7 +167,7 @@ public abstract class OptimizationMethod {
         return checkCurrentRunFinished() && this.runCounter >= this.configuration.getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class);
     }
 
-    protected boolean checkCurrentRunFinished() {
+    public boolean checkCurrentRunFinished() {
         // finished if: maximal fitness or evaluation reached
         return this.bestFitness >= this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class) ||
                 this.evaluationCounter >= this.configuration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
@@ -213,6 +217,10 @@ public abstract class OptimizationMethod {
         return optimizationFinished;
     }
 
+    public boolean isRunFinished() {
+        return runFinished;
+    }
+
     public double getBestFitness() {
         return bestFitness;
     }
@@ -233,14 +241,16 @@ public abstract class OptimizationMethod {
         return this.configuration.getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class);
     }
 
-
-
     public int getGenerationCounter() {
         return generationCounter;
     }
 
     public ConfigurationHandler<OptimizationConfiguration> getOptimizationConfiguration() {
-        return configuration;
+        return this.configuration;
+    }
+
+    public StateHandler<OptimizationState> getState() {
+        return this.generalState;
     }
 
 }
