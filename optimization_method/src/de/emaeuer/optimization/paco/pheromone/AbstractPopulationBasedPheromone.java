@@ -11,6 +11,7 @@ import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoParameter;
 import de.emaeuer.optimization.util.RandomUtil;
+import de.emaeuer.persistence.SingletonDataExporter;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -359,6 +360,25 @@ public abstract class AbstractPopulationBasedPheromone {
 
         newPop.forEach(this::addAntToPopulation);
 
+    }
+
+    public void exportPheromoneMatrix(int evaluationNumber) {
+        Map<String, Object> data = new HashMap<>();
+
+        data.put("evaluation", evaluationNumber);
+
+        this.weightPheromone.cellSet()
+                .forEach(c -> data.put(c.getRowKey() + " -> " + c.getColumnKey(), getValuesForWeight(c.getRowKey(), c.getColumnKey())));
+
+        SingletonDataExporter.addRunData("pheromone", data, true);
+    }
+
+    private Collection<Double> getValuesForWeight(NeuronID start, NeuronID end) {
+        return Objects.requireNonNullElse(this.weightPheromone.get(start, end), Collections.emptyList())
+                .stream()
+                .map(FitnessValue.class::cast)
+                .map(FitnessValue::value)
+                .collect(Collectors.toList());
     }
 
     public Collection<PacoAnt> getPopulation() {

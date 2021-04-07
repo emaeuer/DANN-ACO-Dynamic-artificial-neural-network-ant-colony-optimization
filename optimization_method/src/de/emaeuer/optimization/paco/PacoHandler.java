@@ -110,6 +110,8 @@ public class PacoHandler extends OptimizationMethod {
                     .orElse(null);
         }
 
+        this.pheromone.exportPheromoneMatrix(getEvaluationCounter());
+
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix
             PacoAnt bestCopy = new PacoAnt(bestOfThisIteration.getNeuralNetwork().copy());
