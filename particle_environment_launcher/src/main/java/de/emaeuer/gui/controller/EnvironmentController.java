@@ -106,7 +106,11 @@ public class EnvironmentController {
     protected void nextFrame() {
         // update environment multiple times to increase speed
         updateEnvironmentAccordingToSpeed();
-        drawContent();
+        if (this.finishedProperty.not().get()) {
+            getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
+        } else {
+            drawContent();
+        }
     }
 
     private void drawContent() {
@@ -126,7 +130,14 @@ public class EnvironmentController {
 
         double floored = Math.floor(this.speed);
         for (int i = 0; i < floored; i++) {
+            if (this.finishedProperty.get()) {
+                break;
+            }
             this.handler.update();
+        }
+
+        if (this.finishedProperty.get()) {
+            return;
         }
 
         // additional iteration every second frame if speed - floor == 0.5
@@ -212,8 +223,8 @@ public class EnvironmentController {
         return optimizationState;
     }
 
-    public IntegerProperty progressionProperty() {
-        return this.handler.evaluationCounterProperty();
+    public BooleanProperty updatedProperty() {
+        return this.handler.updatedProperty();
     }
 
     public StringProperty speedProperty() {

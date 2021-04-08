@@ -34,6 +34,8 @@ public class OptimizationEnvironmentHandler {
     private final DoubleProperty fitness = new SimpleDoubleProperty(0);
 
     private final BooleanProperty finished = new SimpleBooleanProperty(false);
+    // property which gets toggled every time something changed
+    private final BooleanProperty updateNotifier = new SimpleBooleanProperty(false);
 
     private final ObjectProperty<StateHandler<OptimizationState>> optimizationState = new SimpleObjectProperty<>();
     private final ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfiguration = new SimpleObjectProperty<>();
@@ -90,6 +92,7 @@ public class OptimizationEnvironmentHandler {
     public void update() {
         if (environment.allAgentsFinished()) {
             handleRestart();
+            this.updateNotifier.set(!this.updateNotifier.get());
         }
 
         if (!this.finished.get()) {
@@ -116,6 +119,8 @@ public class OptimizationEnvironmentHandler {
         exportRunData();
         exportData();
         this.finished.set(true);
+        this.runCounter.set(this.optimization.getRunCounter());
+        this.fitnessProperty().set(this.optimization.getBestFitness());
     }
 
     private void handleNextRun() {
@@ -147,14 +152,12 @@ public class OptimizationEnvironmentHandler {
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
         this.environment.setControllers(solutions);
-        this.evaluationCounter.set(this.evaluationCounter.get() + solutions.size());
+        this.evaluationCounter.set(this.optimization.getEvaluationCounter());
         this.fitnessProperty().set(this.optimization.getBestFitness());
     }
 
     private void step() {
-        if (!this.environment.allAgentsFinished()) {
-            this.environment.step();
-        }
+        this.environment.step();
     }
 
     public ObjectProperty<StateHandler<OptimizationState>> optimizationStateProperty() {
@@ -168,6 +171,8 @@ public class OptimizationEnvironmentHandler {
     public ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfigurationProperty() {
         return environmentConfiguration;
     }
+
+    public BooleanProperty updatedProperty() {return updateNotifier;}
 
     public BooleanProperty finishedProperty() {
         return finished;

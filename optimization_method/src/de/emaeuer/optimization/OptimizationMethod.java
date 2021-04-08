@@ -106,9 +106,13 @@ public abstract class OptimizationMethod {
             // optimization finished completely
             this.runFinished = true;
             this.optimizationFinished = true;
+
+            // final update of optimization state
+            updateRunStatistics();
         } else if (checkCurrentRunFinished()) {
             // only the current run finished restart new optimization
             this.runFinished = true;
+            updateRunStatistics();
         }
     }
 
@@ -120,8 +124,6 @@ public abstract class OptimizationMethod {
         this.generalState.resetValue(OptimizationState.FITNESS_SERIES);
         this.generalState.resetValue(OptimizationState.IMPLEMENTATION_STATE);
         this.generalState.resetValue(OptimizationState.BEST_SOLUTION);
-
-        updateRunStatistics();
 
         this.currentlyBestSolution = null;
 
@@ -193,9 +195,14 @@ public abstract class OptimizationMethod {
     }
 
     protected void exportFitnessValues() {
+        List<Double> fitnessValues = getCurrentSolutions()
+                .stream()
+                .map(Solution::getFitness)
+                .collect(Collectors.toList());
+
         Map<String, Object> data = new HashMap<>();
         data.put("evaluation", getEvaluationCounter());
-        data.put("values", getCurrentSolutions().stream().map(Solution::getFitness).collect(Collectors.toList()));
+        data.put("values", fitnessValues);
 
         SingletonDataExporter.addRunData("fitness", data, true);
     }

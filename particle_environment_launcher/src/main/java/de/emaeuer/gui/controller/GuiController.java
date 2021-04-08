@@ -56,7 +56,7 @@ public class GuiController {
         this.environmentAreaController.environmentConfigurationProperty().bind(this.configurationPanelController.environmentConfigurationProperty());
         this.environmentAreaController.optimizationConfigurationProperty().bind(this.configurationPanelController.optimizationConfigurationProperty());
         this.environmentAreaController.optimizationStateProperty().bind(this.statePanelController.stateProperty());
-        this.environmentAreaController.progressionProperty().addListener((v, o, n) -> handleProgression());
+        this.environmentAreaController.updatedProperty().addListener((v, o, n) -> handleProgression());
         this.environmentAreaController.finishedProperty().addListener((v, o, n) -> handleEnvironmentEnd(n));
         this.playButton.disableProperty().bind(this.environmentAreaController.finishedProperty());
 

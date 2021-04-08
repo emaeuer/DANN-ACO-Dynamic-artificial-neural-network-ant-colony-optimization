@@ -30,6 +30,7 @@ public class SingletonDataExporter {
 
     public synchronized static void reset() {
         root = new JSONObject();
+        runRoot = new JSONObject();
         fileName = "execution_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".json";
     }
 

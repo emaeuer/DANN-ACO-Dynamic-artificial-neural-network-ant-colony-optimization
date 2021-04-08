@@ -73,10 +73,6 @@ public class StateValueOutputMapper {
     // *********************************************
 
     private void refreshPlotForDataSeries(StateParameter<?> stateType, DataSeriesStateValue dataSeries, String suffix) {
-        if (!dataSeries.changedSinceLastGet()) {
-            return;
-        }
-
         String mapIdentifier = createMapIdentifier(stateType, suffix);
 
         if (!this.visualRepresentations.containsKey(mapIdentifier)) {
@@ -169,10 +165,6 @@ public class StateValueOutputMapper {
     // *********************************************
 
     private void refreshFieldForNumber(StateParameter<?> stateType, NumberStateValue numberState, String suffix) {
-        if (!numberState.changedSinceLastGet()) {
-            return;
-        }
-
         String mapIdentifier = createMapIdentifier(stateType, suffix);
         if (!this.visualRepresentations.containsKey(mapIdentifier)) {
             createFieldForNumber(stateType, numberState, suffix);
