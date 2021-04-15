@@ -13,6 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.ComboBox;
@@ -24,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
@@ -65,6 +67,10 @@ public class StateValueOutputMapper {
             refreshSelectionForStateValue(stateType, mapState, suffix);
         } else if (stateValue instanceof GraphStateValue graphState) {
             refreshGraphView(stateType, graphState, suffix);
+        } else if (stateValue instanceof DistributionStateValue distributionState) {
+            refreshDistributionState(stateType, distributionState, suffix);
+        } else if (stateValue instanceof ScatteredDataStateValue scatteredValue) {
+            refreshScatteredDataState(stateType, scatteredValue, suffix);
         }
     }
 
@@ -328,6 +334,108 @@ public class StateValueOutputMapper {
         graphView.setMinHeight(250);
 
         graphView.init();
+    }
+
+    // *********************************************
+    // Methods for handling distribution data
+    // *********************************************
+
+    private void refreshDistributionState(StateParameter<?> stateType, DistributionStateValue distributionState, String suffix) {
+        if (!distributionState.changedSinceLastGet()) {
+            return;
+        }
+
+        String mapIdentifier = createMapIdentifier(stateType, suffix);
+        if (!this.visualRepresentations.containsKey(mapIdentifier)) {
+            createFieldForDistribution(stateType, suffix);
+        }
+
+        Label label = (Label) this.visualRepresentations.get(mapIdentifier);
+        DecimalFormat format = new DecimalFormat("#.#####");
+        String mean = format.format(distributionState.getMean());
+        String deviation = format.format(distributionState.getStandardDeviation());
+
+        label.setText(String.format("Mean: %s - Deviation: %s", mean, deviation));
+    }
+
+    private void createFieldForDistribution(StateParameter<?> stateType, String suffix) {
+        Label label = new Label();
+        this.visualRepresentations.put(createMapIdentifier(stateType, suffix), label);
+        label.getStyleClass().add("number_field");
+
+        this.newContent.add(createCard(stateType, label));
+    }
+
+    // *********************************************
+    // Methods for handling scattered data
+    // *********************************************
+    
+    private void refreshScatteredDataState(StateParameter<?> stateType, ScatteredDataStateValue scatteredValue, String suffix) {
+        if (!scatteredValue.changedSinceLastGet()) {
+            return;
+        }
+
+        String mapIdentifier = createMapIdentifier(stateType, suffix);
+        if (!this.visualRepresentations.containsKey(mapIdentifier)) {
+            createScatterPlot(stateType, suffix);
+        }
+
+        //noinspection unchecked no safe way to cast generic --> if generation on top works correctly is always valid cast
+        ScatterChart<Number, Number> chart = (ScatterChart<Number, Number>) this.visualRepresentations.get(mapIdentifier);
+
+        updateDataSeries(scatteredValue, chart.getData(), stateType.getName());
+    }
+
+    private void createScatterPlot(StateParameter<?> stateType, String suffix) {
+        NumberAxis xAxis = new NumberAxis();
+        xAxis.setLabel("Evaluation number");
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setLabel("Fitness");
+        ScatterChart<Number, Number> chart = new ScatterChart<>(xAxis, yAxis);
+
+        chart.getStyleClass().add("output_plot");
+        this.visualRepresentations.put(createMapIdentifier(stateType, suffix), chart);
+
+        VBox box = createCard(stateType, chart);
+        box.getStyleClass().add("output_plot_background");
+
+        this.newContent.add(box);
+    }
+
+    private void updateDataSeries(ScatteredDataStateValue scatteredData, ObservableList<Series<Number, Number>> property, String name) {
+        Map<Integer, Double[]> seriesData = scatteredData.getValue();
+
+        if (property.isEmpty()) {
+            Series<Number, Number> series = new Series<>();
+            series.setName(name);
+            property.add(series);
+        }
+
+        if (seriesData.isEmpty()) {
+            property.get(0).getData().clear();
+            return;
+        }
+
+        Series<Number, Number> series = property.get(0);
+        Set<Integer> keysToRefresh = scatteredData.getIndicesToRefresh();
+
+        if (seriesData.size() == 1) {
+            // if only data for one iteration exists refresh the complete plot
+            // happens after refresh --> FIXME may cause problems if after refresh more than one iteration is contained
+            series.getData().clear();
+            keysToRefresh.addAll(seriesData.keySet());
+        }
+
+        keysToRefresh.forEach(k -> addScatteredData(k, seriesData.get(k), series));
+
+        // all indices were refreshed
+        scatteredData.getIndicesToRefresh().clear();
+    }
+
+    private void addScatteredData(Integer yValue, Double[] xValues, Series<Number, Number> series) {
+        Arrays.stream(xValues)
+                .map(x -> new XYChart.Data<Number, Number>(x, yValue))
+                .forEach(d -> series.getData().add(d));
     }
 
     // *********************************************

@@ -106,7 +106,7 @@ public class EnvironmentController {
     protected void nextFrame() {
         // update environment multiple times to increase speed
         updateEnvironmentAccordingToSpeed();
-        if (this.finishedProperty.not().get()) {
+        if (this.finishedProperty.get()) {
             getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
         } else {
             drawContent();

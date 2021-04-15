@@ -64,8 +64,8 @@ public class OptimizationEnvironmentHandler {
 
     private void initDataExporter() {
         SingletonDataExporter.reset();
-        SingletonDataExporter.exportConfiguration("optimization_configuration", this.optimizationConfiguration.get());
-        SingletonDataExporter.exportConfiguration("environment_configuration", this.environmentConfiguration.get());
+        SingletonDataExporter.exportConfiguration("OPTIMIZATION_CONFIGURATION", this.optimizationConfiguration.get());
+        SingletonDataExporter.exportConfiguration("ENVIRONMENT_CONFIGURATION", this.environmentConfiguration.get());
     }
 
     private void createEnvironment() {
@@ -139,10 +139,10 @@ public class OptimizationEnvironmentHandler {
     }
 
     private void exportData() {
-        SingletonDataExporter.addData(OptimizationState.AVERAGE_ITERATIONS, optimization.getState());
-        SingletonDataExporter.addData(OptimizationState.AVERAGE_HIDDEN_NODES, optimization.getState());
-        SingletonDataExporter.addData(OptimizationState.AVERAGE_FITNESS, optimization.getState());
-        SingletonDataExporter.addData(OptimizationState.AVERAGE_CONNECTIONS, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.ITERATION_DISTRIBUTION, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.HIDDEN_NODES_DISTRIBUTION, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.FITNESS_DISTRIBUTION, optimization.getState());
+        SingletonDataExporter.addData(OptimizationState.CONNECTIONS_DISTRIBUTION, optimization.getState());
         SingletonDataExporter.finishAndExport();
     }
 

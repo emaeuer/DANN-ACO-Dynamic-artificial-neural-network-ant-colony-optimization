@@ -12,6 +12,7 @@ import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.pheromone.AbstractPopulationBasedPheromone;
 import de.emaeuer.optimization.paco.pheromone.AgePopulationBasedPheromone;
 import de.emaeuer.optimization.paco.pheromone.FitnessPopulationBasedPheromone;
+import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,11 +31,15 @@ public class PacoHandler extends OptimizationMethod {
     private final List<PacoAnt> currentAnts = new ArrayList<>();
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
+    private final StateHandler<PacoState> state = new StateHandler<>(PacoState.class);
 
     public PacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
         this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
+
+        // register own state in optimization state
+        generalState.addNewValue(OptimizationState.IMPLEMENTATION_STATE, this.state);
 
         initialize();
     }
@@ -59,6 +64,9 @@ public class PacoHandler extends OptimizationMethod {
     @Override
     public void resetAndRestart() {
         super.resetAndRestart();
+
+        this.state.resetValue(PacoState.CONNECTION_WEIGHTS_SCATTERED);
+
         initialize();
     }
 
@@ -110,7 +118,7 @@ public class PacoHandler extends OptimizationMethod {
                     .orElse(null);
         }
 
-        this.pheromone.exportPheromoneMatrix(getEvaluationCounter());
+        this.pheromone.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix

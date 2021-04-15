@@ -7,15 +7,14 @@ public enum OptimizationState implements StateParameter<OptimizationState> {
     CURRENT_RUN("Number of runs", NumberStateValue.class),
     CURRENT_ITERATION("Number of iterations", NumberStateValue.class),
     FITNESS_VALUE("Best fitness value", NumberStateValue.class),
-    AVERAGE_ITERATIONS("Average number of evaluations per run", NumberStateValue.class),
-    AVERAGE_FITNESS("Average run fitness", NumberStateValue.class),
-    AVERAGE_HIDDEN_NODES("Average number of hidden nodes", NumberStateValue.class),
-    AVERAGE_CONNECTIONS("Average number of connections", NumberStateValue.class),
+    ITERATION_DISTRIBUTION("Distribution of number of evaluations per run", DistributionStateValue.class),
+    FITNESS_DISTRIBUTION("Distribution of run fitness", DistributionStateValue.class),
+    HIDDEN_NODES_DISTRIBUTION("Distribution of number of hidden nodes", DistributionStateValue.class),
+    CONNECTIONS_DISTRIBUTION("Distribution of number of connections", DistributionStateValue.class),
     AVERAGE_RUN_FITNESS_SERIES("Average fitness over all runs", DataSeriesStateValue.class),
     FITNESS_SERIES("Fitness of current iteration", DataSeriesStateValue.class),
     IMPLEMENTATION_STATE("State of the optimization method", EmbeddedState.class),
     BEST_SOLUTION("Currently best solution", GraphStateValue.class);
-
 
     private final String name;
     private final Class<? extends AbstractStateValue<?, ?>> type;

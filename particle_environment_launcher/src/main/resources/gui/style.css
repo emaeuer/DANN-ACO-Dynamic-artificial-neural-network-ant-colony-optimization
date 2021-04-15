@@ -162,6 +162,11 @@
     -fx-background-color:transparent;
 }
 
+.output_plot .chart-symbol {
+    -fx-background-radius: 0;
+    -fx-padding: 1px ;
+}
+
 .output_plot_background {
     -fx-background-color: -card-background-paint;
 }
