@@ -15,6 +15,10 @@ public class StateValueFactory {
             return new NumberStateValue();
         } else if (GraphStateValue.class.equals(className)) {
             return new GraphStateValue();
+        } else if (DistributionStateValue.class.equals(className)) {
+            return new DistributionStateValue();
+        } else if (ScatteredDataStateValue.class.equals(className)) {
+            return new ScatteredDataStateValue();
         }
 
         throw new IllegalArgumentException("Factory doesn't support values of type " + className.getSimpleName());

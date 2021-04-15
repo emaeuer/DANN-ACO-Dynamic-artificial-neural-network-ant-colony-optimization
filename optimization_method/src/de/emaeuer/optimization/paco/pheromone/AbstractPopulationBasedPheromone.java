@@ -10,8 +10,11 @@ import de.emaeuer.configuration.ConfigurationVariablesBuilder;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoParameter;
+import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
-import de.emaeuer.persistence.SingletonDataExporter;
+import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.AbstractStateValue;
+import de.emaeuer.state.value.ScatteredDataStateValue;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -362,15 +365,21 @@ public abstract class AbstractPopulationBasedPheromone {
 
     }
 
-    public void exportPheromoneMatrix(int evaluationNumber) {
-        Map<String, Object> data = new HashMap<>();
+    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
+        //noinspection unchecked safe cast for generic not possible
+        Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
-        data.put("evaluation", evaluationNumber);
+        for (Table.Cell<NeuronID, NeuronID, Multiset<FitnessValue>> connection : this.weightPheromone.cellSet()) {
+            String id = connection.getRowKey() + " -> " + connection.getColumnKey();
+            currentState.putIfAbsent(id, new ScatteredDataStateValue());
 
-        this.weightPheromone.cellSet()
-                .forEach(c -> data.put(c.getRowKey() + " -> " + c.getColumnKey(), getValuesForWeight(c.getRowKey(), c.getColumnKey())));
-
-        SingletonDataExporter.addRunData("pheromone", data, true);
+            currentState.get(id).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
+                    Objects.requireNonNull(connection.getValue())
+                            .stream()
+                            .mapToDouble(FitnessValue::value)
+                            .boxed()
+                            .toArray(Double[]::new)));
+        }
     }
 
     private Collection<Double> getValuesForWeight(NeuronID start, NeuronID end) {

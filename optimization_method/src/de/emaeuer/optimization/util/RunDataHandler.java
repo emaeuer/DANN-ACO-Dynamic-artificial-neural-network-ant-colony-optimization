@@ -1,7 +1,5 @@
 package de.emaeuer.optimization.util;
 
-import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
 
@@ -52,10 +50,10 @@ public class RunDataHandler {
         this.hiddenNodeNumber.accept(summary.hiddenNodes());
         this.connectionNumber.accept(summary.connections());
 
-        generalState.addNewValue(OptimizationState.AVERAGE_ITERATIONS, this.neededIterationNumbers.getAverage());
-        generalState.addNewValue(OptimizationState.AVERAGE_HIDDEN_NODES, this.hiddenNodeNumber.getAverage());
-        generalState.addNewValue(OptimizationState.AVERAGE_CONNECTIONS, this.connectionNumber.getAverage());
-        generalState.addNewValue(OptimizationState.AVERAGE_FITNESS, this.maxFitness.getAverage());
+        generalState.addNewValue(OptimizationState.ITERATION_DISTRIBUTION, this.neededIterationNumbers.getAverage());
+        generalState.addNewValue(OptimizationState.HIDDEN_NODES_DISTRIBUTION, this.hiddenNodeNumber.getAverage());
+        generalState.addNewValue(OptimizationState.CONNECTIONS_DISTRIBUTION, this.connectionNumber.getAverage());
+        generalState.addNewValue(OptimizationState.FITNESS_DISTRIBUTION, this.maxFitness.getAverage());
     }
 
     public void addFitnessSummary(int evaluationCount, DoubleSummaryStatistics statistic) {

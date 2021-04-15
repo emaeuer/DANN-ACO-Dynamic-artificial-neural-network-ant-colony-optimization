@@ -122,7 +122,6 @@ public abstract class OptimizationMethod {
         this.generalState.resetValue(OptimizationState.CURRENT_ITERATION);
         this.generalState.resetValue(OptimizationState.FITNESS_VALUE);
         this.generalState.resetValue(OptimizationState.FITNESS_SERIES);
-        this.generalState.resetValue(OptimizationState.IMPLEMENTATION_STATE);
         this.generalState.resetValue(OptimizationState.BEST_SOLUTION);
 
         this.currentlyBestSolution = null;
