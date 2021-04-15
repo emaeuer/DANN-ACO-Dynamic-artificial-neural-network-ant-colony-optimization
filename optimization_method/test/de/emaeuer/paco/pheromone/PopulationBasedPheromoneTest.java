@@ -57,7 +57,7 @@ public class PopulationBasedPheromoneTest {
 
     @Test
     public void testAddSolutionsPopulationSizeNotReached() {
-        FitnessPopulationBasedPheromone pheromone = new FitnessPopulationBasedPheromone(buildConfiguration(2), null);
+        FitnessPopulationBasedPheromone pheromone = new FitnessPopulationBasedPheromone(buildConfiguration(2), buildNeuralNetwork(2, 2));
 
         // create test data
         NeuralNetwork nnA = buildNeuralNetwork(2, 2);
@@ -94,18 +94,18 @@ public class PopulationBasedPheromoneTest {
         assertSame(antB, population.get(0));
 
         // check weight pheromone was updated
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 0), new NeuronID(1, 0)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0)),
                 new FitnessValue(100, 1), new FitnessValue(90, -1));
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 0), new NeuronID(1, 1)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1)),
                 new FitnessValue(90, -3));
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 1), new NeuronID(1, 0)));
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 1), new NeuronID(1, 1)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0)));
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1)),
                 new FitnessValue(100, 2), new FitnessValue(90, -2));
     }
 
     @Test
     public void testAddSolutionsPopulationSizeReached() {
-        FitnessPopulationBasedPheromone pheromone = new FitnessPopulationBasedPheromone(buildConfiguration(2), null);
+        FitnessPopulationBasedPheromone pheromone = new FitnessPopulationBasedPheromone(buildConfiguration(2), buildNeuralNetwork(2, 2));
 
         // create test data
         NeuralNetwork nnA = buildNeuralNetwork(2, 2);
@@ -154,12 +154,12 @@ public class PopulationBasedPheromoneTest {
         assertSame(antA, population.get(0));
 
         // check weight pheromone was updated
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 0), new NeuronID(1, 0)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0)),
                 new FitnessValue(100, 1), new FitnessValue(110, 10));
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 0), new NeuronID(1, 1)));
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 1), new NeuronID(1, 0)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1)));
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0)),
                 new FitnessValue(110, 12));
-        assertContainsAll(pheromone.getWeightPheromone().get(new NeuronID(0, 1), new NeuronID(1, 1)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1)),
                 new FitnessValue(100, 2), new FitnessValue(110, 11));
     }
 

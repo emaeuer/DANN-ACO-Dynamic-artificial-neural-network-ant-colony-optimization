@@ -41,14 +41,27 @@ public abstract class AbstractPopulationBasedPheromone {
 
     // a two dimensional table which saves all weights that were assigned to a connection by an ant of this population
     // bag is used to allow duplicates and efficient remove/ add operations
-    private final Table<NeuronID, NeuronID, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> weightPheromone = HashBasedTable.create();
+    private final Table<Integer, Integer, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> weightPheromone = HashBasedTable.create();
+
+    private int neuronIDCounter = 0;
+    private final BiMap<NeuronID, Integer> neuronIDMapping = HashBiMap.create();
 
     public AbstractPopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         this.configuration = configuration;
         this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
         this.baseNetwork = baseNetwork;
 
+        initializeNeuronIDMapping();
+
         this.population = getEmptyPopulation();
+    }
+
+    private void initializeNeuronIDMapping() {
+        Iterator<NeuronID> neuronIterator = NeuralNetworkUtil.iterateNeurons(this.baseNetwork);
+        while (neuronIterator.hasNext()) {
+            this.neuronIDMapping.put(neuronIterator.next(), this.neuronIDCounter);
+            this.neuronIDCounter++;
+        }
     }
 
     protected abstract Collection<PacoAnt> getEmptyPopulation();
@@ -79,10 +92,14 @@ public abstract class AbstractPopulationBasedPheromone {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
             Connection next = connections.next();
-            Collection<FitnessPopulationBasedPheromone.FitnessValue> values = this.weightPheromone.get(next.start(), next.end());
-            Objects.requireNonNull(values).remove(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
+            // check if population contains value not necessary because if value doesn't exist the procedure for adding
+            // ants doesn't work properly --> error is justified
+            Collection<FitnessPopulationBasedPheromone.FitnessValue> values = getPopulationValues(next.start(), next.end());
+            values.remove(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
+
             if (values.isEmpty()) {
-                this.weightPheromone.remove(next.start(), next.end());
+                // if no values exists the cell can be deleted from the table
+                removePopulationValues(next.start(), next.end());
             }
         }
     }
@@ -93,14 +110,12 @@ public abstract class AbstractPopulationBasedPheromone {
 
         // add all weights of this ant
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
-        while (connections.hasNext()) {
-            Connection next = connections.next();
+        connections.forEachRemaining(c -> addConnectionToPopulation(c, ant.getFitness()));
+    }
 
-            if (!this.weightPheromone.contains(next.start(), next.end())) {
-                this.weightPheromone.put(next.start(), next.end(), LinkedHashMultiset.create());
-            }
-            Objects.requireNonNull(this.weightPheromone.get(next.start(), next.end())).add(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
-        }
+    private void addConnectionToPopulation(Connection connection, double fitness) {
+        getOrCreatePopulationValues(connection.start(), connection.end())
+                .add(new FitnessPopulationBasedPheromone.FitnessValue(fitness, connection.weight()));
     }
 
     public NeuralNetwork createNeuralNetworkForGlobalBest() {
@@ -177,7 +192,7 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     private void checkAndAddConnection(NeuralNetwork nn, NeuronID source, NeuronID target) {
-        Collection<FitnessValue> populationValues = this.weightPheromone.get(source, target);
+        Collection<FitnessValue> populationValues = getPopulationValues(source, target);
         double usagesInPopulation = populationValues == null ? 0 : populationValues.size();
 
         double selectedWeightValue = selectWeightForConnection(populationValues);
@@ -215,7 +230,7 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     private void chekAndRemoveConnection(NeuralNetwork nn, NeuronID source, NeuronID target) {
-        Collection<FitnessValue> populationValues = this.weightPheromone.get(source, target);
+        Collection<FitnessValue> populationValues = getPopulationValues(source, target);
         double usagesInPopulation = populationValues == null ? 0 : populationValues.size();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
@@ -232,7 +247,7 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     private void calculateWeightValue(NeuralNetwork nn, Connection connection) {
-        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), this.weightPheromone.get(connection.start(), connection.end()));
+        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end()));
 
         nn.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
     }
@@ -369,8 +384,11 @@ public abstract class AbstractPopulationBasedPheromone {
         //noinspection unchecked safe cast for generic not possible
         Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
-        for (Table.Cell<NeuronID, NeuronID, Multiset<FitnessValue>> connection : this.weightPheromone.cellSet()) {
-            String id = connection.getRowKey() + " -> " + connection.getColumnKey();
+        for (Table.Cell<Integer, Integer, Multiset<FitnessValue>> connection : this.weightPheromone.cellSet()) {
+            int startIndex = Optional.ofNullable(connection.getRowKey()).orElse(-1);
+            int endIndex = Optional.ofNullable(connection.getColumnKey()).orElse(-1);
+
+            String id = getNeuronForID(startIndex) + " -> " + getNeuronForID(endIndex);
             currentState.putIfAbsent(id, new ScatteredDataStateValue());
 
             currentState.get(id).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
@@ -382,20 +400,33 @@ public abstract class AbstractPopulationBasedPheromone {
         }
     }
 
-    private Collection<Double> getValuesForWeight(NeuronID start, NeuronID end) {
-        return Objects.requireNonNullElse(this.weightPheromone.get(start, end), Collections.emptyList())
-                .stream()
-                .map(FitnessValue.class::cast)
-                .map(FitnessValue::value)
-                .collect(Collectors.toList());
+    public Multiset<FitnessValue> getPopulationValues(NeuronID start, NeuronID end) {
+        return this.weightPheromone.get(getIDForNeuron(start), getIDForNeuron(end));
+    }
+
+    private void removePopulationValues(NeuronID start, NeuronID end) {
+        this.weightPheromone.remove(getIDForNeuron(start), getIDForNeuron(end));
+    }
+
+    private Multiset<FitnessValue> getOrCreatePopulationValues(NeuronID start, NeuronID end) {
+        Multiset<FitnessValue> result = getPopulationValues(start, end);
+        if (result == null) {
+            result = HashMultiset.create();
+            this.weightPheromone.put(getIDForNeuron(start), getIDForNeuron(end), result);
+        }
+        return result;
+    }
+
+    private int getIDForNeuron(NeuronID neuron) {
+        return this.neuronIDMapping.get(neuron);
+    }
+
+    private NeuronID getNeuronForID(int id) {
+        return this.neuronIDMapping.inverse().get(id);
     }
 
     public Collection<PacoAnt> getPopulation() {
         return population;
-    }
-
-    public Table<NeuronID, NeuronID, Multiset<FitnessValue>> getWeightPheromone() {
-        return weightPheromone;
     }
 
     public int getMaximalPopulationSize() {
