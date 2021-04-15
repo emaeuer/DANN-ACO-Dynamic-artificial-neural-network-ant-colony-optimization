@@ -163,6 +163,10 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
         // set default activation function may be overridden by modifier
         NeuralNetworkLayerBuilderImpl builder = NeuralNetworkLayerImpl.build();
 
+        // neural network has to be set before and after because settings in modifier may need the neural network
+        // and second setting guarantees that the wright neural network was set
+        Consumer<NeuralNetworkLayerBuilderImpl> basicModifier = b -> b.neuralNetwork(this.nn);
+        modifier = basicModifier.andThen(modifier);
         modifier = modifier.andThen(b -> b.neuralNetwork(this.nn)
                 .layerID(this.nn.getLayers().size())
                 .layerType(p));

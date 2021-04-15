@@ -23,6 +23,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
         RealVector output = this.layers.get(0).process(input);
         for (int i = 1; i < this.layers.size(); i++) {
+            // input vector doesn't have to be passed to the other layers because they retrieve the data from the input layer
             output = this.layers.get(i).process();
         }
         return output;

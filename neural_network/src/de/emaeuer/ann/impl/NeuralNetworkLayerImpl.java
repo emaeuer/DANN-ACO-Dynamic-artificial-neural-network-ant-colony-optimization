@@ -66,7 +66,13 @@ public class NeuralNetworkLayerImpl {
     }
 
     private RealVector applyWeightsBiasAndActivation(RealVector vector) {
-        RealVector weightedResult = weights.operate(vector);
+        RealVector weightedResult;
+        if (this.weights == null) {
+            // this layer has no incoming connections --> activation equals bias
+            weightedResult = new ArrayRealVector(this.getNumberOfNeurons());
+        } else {
+            weightedResult = weights.operate(vector);
+        }
 
         // bias is optional and can be realized by the use of an on neuron and its weights
         if (this.bias != null) {

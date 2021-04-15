@@ -29,11 +29,14 @@ public class MathUtil {
             throw new IndexOutOfBoundsException(String.format("Can't remove column %s from matrix with only %s columns", colToRemove, matrix.getColumnDimension()));
         }
 
-
         int[] selectedRows = IntStream.range(0, matrix.getRowDimension()).filter(i -> i != rowToRemove).toArray();
         int[] selectedCols = IntStream.range(0, matrix.getColumnDimension()).filter(i -> i != colToRemove).toArray();
 
-        return matrix.getSubMatrix(selectedRows, selectedCols);
+        if (selectedRows.length == 0 || selectedCols.length == 0) {
+            return null;
+        } else {
+            return matrix.getSubMatrix(selectedRows, selectedCols);
+        }
     }
 
     public static RealVector removeElementFromVector(RealVector vector, int index) {
@@ -42,6 +45,11 @@ public class MathUtil {
     }
 
     public static RealMatrix addColumnToMatrix(RealMatrix matrix) {
+        // if matrix is null create new matrix
+        if (matrix == null) {
+           return MatrixUtils.createRealMatrix(1, 1);
+        }
+
         RealMatrix newMatrix = MatrixUtils.createRealMatrix(matrix.getRowDimension(), matrix.getColumnDimension() + 1);
 
         for (int i = 0; i < matrix.getColumnDimension(); i++) {

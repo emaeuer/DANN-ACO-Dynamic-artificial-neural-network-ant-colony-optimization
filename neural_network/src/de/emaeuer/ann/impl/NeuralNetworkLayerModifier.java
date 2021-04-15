@@ -173,10 +173,6 @@ public class NeuralNetworkLayerModifier {
     private void removeInputNeuron(NeuronID start) {
         int neuronIndex = this.layer.getInputNeurons().indexOf(start);
         if (neuronIndex != -1) {
-            neuronIndex = this.layer.isInputLayer()
-                    ? this.layer.getNumberOfNeurons() + neuronIndex
-                    : neuronIndex;
-
             this.layer.getInputNeurons().remove(neuronIndex);
             this.layer.setWeights(MathUtil.removeColumnFromMatrix(this.layer.getWeights(), neuronIndex));
         }

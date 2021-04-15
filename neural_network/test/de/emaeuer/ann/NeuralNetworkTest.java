@@ -137,6 +137,31 @@ public class NeuralNetworkTest {
         }
     }
 
+    @Test
+    public void testIsolatedNeurons() {
+        NeuralNetworkImpl nn = (NeuralNetworkImpl) buildNeuralNetwork(2, 2);
+        nn.modify()
+                .removeConnection(new NeuronID(0, 0), new NeuronID(1, 0))
+                .removeConnection(new NeuronID(0, 0), new NeuronID(1, 1))
+                .setBiasOfNeuron(new NeuronID(1, 0), 1);
+
+        assertFalse(nn.neuronHasConnectionTo(new NeuronID(0, 0), new NeuronID(1, 0)));
+        assertFalse(nn.neuronHasConnectionTo(new NeuronID(0, 0), new NeuronID(1, 1)));
+        assertFalse(nn.neuronHasConnectionToLayer(new NeuronID(0, 0), 1));
+
+        // activation equals bias
+        assertArrayEquals(new double[] {0, -1}, nn.process(new ArrayRealVector(new double[] {1, 1})).toArray());
+
+        nn.modify().addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 1);
+
+        assertEquals(1, nn.getWeightOfConnection(new NeuronID(0, 0), new NeuronID(1, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 0), new NeuronID(1, 0)));
+        assertTrue(nn.neuronHasConnectionToLayer(new NeuronID(0, 0), 1));
+
+        // activation equals input + bias
+        assertArrayEquals(new double[] {1, -1}, nn.process(new ArrayRealVector(new double[] {1, 1})).toArray());
+    }
+
     /*
      ##########################################################
      #################### Helper Methods ######################
