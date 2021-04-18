@@ -112,4 +112,17 @@ public class NeuralNetworkUtil {
                 .sum();
     }
 
+    /**
+     * Builds a string that contains all connections
+     *
+     * @return String that contains all connections which can be used to identify equal prototypes
+     */
+    public static String getTopologySummary(NeuralNetwork nn) {
+        StringBuilder builder = new StringBuilder();
+        NeuralNetworkUtil.iterateNeuralNetworkConnections(nn)
+                .forEachRemaining(c -> builder.append(String.format("[%d-%d->%d-%d]",
+                        c.start().getLayerIndex(), c.start().getNeuronIndex(), c.end().getLayerIndex(), c.end().getNeuronIndex())));
+        return builder.toString();
+    }
+
 }

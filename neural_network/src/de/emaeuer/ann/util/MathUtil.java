@@ -60,6 +60,11 @@ public class MathUtil {
     }
 
     public static RealMatrix addRowToMatrix(RealMatrix matrix) {
+        // if matrix is null create new matrix
+        if (matrix == null) {
+            return MatrixUtils.createRealMatrix(1, 1);
+        }
+
         RealMatrix newMatrix = MatrixUtils.createRealMatrix(matrix.getRowDimension() + 1, matrix.getColumnDimension());
 
         for (int i = 0; i < matrix.getRowDimension(); i++) {

@@ -9,12 +9,12 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     POPULATION_SIZE("Solution population size", new IntegerConfigurationValue(20, 1, 100)),
     UPDATES_PER_ITERATION("Number ants that update each iteration", new IntegerConfigurationValue(2, 1, 10)),
     ANTS_PER_ITERATION("Number of ants per iteration", new IntegerConfigurationValue(10, 1, 100)),
-    DEVIATION_FUNCTION("Function to calculate deviation", new ExpressionConfigurationValue("s/(p - 1) + 0.01", PacoParameter.class)),
-    ADDITIONAL_CONNECTION_PROBABILITY_FUNCTION("Function to calculate the probability for an additional connection", new ExpressionConfigurationValue("0.9((n/p)^2)*(v^2)+0.1", PacoParameter.class)),
-    REMOVE_CONNECTION_PROBABILITY_FUNCTION("Function to calculate the probability to remove a connection", new ExpressionConfigurationValue("-0.5((n/p)^2)*(v^2)+0.5", PacoParameter.class)),
-    SPLIT_PROBABILITY_FUNCTION("Function to calculate split probability of a connection", new ExpressionConfigurationValue("1/s * v", PacoParameter.class)),
-    KEEP_BEST("Keep best ant for next iteration", new BooleanConfigurationValue(false)),
-    REMOVE_WORST("Remove the worst (true) / oldest (false) and", new BooleanConfigurationValue(true));
+    DEVIATION_FUNCTION("Function to calculate deviation", new ExpressionConfigurationValue("s/(p - 1) + 0.05", PacoParameter.class)),
+    ELITISM("Use elitism", new BooleanConfigurationValue(false)),
+    REMOVE_WORST("Remove the worst (true) / oldest (false) and", new BooleanConfigurationValue(true)),
+    DYNAMIC_PROBABILITY("Probability for dynamic change", new ExpressionConfigurationValue("0.75(n/p)^2+0.1", PacoParameter.class)),
+    PHEROMONE_VALUE("Pheromone value of a connection", new ExpressionConfigurationValue("(n+1) / (p+1)", PacoParameter.class)),
+    SPLIT_THRESHOLD("Threshold for splitting a connection instead of removing", new ExpressionConfigurationValue("leq(s/(p - 1), 0.1) * geq(n, p * 0.9)", PacoParameter.class));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;

@@ -74,8 +74,8 @@ public class PacoHandler extends OptimizationMethod {
     protected List<? extends Solution> generateSolutions() {
         this.currentAnts.clear();
 
-        if (!this.pheromone.getPopulation().isEmpty() && configuration.getValue(KEEP_BEST, Boolean.class)) {
-            this.currentAnts.add(new PacoAnt(this.pheromone.createNeuralNetworkForGlobalBest()));
+        if (!this.pheromone.getPopulation().isEmpty() && configuration.getValue(ELITISM, Boolean.class)) {
+            this.currentAnts.add(this.pheromone.createGlobalBestAnt());
         }
 
         // if pheromone matrix is empty create the necessary number of ants to fill the population completely
@@ -85,8 +85,7 @@ public class PacoHandler extends OptimizationMethod {
         }
 
         IntStream.range(this.currentAnts.size(), antsPerIteration)
-                .mapToObj(i -> this.pheromone.createNeuralNetworkForPheromone())
-                .map(PacoAnt::new)
+                .mapToObj(i -> this.pheromone.createAntFromPopulation())
                 .forEach(this.currentAnts::add);
 
         return this.currentAnts;
@@ -133,7 +132,6 @@ public class PacoHandler extends OptimizationMethod {
     @Override
     protected void handleProgressionStagnation() {
         super.handleProgressionStagnation();
-        this.pheromone.increaseComplexity();
     }
 
     @Override

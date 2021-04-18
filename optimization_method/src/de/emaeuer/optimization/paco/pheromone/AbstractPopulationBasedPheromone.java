@@ -17,6 +17,8 @@ import de.emaeuer.state.value.AbstractStateValue;
 import de.emaeuer.state.value.ScatteredDataStateValue;
 
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -33,38 +35,39 @@ public abstract class AbstractPopulationBasedPheromone {
 
     private final NeuralNetwork baseNetwork;
 
-    // collection containing all ants of this population sorted according to remove strategy
-    private final Collection<PacoAnt> population;
-
-    // ranked collection of the ants of this population
-    private final TreeSet<PacoAnt> sortedPopulation = new TreeSet<>(Comparator.comparingDouble(PacoAnt::getFitness));
+    private final Map<String, List<NeuralNetwork>> templatePheromone = new HashMap<>();
 
     // a two dimensional table which saves all weights that were assigned to a connection by an ant of this population
     // bag is used to allow duplicates and efficient remove/ add operations
     private final Table<Integer, Integer, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> weightPheromone = HashBasedTable.create();
 
-    private int neuronIDCounter = 0;
-    private final BiMap<NeuronID, Integer> neuronIDMapping = HashBiMap.create();
+    // table which contains the mappings for neurons to the id used in weight pheromone
+    // keys are the neuron of the network and the depth of the network
+    private final Table<NeuronID, Integer, Integer> neuronMapping = HashBasedTable.create();
+
+    private final AtomicInteger neuronMappingCounter = new AtomicInteger(0);
+
+    //############################################################
+    //################ Methods for initialization ################
+    //############################################################
 
     public AbstractPopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         this.configuration = configuration;
         this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
         this.baseNetwork = baseNetwork;
 
-        initializeNeuronIDMapping();
-
-        this.population = getEmptyPopulation();
+        initializeNeuronMapping();
     }
 
-    private void initializeNeuronIDMapping() {
-        Iterator<NeuronID> neuronIterator = NeuralNetworkUtil.iterateNeurons(this.baseNetwork);
-        while (neuronIterator.hasNext()) {
-            this.neuronIDMapping.put(neuronIterator.next(), this.neuronIDCounter);
-            this.neuronIDCounter++;
-        }
+    private void initializeNeuronMapping() {
+        int depth = this.baseNetwork.getDepth();
+        NeuralNetworkUtil.iterateNeurons(this.baseNetwork)
+                .forEachRemaining(n -> this.neuronMapping.put(n, depth, this.neuronMappingCounter.getAndIncrement()));
     }
 
-    protected abstract Collection<PacoAnt> getEmptyPopulation();
+    //############################################################
+    //############### Methods for pheromone update ###############
+    //############################################################
 
     public void addAntToPopulation(PacoAnt ant) {
         // if the population is completely populated an ant has to be removed before a new one is added
@@ -72,182 +75,260 @@ public abstract class AbstractPopulationBasedPheromone {
             removeAnt();
         }
         addAnt(ant);
+        this.templatePheromone.forEach((k, v) -> System.out.println(k + " " + v.size()));
     }
 
-    protected boolean isPopulationCompletelyPopulated() {
-        return this.maximalPopulationSize <= this.population.size();
+    private void removeAnt() {
+        // which ant gets removed is implementation dependent
+        PacoAnt ant = removeAndGetAnt();
+
+        // remove all knowledge of this ant
+        removeTemplateOfAnt(ant);
+        removeWeightsOfAnt(ant);
     }
 
     protected abstract PacoAnt removeAndGetAnt();
 
-    private void removeAnt() {
-        PacoAnt ant = removeAndGetAnt();
-        this.sortedPopulation.remove(ant);
+    private void removeTemplateOfAnt(PacoAnt ant) {
+        // remove template form list of instances of this template
+        String templateKey = NeuralNetworkUtil.getTopologySummary(ant.getNeuralNetwork());
+        List<NeuralNetwork> templateList = this.templatePheromone.get(templateKey);
 
-        removeKnowledgeOfAnt(ant);
+        if (templateList.size() == 1) {
+            this.templatePheromone.remove(templateKey);
+        } else {
+            // remove by reference because all templates in this list are equal
+            templateList.remove(ant.getNeuralNetwork());
+        }
     }
 
-    private void removeKnowledgeOfAnt(PacoAnt ant) {
-        // remove all weights of this ant
+    private void removeWeightsOfAnt(PacoAnt ant) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
             Connection next = connections.next();
-            // check if population contains value not necessary because if value doesn't exist the procedure for adding
+            // check if population contains value not necessary because if the value would be missing the procedure for adding
             // ants doesn't work properly --> error is justified
-            Collection<FitnessPopulationBasedPheromone.FitnessValue> values = getPopulationValues(next.start(), next.end());
+            Collection<FitnessPopulationBasedPheromone.FitnessValue> values = getPopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
             values.remove(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
 
             if (values.isEmpty()) {
                 // if no values exists the cell can be deleted from the table
-                removePopulationValues(next.start(), next.end());
+                removePopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
             }
         }
     }
 
-    private void addAnt(PacoAnt ant) {
-        population.add(ant);
-        this.sortedPopulation.add(ant);
+    protected void addAnt(PacoAnt ant) {
+        getPopulation().add(ant);
 
         // add all weights of this ant
+        addTemplateOfAnt(ant);
+        addWeightsOfAnt(ant);
+    }
+
+    private void addTemplateOfAnt(PacoAnt ant) {
+        // add template to list of instances of this template
+        String templateKey = NeuralNetworkUtil.getTopologySummary(ant.getNeuralNetwork());
+        this.templatePheromone.putIfAbsent(templateKey, new ArrayList<>());
+        this.templatePheromone.get(templateKey).add(ant.getNeuralNetwork());
+    }
+
+    private void addWeightsOfAnt(PacoAnt ant) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
-        connections.forEachRemaining(c -> addConnectionToPopulation(c, ant.getFitness()));
+        connections.forEachRemaining(c -> addConnectionToPopulation(c, ant));
     }
 
-    private void addConnectionToPopulation(Connection connection, double fitness) {
-        getOrCreatePopulationValues(connection.start(), connection.end())
-                .add(new FitnessPopulationBasedPheromone.FitnessValue(fitness, connection.weight()));
+    private void addConnectionToPopulation(Connection connection, PacoAnt ant) {
+        getOrCreatePopulationValues(connection.start(), connection.end(), ant.getNeuralNetwork())
+                .add(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), connection.weight()));
     }
 
-    public NeuralNetwork createNeuralNetworkForGlobalBest() {
-        if (this.population.isEmpty()) {
+    //############################################################
+    //########### Methods for solution generation ################
+    //############################################################
+
+    public PacoAnt createGlobalBestAnt() {
+        if (getPopulation().isEmpty()) {
             return null;
         }
 
         PacoAnt populationBest = getBestAntOfPopulation();
-        return populationBest.getNeuralNetwork().copy();
+        return new PacoAnt(populationBest.getNeuralNetwork().copy());
     }
 
-    protected abstract PacoAnt getBestAntOfPopulation();
+    public PacoAnt createAntFromPopulation() {
+        // select random ant from this population and use its neural network as template
+        NeuralNetwork template = selectNeuralNetworkTemplate();
 
-    public NeuralNetwork createNeuralNetworkForPheromone() {
-        // select random ant from this population and use its neural network as prototype
-        NeuralNetwork prototype = getPrototypeNeuralNetwork();
+        // modify template depending on other values of this population
+        applyNeuralNetworkDynamics(template);
+        adjustWeights(template);
 
-        // modify prototype depending on other values of this population
-        modifyConnections(prototype);
-        adjustWeights(prototype);
-
-        return prototype;
+        return new PacoAnt(template);
     }
 
-    protected NeuralNetwork getPrototypeNeuralNetwork() {
-        // if no knowledge exists start with base network
-        if (this.population.isEmpty()) {
+    protected NeuralNetwork selectNeuralNetworkTemplate() {
+        if (this.templatePheromone.isEmpty()) {
             return this.baseNetwork.copy();
         }
 
-        // (rank / sum ranks) is the selection probability for each element
-        // TODO use int instead
-        double[] rankValues = IntStream.rangeClosed(1, this.sortedPopulation.size())
-                .mapToDouble(v -> v)
+        List<List<NeuralNetwork>> templates = new ArrayList<>(this.templatePheromone.size());
+        List<Integer> selectionProbabilities = new ArrayList<>(this.templatePheromone.size());
+
+        this.templatePheromone.forEach((k, v) -> {
+            templates.add(v);
+            selectionProbabilities.add(v.size());
+        });
+
+        int templateIndex = RandomUtil.selectRandomElementFromVector(selectionProbabilities.stream().mapToInt(i -> i).toArray());
+        // every instance of the selected template has the same probability
+        int[] instanceProbabilities = IntStream.range(0, templates.get(templateIndex).size())
+                .map(i -> 1)
                 .toArray();
+        int instanceIndex = RandomUtil.selectRandomElementFromVector(instanceProbabilities);
 
-        int selectedIndex = RandomUtil.selectRandomElementFromVector(rankValues);
+        return templates.get(templateIndex).get(instanceIndex).copy();
+    }
 
-        // start from the end because they have a higher selection probability
-        Iterator<PacoAnt> antIterator = this.sortedPopulation.descendingIterator();
-        for (int i = this.sortedPopulation.size() - 1; i != selectedIndex && antIterator.hasNext(); i--) {
-            // iterate until selected ant is reached
-            antIterator.next();
+    protected void applyNeuralNetworkDynamics(NeuralNetwork template) {
+        if (this.templatePheromone.isEmpty()) {
+            return;
         }
 
-        return Objects.requireNonNull(antIterator.next()).getNeuralNetwork().copy();
-    }
+        List<NeuralNetwork> similarTemplates = this.templatePheromone.get(NeuralNetworkUtil.getTopologySummary(template));
 
-    protected void adjustWeights(NeuralNetwork nn) {
-        NeuralNetworkUtil.iterateNeuralNetworkConnections(nn).forEachRemaining(c -> calculateWeightValue(nn, c));
-    }
+        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
+                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(PacoParameter.NUMBER_OF_VALUES, similarTemplates.size())
+                .getVariables();
 
-    protected void modifyConnections(NeuralNetwork nn) {
-        List<NeuronID> possibleSources = IntStream.range(0, nn.getDepth())
-                .mapToObj(nn::getNeuronsOfLayer)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+        // if many ants use this template it is more dynamic
+        if (this.configuration.getValue(DYNAMIC_PROBABILITY, Double.class, variables) > RandomUtil.getNextDouble(0, 1)) {
+            List<NeuronID> possibleSources = IntStream.range(0, template.getDepth())
+                    .mapToObj(template::getNeuronsOfLayer)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
 
-        // input neurons can be sources but not targets
-        List<NeuronID> possibleTargets = possibleSources.stream()
-                .filter(Predicate.not(nn::isInputNeuron))
-                .collect(Collectors.toList());
+            // input neurons can be sources but not targets
+            List<NeuronID> possibleTargets = possibleSources.stream()
+                    .filter(Predicate.not(template::isInputNeuron))
+                    .collect(Collectors.toList());
 
-        for (NeuronID source : possibleSources) {
-            for (NeuronID target : possibleTargets) {
-                if (!nn.neuronHasConnectionTo(source, target)) {
-                    checkAndAddConnection(nn, source, target);
-                } else if (this.baseNetwork.getOutgoingConnectionsOfNeuron(source).size() > 1) { // can be removed if alternative exists
-                    // evaluate if connection should be removed
-                    chekAndRemoveConnection(nn, source, target);
+            List<Connection> decisions = new ArrayList<>();
+            List<Double> pheromoneValues = new ArrayList<>();
+
+            for (NeuronID source : possibleSources) {
+                for (NeuronID target : possibleTargets) {
+                    decisions.add(new Connection(source, target, 0));
+                    pheromoneValues.add(calculatePheromoneValueOfConnection(source, target, template));
                 }
+            }
+
+            int decisionIndex = RandomUtil.selectRandomElementFromVector(pheromoneValues.stream().mapToDouble(d -> d).toArray());
+            Connection dynamicElement = decisions.get(decisionIndex);
+
+            // if dynamic element already exists --> remove or split else add
+            if (template.neuronHasConnectionTo(dynamicElement.start(), dynamicElement.end())) {
+                if (isSplitInsteadOfRemove(dynamicElement, template) && splitIsValid(dynamicElement, template)) {
+                    splitConnection(template, dynamicElement);
+                } else {
+                    template.modify().removeConnection(dynamicElement.start(), dynamicElement.end());
+                }
+            } else {
+                template.modify().addConnection(dynamicElement.start(), dynamicElement.end(), 0);
             }
         }
     }
 
-    private void checkAndAddConnection(NeuralNetwork nn, NeuronID source, NeuronID target) {
-        Collection<FitnessValue> populationValues = getPopulationValues(source, target);
-        double usagesInPopulation = populationValues == null ? 0 : populationValues.size();
+    private boolean splitIsValid(Connection dynamicElement, NeuralNetwork nn) {
+        return dynamicElement.start().getLayerIndex() != dynamicElement.end().getLayerIndex() || !nn.isOutputNeuron(dynamicElement.start());
+    }
 
-        double selectedWeightValue = selectWeightForConnection(populationValues);
+    private void splitConnection(NeuralNetwork template, Connection dynamicElement) {
+        System.out.println("Splitting connection " + dynamicElement);
+
+        Map<Integer, NeuronID> oldMapping = new HashMap<>();
+
+        // create a map with the current indices mapped to the neurons of the not modified neuron
+        // the neurons are modified now but the indices should stay the same
+        int depth = template.getDepth();
+        NeuralNetworkUtil.iterateNeurons(template)
+                .forEachRemaining(n -> oldMapping.put(getIDForNeuron(n, depth), n));
+
+        NeuronID splitResult = template.modify().splitConnection(dynamicElement.start(), dynamicElement.end()).getLastModifiedNeuron();
+
+        // don't use old depth because the split may have created new layers
+        updateNeuronIDMapping(oldMapping, splitResult, template.getDepth());
+    }
+
+    private void updateNeuronIDMapping(Map<Integer, NeuronID> oldMappings, NeuronID splitResult, int depth) {
+        // neurons in a new layer point to the same population knowledge --> knowledge is interchangeable between all topologies
+        for (Entry<Integer, NeuronID> oldMapping : oldMappings.entrySet()) {
+            if (!this.neuronMapping.contains(oldMapping.getValue(), depth)) {
+                this.neuronMapping.put(oldMapping.getValue(), depth, oldMapping.getKey());
+            }
+        }
+
+        // create mapping for the new neuron if it wasn't mapped already
+        if (!this.neuronMapping.contains(splitResult, depth)) {
+            this.neuronMapping.put(splitResult, depth, this.neuronMappingCounter.getAndIncrement());
+        }
+    }
+
+    private boolean isSplitInsteadOfRemove(Connection connection, NeuralNetwork template) {
+        int depth = template.getDepth();
+        Collection<FitnessValue> populationKnowledge = this.weightPheromone.get(getIDForNeuron(connection.start(), depth), getIDForNeuron(connection.end(), depth));
+        int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
+
+        double sumOfDifferences = 0;
+
+        if (populationKnowledge != null) {
+            double mean = populationKnowledge.stream()
+                    .mapToDouble(FitnessValue::value)
+                    .average()
+                    .orElse(0);
+
+            sumOfDifferences = populationKnowledge.stream()
+                    .mapToDouble(FitnessValue::value)
+                    .map(d -> Math.abs(mean - d))
+                    .sum();
+        }
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
                 .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, usagesInPopulation)
-                .with(PacoParameter.VALUE, selectedWeightValue)
+                .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
+                .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
                 .getVariables();
 
-        double selectionProbability = this.configuration.getValue(ADDITIONAL_CONNECTION_PROBABILITY_FUNCTION, Double.class, variables);
-
-        if (RandomUtil.getNextDouble(0, 1) < selectionProbability) {
-            nn.modify().addConnection(source, target, 0);
-            calculateWeightValue(nn, new Connection(source, target, 0));
-        }
+        return this.configuration.getValue(SPLIT_THRESHOLD, Boolean.class, variables);
     }
 
-    protected double selectWeightForConnection(Collection<FitnessValue> populationValues) {
-        if (populationValues == null || populationValues.isEmpty()) {
-            // if no previous knowledge exists choose randomly
-            return RandomUtil.getNextDouble(-1, 1);
-        }
-
-        List<FitnessValue> indexedValues = new ArrayList<>(populationValues);
-
-        // select by fitness --> TODO may be better by rank
-        double[] fitnessValues = populationValues.stream()
-                .mapToDouble(FitnessValue::fitness)
-                .toArray();
-
-        int index = RandomUtil.selectRandomElementFromVector(fitnessValues);
-
-        return indexedValues.get(index).value();
-    }
-
-    private void chekAndRemoveConnection(NeuralNetwork nn, NeuronID source, NeuronID target) {
-        Collection<FitnessValue> populationValues = getPopulationValues(source, target);
-        double usagesInPopulation = populationValues == null ? 0 : populationValues.size();
+    protected double calculatePheromoneValueOfConnection(NeuronID source, NeuronID target, NeuralNetwork template) {
+        int depth = template.getDepth();
+        Collection<FitnessValue> populationKnowledge = this.weightPheromone.get(getIDForNeuron(source, depth), getIDForNeuron(target, depth));
+        int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
                 .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, usagesInPopulation)
-                .with(PacoParameter.VALUE, nn.getWeightOfConnection(source, target))
+                .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
                 .getVariables();
 
-        double selectionProbability = this.configuration.getValue(REMOVE_CONNECTION_PROBABILITY_FUNCTION, Double.class, variables);
+        double connectionPheromone = this.configuration.getValue(PHEROMONE_VALUE, Double.class, variables);
 
-        if (RandomUtil.getNextDouble(0, 1) < selectionProbability) {
-            nn.modify().removeConnection(source, target);
+        if (template.neuronHasConnectionTo(source, target)) {
+            return 1 - connectionPheromone;
+        } else {
+            return connectionPheromone;
         }
     }
 
-    private void calculateWeightValue(NeuralNetwork nn, Connection connection) {
-        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end()));
+    protected void adjustWeights(NeuralNetwork nn) {
+        NeuralNetworkUtil.iterateNeuralNetworkConnections(nn)
+                .forEachRemaining(c -> adjustWeightValue(nn, c));
+    }
+
+    private void adjustWeightValue(NeuralNetwork nn, Connection connection) {
+        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end(), nn));
 
         nn.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
     }
@@ -285,100 +366,15 @@ public abstract class AbstractPopulationBasedPheromone {
         return this.configuration.getValue(DEVIATION_FUNCTION, Double.class, variables);
     }
 
-    public void increaseComplexity() {
-        Connection connectionToSplit = determineConnectionToSplit();
-        splitConnection(connectionToSplit);
+    //############################################################
+    //#################### Util Methods ##########################
+    //############################################################
+
+    protected boolean isPopulationCompletelyPopulated() {
+        return this.maximalPopulationSize <= getPopulation().size();
     }
 
-    private Connection determineConnectionToSplit() {
-        List<Connection> splitProbabilities = getBaseConnectionsWithSplitProbabilities();
-
-        double[] probabilityVector = splitProbabilities.stream()
-                .mapToDouble(Connection::weight)
-                .toArray();
-
-        System.out.println(Arrays.toString(probabilityVector));
-
-        // FIXME new connections with little knowledge about get high scores
-        int selectedIndex = RandomUtil.selectRandomElementFromVector(probabilityVector);
-
-        return splitProbabilities.get(selectedIndex);
-    }
-
-    private List<Connection> getBaseConnectionsWithSplitProbabilities() {
-        List<Connection> splitProbabilities = new ArrayList<>();
-        Iterator<Connection> baseConnections = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork);
-
-        while (baseConnections.hasNext()) {
-            Connection baseConnection = baseConnections.next();
-//            Collection<FitnessValue> populationValues = Objects.requireNonNull(this.weightPheromone.get(baseConnection.start(), baseConnection.end()));
-//
-//            double averageWeight = populationValues.stream()
-//                    .mapToDouble(FitnessValue::value)
-//                    .average()
-//                    .orElse(0);
-//
-//            double sumOfSquares = populationValues.stream()
-//                    .mapToDouble(FitnessValue::value)
-//                    .map(v -> v - averageWeight)
-//                    .map(v -> Math.pow(v, 2))
-//                    .sum();
-//
-//            Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-//                    .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-//                    .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
-//                    .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfSquares)
-//                    .with(PacoParameter.VALUE, averageWeight)
-//                    .getVariables();
-//
-//            double splitProbability = this.configuration.getValue(SPLIT_PROBABILITY_FUNCTION, Double.class, variables);
-
-            splitProbabilities.add(new Connection(baseConnection.start(), baseConnection.end(), 1));
-        }
-
-        return splitProbabilities;
-    }
-
-    private void splitConnection(Connection connection) {
-        // TODO log instead of print
-        System.out.printf("Splitting connection form %s to %s%n", connection.start(), connection.end());
-
-        // create copy of neuron ids because they are modified in the split method
-        this.population.forEach(s -> s.getNeuralNetwork().modify().splitConnection(new NeuronID(connection.start()), new NeuronID(connection.end())));
-
-        this.baseNetwork.modify()
-                .splitConnection(new NeuronID(connection.start()), new NeuronID(connection.end()));
-
-        List<PacoAnt> populationCopy = new ArrayList<>(this.population);
-
-        // clear the complete knowledge archive
-        this.population.clear();
-        this.weightPheromone.clear();
-        this.sortedPopulation.clear();
-
-        // rebuild the knowledge archive from the modified neural networks
-        // TODO may remove random ants to increase exploration (either from hole population or just from the corresponding input to the output)
-        populationCopy.forEach(this::addAntToPopulation);
-    }
-
-    public void replaceByRandom() {
-        List<PacoAnt> newPop = this.population.stream()
-                .filter(a -> Math.random() < 0.75)
-                .collect(Collectors.toList());
-
-        // clear the complete knowledge archive
-        this.population.clear();
-        this.weightPheromone.clear();
-        this.sortedPopulation.clear();
-
-        IntStream.range(newPop.size(), getMaximalPopulationSize())
-                .mapToObj(i -> createNeuralNetworkForPheromone())
-                .map(PacoAnt::new)
-                .forEach(newPop::add);
-
-        newPop.forEach(this::addAntToPopulation);
-
-    }
+    protected abstract PacoAnt getBestAntOfPopulation();
 
     public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
         //noinspection unchecked safe cast for generic not possible
@@ -388,7 +384,7 @@ public abstract class AbstractPopulationBasedPheromone {
             int startIndex = Optional.ofNullable(connection.getRowKey()).orElse(-1);
             int endIndex = Optional.ofNullable(connection.getColumnKey()).orElse(-1);
 
-            String id = getNeuronForID(startIndex) + " -> " + getNeuronForID(endIndex);
+            String id = startIndex + " -> " + endIndex;
             currentState.putIfAbsent(id, new ScatteredDataStateValue());
 
             currentState.get(id).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
@@ -400,34 +396,31 @@ public abstract class AbstractPopulationBasedPheromone {
         }
     }
 
-    public Multiset<FitnessValue> getPopulationValues(NeuronID start, NeuronID end) {
-        return this.weightPheromone.get(getIDForNeuron(start), getIDForNeuron(end));
+    public Multiset<FitnessValue> getPopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
+        int depth = nn.getDepth();
+        return this.weightPheromone.get(getIDForNeuron(start, depth), getIDForNeuron(end, depth));
     }
 
-    private void removePopulationValues(NeuronID start, NeuronID end) {
-        this.weightPheromone.remove(getIDForNeuron(start), getIDForNeuron(end));
+    private void removePopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
+        int depth = nn.getDepth();
+        this.weightPheromone.remove(getIDForNeuron(start, depth), getIDForNeuron(end, depth));
     }
 
-    private Multiset<FitnessValue> getOrCreatePopulationValues(NeuronID start, NeuronID end) {
-        Multiset<FitnessValue> result = getPopulationValues(start, end);
+    private Multiset<FitnessValue> getOrCreatePopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
+        int depth = nn.getDepth();
+        Multiset<FitnessValue> result = getPopulationValues(start, end, nn);
         if (result == null) {
             result = HashMultiset.create();
-            this.weightPheromone.put(getIDForNeuron(start), getIDForNeuron(end), result);
+            this.weightPheromone.put(getIDForNeuron(start, depth), getIDForNeuron(end, depth), result);
         }
         return result;
     }
 
-    private int getIDForNeuron(NeuronID neuron) {
-        return this.neuronIDMapping.get(neuron);
+    protected int getIDForNeuron(NeuronID neuron, int depth) {
+        return Objects.requireNonNull(this.neuronMapping.get(neuron, depth));
     }
 
-    private NeuronID getNeuronForID(int id) {
-        return this.neuronIDMapping.inverse().get(id);
-    }
-
-    public Collection<PacoAnt> getPopulation() {
-        return population;
-    }
+    public abstract Collection<PacoAnt> getPopulation();
 
     public int getMaximalPopulationSize() {
         return maximalPopulationSize;

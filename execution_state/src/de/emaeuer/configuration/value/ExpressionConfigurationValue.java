@@ -32,6 +32,18 @@ public class ExpressionConfigurationValue extends AbstractConfigurationValue<Dou
                 public double apply(double... doubles) {
                     return Math.min(doubles[0], doubles[1]);
                 }
+            },
+            new Function("leq", 2) {
+                @Override
+                public double apply(double... doubles) {
+                    return doubles[0] <= doubles[1] ? 1 : 0;
+                }
+            },
+            new Function("geq", 2) {
+                @Override
+                public double apply(double... doubles) {
+                    return doubles[0] >= doubles[1] ? 1 : 0;
+                }
             }
     };
 

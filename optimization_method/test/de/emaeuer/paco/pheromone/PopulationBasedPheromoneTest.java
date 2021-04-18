@@ -94,12 +94,12 @@ public class PopulationBasedPheromoneTest {
         assertSame(antB, population.get(0));
 
         // check weight pheromone was updated
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0), nnA),
                 new FitnessValue(100, 1), new FitnessValue(90, -1));
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1), nnA),
                 new FitnessValue(90, -3));
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0)));
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0), nnA));
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1), nnA),
                 new FitnessValue(100, 2), new FitnessValue(90, -2));
     }
 
@@ -154,12 +154,12 @@ public class PopulationBasedPheromoneTest {
         assertSame(antA, population.get(0));
 
         // check weight pheromone was updated
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0), nnA),
                 new FitnessValue(100, 1), new FitnessValue(110, 10));
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1)));
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1), nnA));
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0), nnA),
                 new FitnessValue(110, 12));
-        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1)),
+        assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1), nnA),
                 new FitnessValue(100, 2), new FitnessValue(110, 11));
     }
 

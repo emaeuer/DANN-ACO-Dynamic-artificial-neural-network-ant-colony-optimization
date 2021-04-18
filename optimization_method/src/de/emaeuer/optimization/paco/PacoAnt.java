@@ -32,4 +32,5 @@ public class PacoAnt implements Solution {
     public NeuralNetwork getNeuralNetwork() {
         return brain;
     }
+
 }

@@ -13,6 +13,21 @@ public class RandomUtil {
 
     private RandomUtil() {}
 
+    public static int selectRandomElementFromVector(int[] vector) {
+        int sum = Arrays.stream(vector).sum();
+        int selectionValue = RNG.nextInt(sum) + 1;
+        int cumulatedSum = 0;
+
+        for (int i = 0; i < vector.length; i++) {
+            cumulatedSum += vector[i];
+            if (cumulatedSum >= selectionValue) {
+                return i;
+            }
+        }
+
+        throw new IllegalArgumentException("Failed to select a random element from the vector " + Arrays.toString(vector));
+    }
+
     public static int selectRandomElementFromVector(RealVector vector) {
         return selectRandomElementFromVector(vector.toArray());
     }
@@ -24,14 +39,9 @@ public class RandomUtil {
 
         for (int i = 0; i < vector.length; i++) {
             cumulatedSum += vector[i];
-            if (cumulatedSum > selectionValue) {
+            if (cumulatedSum >= selectionValue) {
                 return i;
             }
-        }
-
-        // rare case that Math.random() was 1 or vector only contains one element
-        if (cumulatedSum == selectionValue) {
-            return vector.length - 1;
         }
 
         throw new IllegalArgumentException("Failed to select a random element from the vector " + Arrays.toString(vector));
@@ -74,5 +84,4 @@ public class RandomUtil {
             System.out.println(getBetaDistributedValue(-0.99, 0.04));
         }
     }
-
 }

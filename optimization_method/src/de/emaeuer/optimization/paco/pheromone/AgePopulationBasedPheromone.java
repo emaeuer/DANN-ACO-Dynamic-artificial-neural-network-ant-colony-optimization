@@ -15,13 +15,12 @@ public class AgePopulationBasedPheromone extends AbstractPopulationBasedPheromon
 
     private PacoAnt populationBest = null;
 
+    private final LinkedList<PacoAnt> population;
+
     public AgePopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         super(configuration, baseNetwork);
-    }
 
-    @Override
-    protected Collection<PacoAnt> getEmptyPopulation() {
-        return new LinkedList<>();
+        this.population = new LinkedList<>();
     }
 
     @Override
@@ -35,7 +34,7 @@ public class AgePopulationBasedPheromone extends AbstractPopulationBasedPheromon
 
     @Override
     protected PacoAnt removeAndGetAnt() {
-        return getPopulationImpl().poll();
+        return this.population.poll();
     }
 
     @Override
@@ -43,7 +42,8 @@ public class AgePopulationBasedPheromone extends AbstractPopulationBasedPheromon
         return this.populationBest;
     }
 
-    private Queue<PacoAnt> getPopulationImpl() {
-        return (Queue<PacoAnt>) this.getPopulation();
+    @Override
+    public Collection<PacoAnt> getPopulation() {
+        return this.population;
     }
 }

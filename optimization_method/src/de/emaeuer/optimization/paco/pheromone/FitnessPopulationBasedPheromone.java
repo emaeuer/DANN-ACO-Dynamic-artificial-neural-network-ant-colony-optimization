@@ -10,13 +10,12 @@ import java.util.*;
 
 public class FitnessPopulationBasedPheromone extends AbstractPopulationBasedPheromone {
 
+    private final MinMaxPriorityQueue<PacoAnt> population;
+
     public FitnessPopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         super(configuration, baseNetwork);
-    }
 
-    @Override
-    protected Collection<PacoAnt> getEmptyPopulation() {
-        return MinMaxPriorityQueue.orderedBy(Comparator.comparingDouble(PacoAnt::getFitness))
+        this.population = MinMaxPriorityQueue.orderedBy(Comparator.comparingDouble(PacoAnt::getFitness))
                 .maximumSize(getMaximalPopulationSize())
                 .create();
     }
@@ -24,7 +23,7 @@ public class FitnessPopulationBasedPheromone extends AbstractPopulationBasedPher
     @Override
     public void addAntToPopulation(PacoAnt ant) {
         // ant only updates only if it is at least as good as the worst of this population and the population is completely populated
-        if (isPopulationCompletelyPopulated() && !getPopulation().isEmpty() && getPopulationImpl().peekFirst().getFitness() > ant.getFitness()) {
+        if (isPopulationCompletelyPopulated() && !getPopulation().isEmpty() && this.population.peekFirst().getFitness() > ant.getFitness()) {
             return;
         }
 
@@ -33,15 +32,16 @@ public class FitnessPopulationBasedPheromone extends AbstractPopulationBasedPher
 
     @Override
     protected PacoAnt removeAndGetAnt() {
-        return getPopulationImpl().pollFirst();
+        return this.population.pollFirst();
     }
 
     @Override
     protected PacoAnt getBestAntOfPopulation() {
-        return getPopulationImpl().peekLast();
+        return this.population.peekLast();
     }
 
-    private MinMaxPriorityQueue<PacoAnt> getPopulationImpl() {
-        return (MinMaxPriorityQueue<PacoAnt>) this.getPopulation();
+    @Override
+    public Collection<PacoAnt> getPopulation() {
+        return this.population;
     }
 }

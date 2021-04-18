@@ -73,6 +73,8 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> i
             } else if (Double.class.equals(expectedValueType)) {
                 return expectedValueType.cast(number.doubleValue());
             }
+        } else if (Boolean.class.isAssignableFrom(expectedValueType) && value instanceof Number number) {
+            return expectedValueType.cast(number.doubleValue() != 0);
         }
 
         throw new IllegalArgumentException(String.format("Expected value type %s doesn't match actual value type %s", expectedValueType.getSimpleName(), value.getClass().getSimpleName()));
