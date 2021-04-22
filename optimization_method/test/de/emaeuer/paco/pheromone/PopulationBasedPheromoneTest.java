@@ -6,7 +6,6 @@ import de.emaeuer.ann.NeuronID;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.pheromone.AbstractPopulationBasedPheromone.FitnessValue;
 import de.emaeuer.optimization.paco.pheromone.FitnessPopulationBasedPheromone;
 import org.junit.jupiter.api.Test;
 
@@ -95,12 +94,12 @@ public class PopulationBasedPheromoneTest {
 
         // check weight pheromone was updated
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0), nnA),
-                new FitnessValue(100, 1), new FitnessValue(90, -1));
+                1.0, -1.0);
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1), nnA),
-                new FitnessValue(90, -3));
+                 -3.0);
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0), nnA));
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1), nnA),
-                new FitnessValue(100, 2), new FitnessValue(90, -2));
+                2.0, -2.0);
     }
 
     @Test
@@ -155,12 +154,12 @@ public class PopulationBasedPheromoneTest {
 
         // check weight pheromone was updated
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 0), nnA),
-                new FitnessValue(100, 1), new FitnessValue(110, 10));
+                1.0, 10.0);
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 0), new NeuronID(1, 1), nnA));
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 0), nnA),
-                new FitnessValue(110, 12));
+                12.0);
         assertContainsAll(pheromone.getPopulationValues(new NeuronID(0, 1), new NeuronID(1, 1), nnA),
-                new FitnessValue(100, 2), new FitnessValue(110, 11));
+                2.0, 11.0);
     }
 
     /*
@@ -169,14 +168,14 @@ public class PopulationBasedPheromoneTest {
      ##########################################################
     */
 
-    private void assertContainsAll(Collection<FitnessValue> actualValues, FitnessValue... expectedValues) {
+    private void assertContainsAll(Collection<Double> actualValues, Double... expectedValues) {
         if (expectedValues.length == 0) {
             assertNull(actualValues);
             return;
         }
         assertEquals(expectedValues.length, actualValues.size());
 
-        for (FitnessValue expectedValue : expectedValues) {
+        for (double expectedValue : expectedValues) {
             assertTrue(actualValues.contains(expectedValue), String.format("Expected value %s was not found", expectedValue));
         }
     }

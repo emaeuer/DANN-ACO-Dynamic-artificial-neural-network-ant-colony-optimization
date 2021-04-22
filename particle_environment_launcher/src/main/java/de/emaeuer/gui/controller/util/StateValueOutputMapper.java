@@ -371,19 +371,19 @@ public class StateValueOutputMapper {
     // *********************************************
     
     private void refreshScatteredDataState(StateParameter<?> stateType, ScatteredDataStateValue scatteredValue, String suffix) {
-        if (!scatteredValue.changedSinceLastGet()) {
-            return;
-        }
-
-        String mapIdentifier = createMapIdentifier(stateType, suffix);
-        if (!this.visualRepresentations.containsKey(mapIdentifier)) {
-            createScatterPlot(stateType, suffix);
-        }
-
-        //noinspection unchecked no safe way to cast generic --> if generation on top works correctly is always valid cast
-        ScatterChart<Number, Number> chart = (ScatterChart<Number, Number>) this.visualRepresentations.get(mapIdentifier);
-
-        updateDataSeries(scatteredValue, chart.getData(), stateType.getName());
+//        if (!scatteredValue.changedSinceLastGet()) {
+//            return;
+//        }
+//
+//        String mapIdentifier = createMapIdentifier(stateType, suffix);
+//        if (!this.visualRepresentations.containsKey(mapIdentifier)) {
+//            createScatterPlot(stateType, suffix);
+//        }
+//
+//        //noinspection unchecked no safe way to cast generic --> if generation on top works correctly is always valid cast
+//        ScatterChart<Number, Number> chart = (ScatterChart<Number, Number>) this.visualRepresentations.get(mapIdentifier);
+//
+//        updateDataSeries(scatteredValue, chart.getData(), stateType.getName());
     }
 
     private void createScatterPlot(StateParameter<?> stateType, String suffix) {

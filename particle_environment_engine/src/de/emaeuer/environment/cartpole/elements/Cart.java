@@ -46,7 +46,7 @@ public class Cart extends AbstractElement {
         }
 
         // calculate the data of the agent
-        double xInput = (getPosition().getX() - this.environment.getWidth() / 2 + getSize().getX() / 2) / this.xThreshold;
+        double xInput = (getPosition().getX() - this.environment.getWidth() / 2) / this.xThreshold;
         double thetaInput = this.theta / this.thetaThreshold;
 
         // get the action of the agent controller

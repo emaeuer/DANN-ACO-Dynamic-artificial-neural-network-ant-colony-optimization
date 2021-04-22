@@ -27,8 +27,6 @@ import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
 
 public abstract class AbstractPopulationBasedPheromone {
 
-    public static final record FitnessValue(double fitness, double value) {}
-
     private final ConfigurationHandler<PacoConfiguration> configuration;
 
     private final int maximalPopulationSize;
@@ -39,12 +37,11 @@ public abstract class AbstractPopulationBasedPheromone {
 
     // a two dimensional table which saves all weights that were assigned to a connection by an ant of this population
     // bag is used to allow duplicates and efficient remove/ add operations
-    private final Table<Integer, Integer, Multiset<FitnessPopulationBasedPheromone.FitnessValue>> weightPheromone = HashBasedTable.create();
+    private final Table<Integer, Integer, Multiset<Double>> weightPheromone = HashBasedTable.create();
 
     // table which contains the mappings for neurons to the id used in weight pheromone
     // keys are the neuron of the network and the depth of the network
     private final Table<NeuronID, Integer, Integer> neuronMapping = HashBasedTable.create();
-
     private final AtomicInteger neuronMappingCounter = new AtomicInteger(0);
 
     //############################################################
@@ -108,8 +105,8 @@ public abstract class AbstractPopulationBasedPheromone {
             Connection next = connections.next();
             // check if population contains value not necessary because if the value would be missing the procedure for adding
             // ants doesn't work properly --> error is justified
-            Collection<FitnessPopulationBasedPheromone.FitnessValue> values = getPopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
-            values.remove(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), next.weight()));
+            Collection<Double> values = getPopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
+            values.remove(next.weight());
 
             if (values.isEmpty()) {
                 // if no values exists the cell can be deleted from the table
@@ -140,7 +137,7 @@ public abstract class AbstractPopulationBasedPheromone {
 
     private void addConnectionToPopulation(Connection connection, PacoAnt ant) {
         getOrCreatePopulationValues(connection.start(), connection.end(), ant.getNeuralNetwork())
-                .add(new FitnessPopulationBasedPheromone.FitnessValue(ant.getFitness(), connection.weight()));
+                .add(connection.weight());
     }
 
     //############################################################
@@ -230,11 +227,14 @@ public abstract class AbstractPopulationBasedPheromone {
             // if dynamic element already exists --> remove or split else add
             if (template.neuronHasConnectionTo(dynamicElement.start(), dynamicElement.end())) {
                 if (isSplitInsteadOfRemove(dynamicElement, template) && splitIsValid(dynamicElement, template)) {
+                    System.out.printf("Splitting connection %s to %s%n", dynamicElement.start(), dynamicElement.end());
                     splitConnection(template, dynamicElement);
                 } else {
+                    System.out.printf("Removing connection %s to %s%n", dynamicElement.start(), dynamicElement.end());
                     template.modify().removeConnection(dynamicElement.start(), dynamicElement.end());
                 }
             } else {
+                System.out.printf("Adding connection %s to %s%n", dynamicElement.start(), dynamicElement.end());
                 template.modify().addConnection(dynamicElement.start(), dynamicElement.end(), 0);
             }
         }
@@ -245,20 +245,19 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     private void splitConnection(NeuralNetwork template, Connection dynamicElement) {
-        System.out.println("Splitting connection " + dynamicElement);
-
-        Map<Integer, NeuronID> oldMapping = new HashMap<>();
+        int depth = template.getDepth();
 
         // create a map with the current indices mapped to the neurons of the not modified neuron
         // the neurons are modified now but the indices should stay the same
-        int depth = template.getDepth();
+        Map<Integer, NeuronID> oldMapping = new HashMap<>();
         NeuralNetworkUtil.iterateNeurons(template)
                 .forEachRemaining(n -> oldMapping.put(getIDForNeuron(n, depth), n));
 
         NeuronID splitResult = template.modify().splitConnection(dynamicElement.start(), dynamicElement.end()).getLastModifiedNeuron();
 
         // don't use old depth because the split may have created new layers
-        updateNeuronIDMapping(oldMapping, splitResult, template.getDepth());
+        int depthAfterSplit = template.getDepth();
+        updateNeuronIDMapping(oldMapping, splitResult, depthAfterSplit);
     }
 
     private void updateNeuronIDMapping(Map<Integer, NeuronID> oldMappings, NeuronID splitResult, int depth) {
@@ -277,19 +276,19 @@ public abstract class AbstractPopulationBasedPheromone {
 
     private boolean isSplitInsteadOfRemove(Connection connection, NeuralNetwork template) {
         int depth = template.getDepth();
-        Collection<FitnessValue> populationKnowledge = this.weightPheromone.get(getIDForNeuron(connection.start(), depth), getIDForNeuron(connection.end(), depth));
+        Collection<Double> populationKnowledge = this.weightPheromone.get(getIDForNeuron(connection.start(), depth), getIDForNeuron(connection.end(), depth));
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
         double sumOfDifferences = 0;
 
         if (populationKnowledge != null) {
             double mean = populationKnowledge.stream()
-                    .mapToDouble(FitnessValue::value)
+                    .mapToDouble(d -> d)
                     .average()
                     .orElse(0);
 
             sumOfDifferences = populationKnowledge.stream()
-                    .mapToDouble(FitnessValue::value)
+                    .mapToDouble(d -> d)
                     .map(d -> Math.abs(mean - d))
                     .sum();
         }
@@ -305,7 +304,12 @@ public abstract class AbstractPopulationBasedPheromone {
 
     protected double calculatePheromoneValueOfConnection(NeuronID source, NeuronID target, NeuralNetwork template) {
         int depth = template.getDepth();
-        Collection<FitnessValue> populationKnowledge = this.weightPheromone.get(getIDForNeuron(source, depth), getIDForNeuron(target, depth));
+        int startID = getIDForNeuron(source, depth);
+        int endID = getIDForNeuron(target, depth);
+
+        Collection<Double> populationKnowledge = this.weightPheromone.get(startID, endID);
+
+
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
@@ -316,10 +320,22 @@ public abstract class AbstractPopulationBasedPheromone {
         double connectionPheromone = this.configuration.getValue(PHEROMONE_VALUE, Double.class, variables);
 
         if (template.neuronHasConnectionTo(source, target)) {
-            return 1 - connectionPheromone;
+            return checkNeuronIsNotIsolated(source, target, template) ? 1 - connectionPheromone : 0;
         } else {
             return connectionPheromone;
         }
+    }
+
+    private boolean checkNeuronIsNotIsolated(NeuronID source, NeuronID target, NeuralNetwork template) {
+        if (isSplitInsteadOfRemove(new Connection(source, target, 0), template)) {
+            return true;
+        }
+
+        if (template.getOutgoingConnectionsOfNeuron(source).size() == 1) {
+            return template.isOutputNeuron(source);
+        }
+
+        return template.getIncomingConnectionsOfNeuron(target).size() != 1;
     }
 
     protected void adjustWeights(NeuralNetwork nn) {
@@ -333,7 +349,7 @@ public abstract class AbstractPopulationBasedPheromone {
         nn.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
     }
 
-    private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<FitnessValue> populationValues) {
+    private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<Double> populationValues) {
         double value;
 
         if (populationValues == null || populationValues.isEmpty()) {
@@ -351,9 +367,9 @@ public abstract class AbstractPopulationBasedPheromone {
         return value;
     }
 
-    private double calculateDeviation(Collection<FitnessValue> populationValues, double mean) {
+    private double calculateDeviation(Collection<Double> populationValues, double mean) {
         double sumOfDifferences = populationValues.stream()
-                .mapToDouble(FitnessValue::value)
+                .mapToDouble(d -> d)
                 .map(d -> Math.abs(mean - d))
                 .sum();
 
@@ -380,7 +396,7 @@ public abstract class AbstractPopulationBasedPheromone {
         //noinspection unchecked safe cast for generic not possible
         Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
-        for (Table.Cell<Integer, Integer, Multiset<FitnessValue>> connection : this.weightPheromone.cellSet()) {
+        for (Table.Cell<Integer, Integer, Multiset<Double>> connection : this.weightPheromone.cellSet()) {
             int startIndex = Optional.ofNullable(connection.getRowKey()).orElse(-1);
             int endIndex = Optional.ofNullable(connection.getColumnKey()).orElse(-1);
 
@@ -390,13 +406,13 @@ public abstract class AbstractPopulationBasedPheromone {
             currentState.get(id).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
                     Objects.requireNonNull(connection.getValue())
                             .stream()
-                            .mapToDouble(FitnessValue::value)
+                            .mapToDouble(d -> d)
                             .boxed()
                             .toArray(Double[]::new)));
         }
     }
 
-    public Multiset<FitnessValue> getPopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
+    public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
         int depth = nn.getDepth();
         return this.weightPheromone.get(getIDForNeuron(start, depth), getIDForNeuron(end, depth));
     }
@@ -406,9 +422,9 @@ public abstract class AbstractPopulationBasedPheromone {
         this.weightPheromone.remove(getIDForNeuron(start, depth), getIDForNeuron(end, depth));
     }
 
-    private Multiset<FitnessValue> getOrCreatePopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
+    private Multiset<Double> getOrCreatePopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {
         int depth = nn.getDepth();
-        Multiset<FitnessValue> result = getPopulationValues(start, end, nn);
+        Multiset<Double> result = getPopulationValues(start, end, nn);
         if (result == null) {
             result = HashMultiset.create();
             this.weightPheromone.put(getIDForNeuron(start, depth), getIDForNeuron(end, depth), result);
