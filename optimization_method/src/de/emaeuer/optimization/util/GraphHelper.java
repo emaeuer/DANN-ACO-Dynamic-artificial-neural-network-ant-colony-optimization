@@ -2,12 +2,7 @@ package de.emaeuer.optimization.util;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
-import de.emaeuer.state.value.GraphStateValue;
 import de.emaeuer.state.value.GraphStateValue.Connection;
-import org.jgrapht.Graph;
-import org.jgrapht.Graphs;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.builder.GraphTypeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;

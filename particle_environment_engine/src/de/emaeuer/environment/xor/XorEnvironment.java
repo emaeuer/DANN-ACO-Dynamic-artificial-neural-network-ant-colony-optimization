@@ -4,17 +4,11 @@ import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
-import de.emaeuer.environment.elements.AbstractElement;
-import de.emaeuer.optimization.Solution;
-import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.state.StateHandler;
-import org.apache.commons.math3.linear.ArrayRealVector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 public class XorEnvironment extends AbstractEnvironment  {
 

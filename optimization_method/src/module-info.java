@@ -10,7 +10,6 @@ module optimization {
     requires execution.state;
     requires neural.network;
     requires org.apache.logging.log4j;
-    requires org.jgrapht.core;
     requires com.google.common;
     requires neat.anji;
 }
