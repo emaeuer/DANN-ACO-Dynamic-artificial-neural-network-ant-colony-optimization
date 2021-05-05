@@ -16,17 +16,18 @@ public class NeuralNetworkBuilderImpl implements NeuralNetworkBuilder<NeuralNetw
 
     private static final String EXCEPTION_MESSAGE_PATTERN = "Failed to create neural network the %s is missing";
 
-    private NeuralNetworkImpl nn = new NeuralNetworkImpl();
 
     private boolean nextFullyConnected = false;
 
     private int necessaryModificationFlag = 0b11;
 
     private ConfigurationHandler<NeuralNetworkConfiguration> configuration = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+    private NeuralNetworkImpl nn = new NeuralNetworkImpl(this.configuration);
 
     @Override
     public NeuralNetworkBuilder<NeuralNetworkLayerBuilderImpl> configure(ConfigurationHandler<NeuralNetworkConfiguration> configuration) {
         this.configuration = configuration;
+        this.nn = new NeuralNetworkImpl(configuration);
         return this;
     }
 

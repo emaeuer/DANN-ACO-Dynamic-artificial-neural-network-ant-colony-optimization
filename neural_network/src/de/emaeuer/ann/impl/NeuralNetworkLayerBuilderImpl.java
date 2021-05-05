@@ -141,7 +141,6 @@ public class NeuralNetworkLayerBuilderImpl implements NeuralNetworkLayerBuilder 
     private void processConnections() {
         if (this.layer.isInputLayer()) {
             this.layer.setWeights(null);
-            this.layer.setActivationFunction(null);
             this.layer.setBias(null);
             this.connections.clear();
             return;

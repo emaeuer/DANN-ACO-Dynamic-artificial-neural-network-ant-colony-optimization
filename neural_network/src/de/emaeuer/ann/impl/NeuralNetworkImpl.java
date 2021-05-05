@@ -2,6 +2,8 @@ package de.emaeuer.ann.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
+import de.emaeuer.configuration.ConfigurationHandler;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.*;
@@ -12,7 +14,16 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     private final NeuralNetworkModifierImpl modifier = new NeuralNetworkModifierImpl(this);
 
+    private final ConfigurationHandler<NeuralNetworkConfiguration> configuration;
+
     private boolean usesExplicitBias = true;
+
+    public NeuralNetworkImpl() {
+        this(new ConfigurationHandler<>(NeuralNetworkConfiguration.class));
+    }
+    public NeuralNetworkImpl(ConfigurationHandler<NeuralNetworkConfiguration> configuration) {
+        this.configuration = configuration;
+    }
 
     @Override
     public RealVector process(RealVector input) {
@@ -106,7 +117,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     @Override
     public NeuralNetwork copy() {
-        NeuralNetworkImpl copy = new NeuralNetworkImpl();
+        NeuralNetworkImpl copy = new NeuralNetworkImpl(this.configuration);
         copy.usesExplicitBias = this.usesExplicitBias;
 
         // saves already created/ copied neurons to prevent duplication of neurons
@@ -115,7 +126,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         for (NeuralNetworkLayerImpl layer : this.layers) {
             copy.layers.add(layer.copy(copy, existingNeurons));
         }
-        
+
         return copy;
     }
 
@@ -150,4 +161,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         this.usesExplicitBias = value;
     }
 
+    public ConfigurationHandler<NeuralNetworkConfiguration> getConfiguration() {
+        return configuration;
+    }
 }

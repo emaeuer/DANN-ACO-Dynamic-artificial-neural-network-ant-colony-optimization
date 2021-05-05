@@ -55,9 +55,9 @@ public class NeuralNetworkLayerImpl {
     }
 
     private RealVector processVector(RealVector vector) {
-        // the activation of the input layer is the external input vector
+        // the activation of the input layer is the result of the activation function applied to the external input
         RealVector output = switch (type) {
-            case INPUT -> vector;
+            case INPUT -> vector.map(this.activationFunction.getActivationFunction()::apply);
             case OUTPUT, HIDDEN -> applyWeightsBiasAndActivation(vector);
         };
 

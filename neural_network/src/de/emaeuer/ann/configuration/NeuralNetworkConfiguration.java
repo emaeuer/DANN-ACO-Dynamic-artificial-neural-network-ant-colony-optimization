@@ -15,9 +15,9 @@ public enum NeuralNetworkConfiguration implements DefaultConfiguration<NeuralNet
     // TODO implement
 //    BIAS_AS_ON_NEURON("Realize bias as on neuron", new BooleanConfigurationValue(false)),
 
-    OUTPUT_ACTIVATION_FUNCTION("Activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames())),
-    INPUT_ACTIVATION_FUNCTION("Activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames())),
-    HIDDEN_ACTIVATION_FUNCTION("Activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames()));
+    OUTPUT_ACTIVATION_FUNCTION("Output layer activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames())),
+    INPUT_ACTIVATION_FUNCTION("Input layer activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames())),
+    HIDDEN_ACTIVATION_FUNCTION("Hidden layer activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames()));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;
