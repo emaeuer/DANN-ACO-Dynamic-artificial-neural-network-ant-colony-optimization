@@ -10,6 +10,8 @@ import de.emaeuer.configuration.ConfigurationVariablesBuilder;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoParameter;
+import de.emaeuer.optimization.paco.population.AbstractPopulation;
+import de.emaeuer.optimization.paco.population.PopulationFactory;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.state.StateHandler;
@@ -25,13 +27,15 @@ import java.util.stream.IntStream;
 
 import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
 
-public abstract class AbstractPopulationBasedPheromone {
+public class PacoPheromone {
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
 
     private final int maximalPopulationSize;
 
     private final NeuralNetwork baseNetwork;
+
+    private final AbstractPopulation<?> population;
 
     private final Map<String, List<NeuralNetwork>> templatePheromone = new HashMap<>();
 
@@ -48,10 +52,11 @@ public abstract class AbstractPopulationBasedPheromone {
     //################ Methods for initialization ################
     //############################################################
 
-    public AbstractPopulationBasedPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
+    public PacoPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
         this.configuration = configuration;
         this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
         this.baseNetwork = baseNetwork;
+        this.population = PopulationFactory.create(configuration);
 
         initializeNeuronMapping();
     }
@@ -67,24 +72,22 @@ public abstract class AbstractPopulationBasedPheromone {
     //############################################################
 
     public void addAntToPopulation(PacoAnt ant) {
-        // if the population is completely populated an ant has to be removed before a new one is added
-        if (isPopulationCompletelyPopulated()) {
-            removeAnt();
-        }
-        addAnt(ant);
-        this.templatePheromone.forEach((k, v) -> System.out.println(k + " " + v.size()));
+        // if the population adds the ant (added ant is returned) adjust the pheromone accordingly
+        this.population.addAnt(ant)
+                .ifPresent(this::addAnt);
+        // if the population removes an ant (ant to remove is present) adjust the pheromone accordingly
+        this.population.removeAnt()
+                .ifPresent(this::removeAnt);
+
+//        this.templatePheromone.forEach((k, v) -> System.out.println(k + " " + v.size()));
     }
 
-    private void removeAnt() {
-        // which ant gets removed is implementation dependent
-        PacoAnt ant = removeAndGetAnt();
-
+    private void removeAnt(PacoAnt ant) {
+        System.out.println("remove");
         // remove all knowledge of this ant
         removeTemplateOfAnt(ant);
         removeWeightsOfAnt(ant);
     }
-
-    protected abstract PacoAnt removeAndGetAnt();
 
     private void removeTemplateOfAnt(PacoAnt ant) {
         // remove template form list of instances of this template
@@ -116,8 +119,7 @@ public abstract class AbstractPopulationBasedPheromone {
     }
 
     protected void addAnt(PacoAnt ant) {
-        getPopulation().add(ant);
-
+        System.out.println("add");
         // add all weights of this ant
         addTemplateOfAnt(ant);
         addWeightsOfAnt(ant);
@@ -143,15 +145,6 @@ public abstract class AbstractPopulationBasedPheromone {
     //############################################################
     //########### Methods for solution generation ################
     //############################################################
-
-    public PacoAnt createGlobalBestAnt() {
-        if (getPopulation().isEmpty()) {
-            return null;
-        }
-
-        PacoAnt populationBest = getBestAntOfPopulation();
-        return new PacoAnt(populationBest.getNeuralNetwork().copy());
-    }
 
     public PacoAnt createAntFromPopulation() {
         // select random ant from this population and use its neural network as template
@@ -386,12 +379,6 @@ public abstract class AbstractPopulationBasedPheromone {
     //#################### Util Methods ##########################
     //############################################################
 
-    protected boolean isPopulationCompletelyPopulated() {
-        return this.maximalPopulationSize <= getPopulation().size();
-    }
-
-    protected abstract PacoAnt getBestAntOfPopulation();
-
     public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
         //noinspection unchecked safe cast for generic not possible
         Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
@@ -436,9 +423,11 @@ public abstract class AbstractPopulationBasedPheromone {
         return Objects.requireNonNull(this.neuronMapping.get(neuron, depth));
     }
 
-    public abstract Collection<PacoAnt> getPopulation();
-
     public int getMaximalPopulationSize() {
         return maximalPopulationSize;
+    }
+
+    public int getPopulationSize() {
+        return this.population.getSize();
     }
 }

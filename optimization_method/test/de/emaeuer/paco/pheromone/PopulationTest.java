@@ -1,0 +1,116 @@
+package de.emaeuer.paco.pheromone;
+
+import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.population.impl.AgeBasedPopulation;
+import de.emaeuer.optimization.paco.population.impl.FitnessBasedPopulation;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PopulationTest {
+
+    private PacoAnt createAnt(double fitness) {
+        PacoAnt ant = new PacoAnt(null);
+        ant.setFitness(fitness);
+        return ant;
+    }
+
+    @Test
+    public void testAgeBasedWithoutElitism() {
+        AgeBasedPopulation population = new AgeBasedPopulation(5, false);
+
+        List<PacoAnt> ants = new ArrayList<>();
+
+        // add 5 ants (nothing should be removed)
+        for (int i = 0; i < 5; i++) {
+            PacoAnt ant = createAnt(5 - i);
+            ants.add(ant);
+            assertSame(ant, population.addAnt(ant).orElse(null));
+            assertEquals(i + 1, population.getSize());
+            assertFalse(population.removeAnt().isPresent(), "Failed in iteration " + i);
+        }
+
+        // add additional 5 ants (every step the oldest ant should be removed)
+        for (int i = 0; i < 5; i++) {
+            PacoAnt ant = createAnt(5 - i);
+            assertSame(ant, population.addAnt(ant).orElse(null));
+            PacoAnt removed = population.removeAnt().get();
+            assertSame(removed, ants.remove(0));
+            assertEquals(5, population.getSize());
+        }
+
+        assertTrue(ants.isEmpty());
+    }
+
+    @Test
+    public void testAgeBasedWithElitism() {
+        AgeBasedPopulation population = new AgeBasedPopulation(5, true);
+
+        List<PacoAnt> ants = new ArrayList<>();
+
+        // add 4 ants (nothing should be removed)
+        for (int i = 0; i < 4; i++) {
+            PacoAnt ant = createAnt(i);
+            ants.add(ant);
+            assertSame(ant, population.addAnt(ant).orElse(null));
+            assertEquals(i + 1, population.getSize());
+            assertFalse(population.removeAnt().isPresent(), "Failed in iteration " + i);
+        }
+
+        PacoAnt globalBest = createAnt(10);
+        population.addAnt(globalBest);
+
+        // add additional 5 ants (every step the oldest ant should be removed)
+        for (int i = 0; i < 5; i++) {
+            PacoAnt ant = createAnt(5 - i);
+            ants.add(ant);
+            assertSame(ant, population.addAnt(ant).orElse(null));
+            PacoAnt removed = population.removeAnt().get();
+            assertSame(removed, ants.remove(0));
+            assertEquals(5, population.getSize());
+        }
+
+        // test if the old global best is removed next because it has reached the maximum age and a better ant was added
+        population.addAnt(createAnt(20));
+        assertSame(globalBest, population.removeAnt().get());
+    }
+
+    @Test
+    public void testFitnessBased() {
+        FitnessBasedPopulation population = new FitnessBasedPopulation(5);
+
+        List<PacoAnt> ants = new ArrayList<>();
+
+        // add 5 ants (nothing should be removed)
+        for (int i = 0; i < 5; i++) {
+            PacoAnt ant = createAnt(Math.pow(i + 1, 2) % 10 + 2);
+            ants.add(ant);
+            assertSame(ant, population.addAnt(ant).orElse(null));
+            assertEquals(i + 1, population.getSize());
+            assertFalse(population.removeAnt().isPresent(), "Failed in iteration " + i);
+        }
+
+        // check that ant is not added if the score is too low
+        PacoAnt worstAnt = createAnt(1);
+        assertFalse(population.addAnt(worstAnt).isPresent());
+        assertFalse(population.removeAnt().isPresent());
+
+        ants.sort(Comparator.comparingDouble(PacoAnt::getFitness));
+
+        // add additional 5 ants which are better than the best 5 (every step the worst ant should be removed)
+        for (int i = 0; i < 5; i++) {
+            PacoAnt ant = createAnt(12 + i);
+            assertSame(ant, population.addAnt(ant).orElse(null));
+            PacoAnt removed = population.removeAnt().get();
+            assertSame(removed, ants.remove(0));
+            assertEquals(5, population.getSize());
+        }
+
+        assertTrue(ants.isEmpty());
+    }
+
+}

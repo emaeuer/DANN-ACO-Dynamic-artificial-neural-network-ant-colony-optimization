@@ -9,9 +9,7 @@ import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.pheromone.AbstractPopulationBasedPheromone;
-import de.emaeuer.optimization.paco.pheromone.AgePopulationBasedPheromone;
-import de.emaeuer.optimization.paco.pheromone.FitnessPopulationBasedPheromone;
+import de.emaeuer.optimization.paco.pheromone.PacoPheromone;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +24,7 @@ public class PacoHandler extends OptimizationMethod {
 
     private final static Logger LOG = LogManager.getLogger(PacoHandler.class);
 
-    private AbstractPopulationBasedPheromone pheromone;
+    private PacoPheromone pheromone;
 
     private final List<PacoAnt> currentAnts = new ArrayList<>();
 
@@ -54,11 +52,7 @@ public class PacoHandler extends OptimizationMethod {
                 .outputLayer()
                 .finish();
 
-        if (this.configuration.getValue(REMOVE_WORST, Boolean.class)) {
-            this.pheromone = new FitnessPopulationBasedPheromone(this.configuration, baseNetwork);
-        } else {
-            this.pheromone = new AgePopulationBasedPheromone(this.configuration, baseNetwork);
-        }
+        this.pheromone = new PacoPheromone(this.configuration, baseNetwork);
     }
 
     @Override
@@ -74,14 +68,10 @@ public class PacoHandler extends OptimizationMethod {
     protected List<? extends Solution> generateSolutions() {
         this.currentAnts.clear();
 
-        if (!this.pheromone.getPopulation().isEmpty() && configuration.getValue(ELITISM, Boolean.class)) {
-            this.currentAnts.add(this.pheromone.createGlobalBestAnt());
-        }
-
         // if pheromone matrix is empty create the necessary number of ants to fill the population completely
         int antsPerIteration = this.configuration.getValue(ANTS_PER_ITERATION, Integer.class);
-        if (this.pheromone.getPopulation().size() < this.pheromone.getMaximalPopulationSize()) {
-            antsPerIteration = Math.max(this.pheromone.getMaximalPopulationSize() - this.pheromone.getPopulation().size(), antsPerIteration);
+        if (this.pheromone.getPopulationSize() < this.pheromone.getMaximalPopulationSize()) {
+            antsPerIteration = Math.max(this.pheromone.getMaximalPopulationSize() - this.pheromone.getPopulationSize(), antsPerIteration);
         }
 
         IntStream.range(this.currentAnts.size(), antsPerIteration)
@@ -94,14 +84,14 @@ public class PacoHandler extends OptimizationMethod {
     @Override
     public void update() {
         PacoAnt bestOfThisIteration;
-        if (this.pheromone.getPopulation().isEmpty()) {
+        if (this.pheromone.getPopulationSize() == 0) {
             // initially all ant update regardless of the fitness to fill the population
             bestOfThisIteration = this.currentAnts.stream()
                     .peek(this.pheromone::addAntToPopulation)
                     .max(Comparator.comparingDouble(PacoAnt::getFitness))
                     .orElse(null);
-        } else if (this.pheromone.getPopulation().size() < this.pheromone.getMaximalPopulationSize() - this.configuration.getValue(UPDATES_PER_ITERATION, Integer.class)) {
-            int skipCount = Math.max(0, this.currentAnts.size() - this.pheromone.getMaximalPopulationSize() + this.pheromone.getPopulation().size());
+        } else if (this.pheromone.getPopulationSize() < this.pheromone.getMaximalPopulationSize() - this.configuration.getValue(UPDATES_PER_ITERATION, Integer.class)) {
+            int skipCount = Math.max(0, this.currentAnts.size() - this.pheromone.getMaximalPopulationSize() + this.pheromone.getPopulationSize());
             bestOfThisIteration = this.currentAnts.stream()
                     .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
                     .skip(skipCount)

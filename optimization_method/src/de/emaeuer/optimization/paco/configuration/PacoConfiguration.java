@@ -3,6 +3,7 @@ package de.emaeuer.optimization.paco.configuration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.*;
+import de.emaeuer.optimization.paco.population.PopulationUpdateStrategies;
 
 public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration> {
 
@@ -11,7 +12,7 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     ANTS_PER_ITERATION("Number of ants per iteration", new IntegerConfigurationValue(10, 1, 100)),
     DEVIATION_FUNCTION("Function to calculate deviation", new ExpressionConfigurationValue("s/(p - 1) + 0.05", PacoParameter.class)),
     ELITISM("Use elitism", new BooleanConfigurationValue(false)),
-    REMOVE_WORST("Remove the worst (true) / oldest (false) and", new BooleanConfigurationValue(true)),
+    UPDATE_STRATEGY("Population update strategy", new StringConfigurationValue(PopulationUpdateStrategies.AGE.name(), PopulationUpdateStrategies.getNames())),
     DYNAMIC_PROBABILITY("Probability for dynamic change", new ExpressionConfigurationValue("0.75(n/p)^2+0.1", PacoParameter.class)),
     PHEROMONE_VALUE("Pheromone value of a connection", new ExpressionConfigurationValue("(n+1) / (p+1)", PacoParameter.class)),
     SPLIT_THRESHOLD("Threshold for splitting a connection instead of removing", new ExpressionConfigurationValue("leq(s/(p - 1), 0.1) * geq(n, p * 0.9)", PacoParameter.class));
