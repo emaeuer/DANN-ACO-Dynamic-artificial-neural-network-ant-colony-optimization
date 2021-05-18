@@ -2,9 +2,9 @@ package de.emaeuer.ann.util;
 
 import de.emaeuer.ann.LayerType;
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.impl.NeuralNetworkImpl;
 import de.emaeuer.ann.NeuronID;
-import de.emaeuer.ann.impl.NeuralNetworkLayerImpl;
+import de.emaeuer.ann.impl.layer.based.NeuralNetworkImpl;
+import de.emaeuer.ann.impl.layer.based.NeuralNetworkLayerImpl;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;

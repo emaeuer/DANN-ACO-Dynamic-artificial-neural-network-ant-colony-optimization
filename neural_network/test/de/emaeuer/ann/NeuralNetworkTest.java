@@ -1,8 +1,8 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.impl.NeuralNetworkBuilderImpl;
-import de.emaeuer.ann.impl.NeuralNetworkImpl;
-import de.emaeuer.ann.impl.NeuralNetworkLayerImpl;
+import de.emaeuer.ann.impl.layer.based.NeuralNetworkBuilderImpl;
+import de.emaeuer.ann.impl.layer.based.NeuralNetworkImpl;
+import de.emaeuer.ann.impl.layer.based.NeuralNetworkLayerImpl;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.jupiter.api.Test;

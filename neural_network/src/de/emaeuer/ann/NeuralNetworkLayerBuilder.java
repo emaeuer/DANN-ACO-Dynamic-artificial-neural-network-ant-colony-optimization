@@ -1,6 +1,5 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.impl.NeuralNetworkLayerBuilderImpl;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.List;

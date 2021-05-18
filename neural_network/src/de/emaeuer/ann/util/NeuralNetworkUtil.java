@@ -14,15 +14,18 @@ public class NeuralNetworkUtil {
     private static class ConnectionIterator implements Iterator<Connection> {
 
         private final NeuralNetwork nn;
+        private final Iterator<NeuronID> neuronIterator;
 
         private NeuronID currentNeuron;
+
         private int currentConnectionIndex;
 
         private Connection next;
 
         public ConnectionIterator(NeuralNetwork nn) {
             this.nn = nn;
-            this.currentNeuron = this.nn.getNeuronsOfLayer(0).get(0);
+            this.neuronIterator = NeuralNetworkUtil.iterateNeurons(this.nn);
+            this.currentNeuron = neuronIterator.hasNext() ? this.neuronIterator.next() : null;
             this.next = calculateNext();
         }
 
@@ -50,10 +53,13 @@ public class NeuralNetworkUtil {
             List<NeuronID> currentConnections = this.nn.getOutgoingConnectionsOfNeuron(this.currentNeuron);
 
             // if all connections of current neuron were iterated select next neuron
-            if (this.currentConnectionIndex >= currentConnections.size()) {
-                selectNextNeuron();
-                // restart with next neuron
-                return calculateNext();
+            while (this.currentConnectionIndex >= currentConnections.size()) {
+                if (!this.neuronIterator.hasNext()) {
+                    return null;
+                }
+                this.currentNeuron = this.neuronIterator.next();
+                currentConnections = this.nn.getOutgoingConnectionsOfNeuron(this.currentNeuron);
+                this.currentConnectionIndex = 0;
             }
 
             NeuronID target = currentConnections.get(this.currentConnectionIndex);
@@ -61,23 +67,6 @@ public class NeuralNetworkUtil {
             this.currentConnectionIndex++;
 
             return new Connection(this.currentNeuron, target, weight);
-        }
-
-        private void selectNextNeuron() {
-            List<NeuronID> neuronsOfSameLayer = this.nn.getNeuronsOfLayer(this.currentNeuron.getLayerIndex());
-
-            // check if all neurons of this layer were iterated
-            if (this.currentNeuron.getNeuronIndex() == neuronsOfSameLayer.size() - 1) {
-                // select first neuron of the next layer if neuron wasn't the last one
-                this.currentNeuron = this.currentNeuron.getLayerIndex() < this.nn.getDepth() - 1
-                        ? this.nn.getNeuronsOfLayer(this.currentNeuron.getLayerIndex() + 1).get(0)
-                        : null;
-            } else {
-                // select next neuron of this layer
-                this.currentNeuron = this.nn.getNeuronsOfLayer(this.currentNeuron.getLayerIndex())
-                        .get(this.currentNeuron.getNeuronIndex() + 1);
-            }
-            this.currentConnectionIndex = 0;
         }
     }
 

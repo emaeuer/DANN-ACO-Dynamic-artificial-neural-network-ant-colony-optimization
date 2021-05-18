@@ -2,6 +2,7 @@ package de.emaeuer.optimization.paco;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.optimization.OptimizationMethod;
@@ -44,8 +45,7 @@ public class PacoHandler extends OptimizationMethod {
 
     private void initialize() {
         // build basic neural network with just the necessary network neurons and connections
-        NeuralNetwork baseNetwork = NeuralNetwork.build()
-                .configure(ConfigurationHelper.extractEmbeddedConfiguration(getOptimizationConfiguration(), NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
+        NeuralNetwork baseNetwork = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(ConfigurationHelper.extractEmbeddedConfiguration(getOptimizationConfiguration(), NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
                 .implicitBias()
                 .inputLayer()
                 .fullyConnectToNextLayer()

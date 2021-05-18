@@ -1,11 +1,10 @@
-package de.emaeuer.ann.impl;
+package de.emaeuer.ann.impl.layer.based;
 
 import de.emaeuer.ann.ActivationFunction;
 import de.emaeuer.ann.LayerType;
 import de.emaeuer.ann.NeuralNetworkModifier;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
-import de.emaeuer.configuration.ConfigurationHandler;
 
 public class NeuralNetworkModifierImpl implements NeuralNetworkModifier {
 

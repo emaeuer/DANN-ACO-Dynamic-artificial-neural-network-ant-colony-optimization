@@ -1,11 +1,20 @@
-package de.emaeuer.ann.util;
+package de.emaeuer.ann.neuron.based;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.ann.impl.layer.based.NeuralNetworkBuilderImpl;
 import de.emaeuer.ann.impl.layer.based.NeuralNetworkImpl;
 import de.emaeuer.ann.impl.layer.based.NeuralNetworkLayerImpl;
+import de.emaeuer.ann.impl.neuron.based.Neuron;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetwork;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
+import de.emaeuer.ann.util.NeuralNetworkUtil;
+import de.emaeuer.configuration.ConfigurationHandler;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,23 +30,27 @@ public class NeuralNetworkModifierTest {
         if (numberOfNeurons.length < 2) {
             fail("A neural network needs at least 2 layers");
         }
-        NeuralNetworkBuilderImpl builder = (NeuralNetworkBuilderImpl) NeuralNetwork.build()
-                .inputLayer(numberOfNeurons[0])
+
+        ConfigurationHandler<NeuralNetworkConfiguration> config = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+        config.setValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, numberOfNeurons[0]);
+        config.setValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, numberOfNeurons[numberOfNeurons.length - 1]);
+
+        NeuronBasedNeuralNetworkBuilder builder = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(config)
+                .inputLayer()
                 .fullyConnectToNextLayer();
 
-        for (int i = 1; i < numberOfNeurons.length - 1; i++) {
-            builder = builder.hiddenLayer(numberOfNeurons[i])
+        if (numberOfNeurons.length == 3) {
+            builder.hiddenLayer(numberOfNeurons[1])
                     .fullyConnectToNextLayer();
         }
 
-        NeuralNetworkImpl nn = (NeuralNetworkImpl) builder.outputLayer(numberOfNeurons[numberOfNeurons.length - 1])
-                .finish();
+        NeuronBasedNeuralNetwork nn = builder.outputLayer().finish();
 
         // set all weights to -1 (for comparison with new weights)
-        for (NeuralNetworkLayerImpl layer : nn.getLayers()) {
-            if (!layer.isInputLayer()) {
-                layer.setWeights(layer.getWeights().scalarAdd(-1));
-            }
+        Iterator<NeuralNetworkUtil.Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(nn);
+        while (connections.hasNext()) {
+            NeuralNetworkUtil.Connection connection = connections.next();
+            nn.modify().setWeightOfConnection(connection.start(), connection.end(), -1);
         }
 
         return nn;
@@ -54,7 +67,7 @@ public class NeuralNetworkModifierTest {
         NeuralNetwork nn = buildNeuralNetwork(1, 1);
         NeuronID input = new NeuronID(0, 0);
 
-        nn.modify().splitConnection(new NeuronID(0, 0), new NeuronID(1, 0));
+        nn.modify().splitConnection(new NeuronID(0, 0), new NeuronID(2, 0));
 
         NeuronID newNeuron = new NeuronID(1, 0);
         NeuronID output = new NeuronID(2, 0);
@@ -92,13 +105,13 @@ public class NeuralNetworkModifierTest {
                 .addConnection(output, hidden, 0.5)
                 .splitConnection(output, hidden);
 
-        NeuronID newNeuron = new NeuronID(2, 0);
-        output = new NeuronID(3, 0);
+        NeuronID newNeuron = new NeuronID(1, 1);
+        output = new NeuronID(2, 0);
 
         assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
 
         // check general updates
-        assertEquals(4, nn.getDepth());
+        assertEquals(3, nn.getDepth());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(hidden).size());
         assertEquals(1, nn.getIncomingConnectionsOfNeuron(newNeuron).size());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(newNeuron).size());
@@ -228,58 +241,16 @@ public class NeuralNetworkModifierTest {
     }
 
     @Test
-    public void testSplitConnectionRecurrentMultipleLayers() {
-        NeuralNetwork nn = buildNeuralNetwork(1, 1, 1, 1);
-        NeuronID hiddenOne = new NeuronID(1, 0);
-        NeuronID hiddenTwo = new NeuronID(2, 0);
-        NeuronID output = new NeuronID(3, 0);
-
-        // add recurrent skip connection and split it
-        nn.modify()
-                .addConnection(output, hiddenOne, 0.5)
-                .splitConnection(output, hiddenOne);
-
-        NeuronID newNeuron = new NeuronID(2, 1);
-
-        assertEquals(newNeuron, nn.modify().getLastModifiedNeuron());
-
-        // check general updates
-        assertEquals(4, nn.getDepth());
-        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(hiddenOne).size());
-        assertEquals(2, nn.getIncomingConnectionsOfNeuron(hiddenOne).size());
-        assertEquals(1, nn.getIncomingConnectionsOfNeuron(newNeuron).size());
-        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(newNeuron).size());
-        assertEquals(1, nn.getIncomingConnectionsOfNeuron(hiddenTwo).size());
-        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(hiddenTwo).size());
-        assertEquals(1, nn.getIncomingConnectionsOfNeuron(output).size());
-        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(output).size());
-
-        // check connection start and end
-        assertTrue(nn.neuronHasConnectionTo(hiddenOne, hiddenTwo));
-        assertTrue(nn.neuronHasConnectionTo(hiddenTwo, output));
-        assertTrue(nn.neuronHasConnectionTo(output, newNeuron));
-        assertTrue(nn.neuronHasConnectionTo(newNeuron, hiddenOne));
-        assertFalse(nn.neuronHasConnectionTo(output, hiddenOne));
-
-        // check connection configuration
-        assertEquals(0.5, nn.getWeightOfConnection(output, newNeuron));
-        assertEquals(1, nn.getWeightOfConnection(newNeuron, hiddenOne));
-
-        // check created neuron
-        assertEquals(0, nn.getBiasOfNeuron(newNeuron));
-    }
-
-    @Test
     public void testMultipleSplit() {
         NeuralNetwork nn = buildNeuralNetwork(4, 1);
 
         nn.modify()
-                .splitConnection(new NeuronID(0, 0), new NeuronID(1, 0))
+                .splitConnection(new NeuronID(0, 0), new NeuronID(2, 0))
                 .splitConnection(new NeuronID(0, 2), new NeuronID(2, 0))
                 .splitConnection(new NeuronID(0, 2), new NeuronID(1, 1));
 
         // check general updates
-        assertEquals(4, nn.getDepth());
+        assertEquals(3, nn.getDepth());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(0, 0)).size());
         assertEquals(0, nn.getIncomingConnectionsOfNeuron(new NeuronID(0, 0)).size());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(0, 1)).size());
@@ -290,21 +261,38 @@ public class NeuralNetworkModifierTest {
         assertEquals(0, nn.getIncomingConnectionsOfNeuron(new NeuronID(0, 3)).size());
         assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(1, 0)).size());
         assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(1, 0)).size());
-        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(2, 0)).size());
-        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(2, 0)).size());
-        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(2, 1)).size());
-        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(2, 1)).size());
-        assertEquals(0, nn.getOutgoingConnectionsOfNeuron(new NeuronID(3, 0)).size());
-        assertEquals(4, nn.getIncomingConnectionsOfNeuron(new NeuronID(3, 0)).size());
+        assertEquals(0, nn.getOutgoingConnectionsOfNeuron(new NeuronID(2, 0)).size());
+        assertEquals(4, nn.getIncomingConnectionsOfNeuron(new NeuronID(2, 0)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(1, 1)).size());
+        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(1, 1)).size());
+        assertEquals(1, nn.getOutgoingConnectionsOfNeuron(new NeuronID(1, 2)).size());
+        assertEquals(1, nn.getIncomingConnectionsOfNeuron(new NeuronID(1, 2)).size());
 
         // check connection start and end
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 0), new NeuronID(2, 0)));
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 1), new NeuronID(3, 0)));
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 2), new NeuronID(1, 0)));
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 3), new NeuronID(3, 0)));
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(1, 0), new NeuronID(2, 1)));
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(2, 0), new NeuronID(3, 0)));
-        assertTrue(nn.neuronHasConnectionTo(new NeuronID(2, 1), new NeuronID(3, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 0), new NeuronID(1, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 1), new NeuronID(2, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 2), new NeuronID(1, 2)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(0, 3), new NeuronID(2, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(1, 0), new NeuronID(2, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(1, 1), new NeuronID(2, 0)));
+        assertTrue(nn.neuronHasConnectionTo(new NeuronID(1, 2), new NeuronID(1, 1)));
+    }
+
+    @Test
+    public void testAddNeuron() {
+        NeuralNetwork nn = buildNeuralNetwork(1, 1);
+
+        nn.modify().addNeuron(1, 0.5);
+
+        assertEquals(0.5, nn.getBiasOfNeuron(new NeuronID(1, 0)));
+
+        assertEquals(1, nn.getNeuronsOfLayer(0).size());
+        assertEquals(1, nn.getNeuronsOfLayer(1).size());
+        assertEquals(1, nn.getNeuronsOfLayer(2).size());
+
+        assertConnections(nn, new NeuronID(0, 0), new NeuronID(2, 0));
+        assertConnections(nn, new NeuronID(1, 0));
+        assertConnections(nn, new NeuronID(2, 0));
     }
 
     /*
@@ -312,5 +300,55 @@ public class NeuralNetworkModifierTest {
      #################### Helper Methods ######################
      ##########################################################
     */
+
+    public void assertConnections(NeuralNetwork nn, NeuronID source, NeuronID... targets) {
+        assertEquals(targets.length, nn.getOutgoingConnectionsOfNeuron(source).size());
+
+        for (NeuronID target : targets) {
+            assertTrue(nn.getOutgoingConnectionsOfNeuron(source)
+                    .stream()
+                    .anyMatch(n -> n.equals(target)));
+        }
+    }
+
+    private void checkExpectedIncomingConnectionsAndEventuallyNewOne(NeuralNetwork nn, NeuronID start, NeuronID end, NeuronID neuron, NeuronID... incoming) {
+        assertEquals(incoming.length + (neuron.equals(end) ? 1 : 0), nn.getIncomingConnectionsOfNeuron(neuron).size());
+        // check expected incoming connections exist
+        for (NeuronID in : incoming) {
+            assertEquals(1, nn.getIncomingConnectionsOfNeuron(neuron)
+                    .stream()
+                    .filter(n -> n.equals(in))
+                    .filter(n -> nn.getWeightOfConnection(n, neuron) == -1)
+                    .count(), String.format("Expected connection from %s to %s is missing", in, neuron));
+        }
+        // if this neuron is the target of the new connection check if the new connection is registered as incoming
+        if (neuron.equals(end)) {
+            assertEquals(1, nn.getIncomingConnectionsOfNeuron(neuron)
+                    .stream()
+                    .filter(n -> n.equals(start))
+                    .filter(n -> nn.getWeightOfConnection(n, neuron) == 1)
+                    .count(), String.format("Expected connection from %s to %s is missing", start, neuron));
+        }
+    }
+
+    private void checkExpectedOutgoingConnectionsAndEventuallyNewOne(NeuralNetwork nn, NeuronID start, NeuronID end, NeuronID neuron, NeuronID... outgoing) {
+        assertEquals(outgoing.length + (neuron.equals(start) ? 1 : 0), nn.getOutgoingConnectionsOfNeuron(neuron).size());
+        // check expected outgoing connections exist
+        for (NeuronID out : outgoing) {
+            assertEquals(1, nn.getOutgoingConnectionsOfNeuron(neuron)
+                    .stream()
+                    .filter(n -> n.equals(out))
+                    .filter(n -> nn.getWeightOfConnection(neuron, n) == -1)
+                    .count(), String.format("Expected connection from %s to %s is missing", neuron, out));
+        }
+        // if this neuron is the source of the new connection check if the new connection is registered as outgoing
+        if (neuron.equals(start)) {
+            assertEquals(1, nn.getOutgoingConnectionsOfNeuron(neuron)
+                    .stream()
+                    .filter(n -> n.equals(end))
+                    .filter(n -> nn.getWeightOfConnection(neuron, n) == 1)
+                    .count(), String.format("Expected connection from %s to %s is missing", neuron, end));
+        }
+    }
 
 }

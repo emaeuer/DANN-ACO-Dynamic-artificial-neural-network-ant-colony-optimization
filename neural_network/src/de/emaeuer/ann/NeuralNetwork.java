@@ -1,10 +1,8 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.impl.NeuralNetworkBuilderImpl;
-import de.emaeuer.ann.impl.NeuralNetworkLayerBuilderImpl;
+import de.emaeuer.ann.impl.layer.based.NeuralNetworkBuilderImpl;
 import org.apache.commons.math3.linear.RealVector;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface NeuralNetwork {

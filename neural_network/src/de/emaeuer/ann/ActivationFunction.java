@@ -3,7 +3,7 @@ package de.emaeuer.ann;
 import java.util.Arrays;
 import java.util.function.DoubleFunction;
 
-public enum ActivationFunction {
+public enum ActivationFunction implements DoubleFunction<Double> {
 
     LINEAR_UNTIL_SATURATION(v -> Math.max(Math.min(v, 1), 0)),
     IDENTITY(v -> v),
@@ -26,4 +26,10 @@ public enum ActivationFunction {
     public DoubleFunction<Double> getActivationFunction() {
         return activationFunction;
     }
+
+    @Override
+    public Double apply(double value) {
+        return this.activationFunction.apply(value);
+    }
+
 }

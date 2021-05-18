@@ -1,4 +1,4 @@
-package de.emaeuer.ann.impl;
+package de.emaeuer.ann.impl.layer.based;
 
 import de.emaeuer.ann.*;
 import de.emaeuer.ann.NeuronID;

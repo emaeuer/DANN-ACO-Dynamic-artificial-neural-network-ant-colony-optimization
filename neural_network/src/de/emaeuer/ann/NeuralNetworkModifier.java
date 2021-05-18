@@ -1,8 +1,5 @@
 package de.emaeuer.ann;
 
-import de.emaeuer.ann.impl.NeuralNetworkLayerModifier;
-import de.emaeuer.ann.impl.NeuralNetworkModifierImpl;
-
 public interface NeuralNetworkModifier {
 
     NeuralNetworkModifier splitConnection(NeuronID start, NeuronID end);

@@ -1,10 +1,14 @@
-package de.emaeuer.ann.util;
+package de.emaeuer.ann.neuron.based;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.ann.impl.layer.based.NeuralNetworkBuilderImpl;
 import de.emaeuer.ann.impl.layer.based.NeuralNetworkImpl;
 import de.emaeuer.ann.impl.layer.based.NeuralNetworkLayerImpl;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetwork;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
+import de.emaeuer.configuration.ConfigurationHandler;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,14 +22,14 @@ public class NeuralNetworkLayerModifierTest {
     */
 
     private NeuralNetworkLayerImpl buildHiddenLayer(int numberOfNeurons) {
-        NeuralNetworkImpl nn = (NeuralNetworkImpl) NeuralNetwork.build()
-                .inputLayer(1)
+        NeuronBasedNeuralNetwork nn = NeuronBasedNeuralNetworkBuilder.build()
+                .inputLayer()
                 .fullyConnectToNextLayer()
                 .hiddenLayer(numberOfNeurons)
                 .fullyConnectToNextLayer()
-                .outputLayer(1)
+                .outputLayer()
                 .finish();
-        return nn.getLayer(1);
+        return null;
     }
 
     private NeuralNetworkImpl buildNeuralNetwork(int... numberOfNeurons) {
@@ -358,7 +362,7 @@ public class NeuralNetworkLayerModifierTest {
         checkExpectedOutgoingConnectionsAndEventuallyNewOne(nn, start, end, output.getNeurons().get(0));
     }
 
-    private void checkExpectedIncomingConnectionsAndEventuallyNewOne(NeuralNetwork nn, NeuronID start, NeuronID end, NeuronID neuron, NeuronID... incoming) {
+    private void checkExpectedIncomingConnectionsAndEventuallyNewOne(NeuralNetworkImpl nn, NeuronID start, NeuronID end, NeuronID neuron, NeuronID... incoming) {
         assertEquals(incoming.length + (neuron.equals(end) ? 1 : 0), nn.getIncomingConnectionsOfNeuron(neuron).size());
         // check expected incoming connections exist
         for (NeuronID in : incoming) {
@@ -378,7 +382,7 @@ public class NeuralNetworkLayerModifierTest {
         }
     }
 
-    private void checkExpectedOutgoingConnectionsAndEventuallyNewOne(NeuralNetwork nn, NeuronID start, NeuronID end, NeuronID neuron, NeuronID... outgoing) {
+    private void checkExpectedOutgoingConnectionsAndEventuallyNewOne(NeuralNetworkImpl nn, NeuronID start, NeuronID end, NeuronID neuron, NeuronID... outgoing) {
         assertEquals(outgoing.length + (neuron.equals(start) ? 1 : 0), nn.getOutgoingConnectionsOfNeuron(neuron).size());
         // check expected outgoing connections exist
         for (NeuronID out : outgoing) {
