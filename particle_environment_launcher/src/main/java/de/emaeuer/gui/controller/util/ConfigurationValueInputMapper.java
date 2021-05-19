@@ -40,6 +40,7 @@ public class ConfigurationValueInputMapper {
         configuration.getConfigurationValues()
                 .entrySet()
                 .stream()
+                .filter(e -> !e.getKey().isDisabled())
                 .filter(e -> !EmbeddedConfiguration.class.equals(e.getKey().getValueType()))
                 .map(e -> ConfigurationValueInputMapper.mapConfigurationToInput(e, action, configuration))
                 .forEach(n -> boxWithDirectInputs.getChildren().add(n));
@@ -48,6 +49,7 @@ public class ConfigurationValueInputMapper {
         configuration.getConfigurationValues()
                 .entrySet()
                 .stream()
+                .filter(e -> !e.getKey().isDisabled())
                 .filter(e -> EmbeddedConfiguration.class.equals(e.getKey().getValueType()))
                 .map(e -> createPaneForConfiguration(((EmbeddedConfiguration<?>) e.getValue()).getValue(),
                         action, e.getKey().getName()))

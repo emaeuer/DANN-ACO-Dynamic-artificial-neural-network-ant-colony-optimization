@@ -43,11 +43,6 @@ public enum NeuralNetworkConfiguration implements DefaultConfiguration<NeuralNet
     }
 
     @Override
-    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<NeuralNetworkConfiguration> handler) {
-        // do nothing because not needed
-    }
-
-    @Override
     public boolean refreshNecessary() {
         return false;
     }

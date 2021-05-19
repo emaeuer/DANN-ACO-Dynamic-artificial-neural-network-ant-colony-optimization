@@ -42,11 +42,6 @@ public enum CartPoleConfiguration implements DefaultConfiguration<CartPoleConfig
     }
 
     @Override
-    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<CartPoleConfiguration> handler) {
-        // not necessary
-    }
-
-    @Override
     public boolean refreshNecessary() {
         return false;
     }

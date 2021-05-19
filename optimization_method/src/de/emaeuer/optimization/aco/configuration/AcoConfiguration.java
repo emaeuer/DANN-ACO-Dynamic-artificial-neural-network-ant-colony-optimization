@@ -42,11 +42,6 @@ public enum AcoConfiguration implements DefaultConfiguration<AcoConfiguration> {
     }
 
     @Override
-    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<AcoConfiguration> handler) {
-        // do nothing because not needed
-    }
-
-    @Override
     public boolean refreshNecessary() {
         return false;
     }

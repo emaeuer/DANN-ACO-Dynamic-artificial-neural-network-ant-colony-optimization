@@ -42,4 +42,8 @@ public interface NeuralNetwork {
     boolean isInputNeuron(NeuronID currentNeuron);
 
     boolean usesExplicitBias();
+
+    double getMaxWeightValue();
+
+    double getMinWeightValue();
 }

@@ -46,7 +46,7 @@ public abstract class OptimizationMethod {
         this.configuration = configuration;
         this.generalState = generalState;
 
-        this.averageHandler = new RunDataHandler(this.generalState);
+        this.averageHandler = new RunDataHandler(this.generalState, configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
 
         logConfiguration(configuration);
 
@@ -207,7 +207,7 @@ public abstract class OptimizationMethod {
     }
 
     protected void updateBestSolution() {
-        this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.transformToConnectionList(this.currentlyBestSolution.getNeuralNetwork()));
+        this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.retrieveGraph(this.currentlyBestSolution.getNeuralNetwork()));
     }
 
     protected abstract List<? extends Solution> getCurrentSolutions();

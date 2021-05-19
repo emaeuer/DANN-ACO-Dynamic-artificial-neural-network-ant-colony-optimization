@@ -41,11 +41,6 @@ public enum NeatConfiguration implements DefaultConfiguration<NeatConfiguration>
     }
 
     @Override
-    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<NeatConfiguration> handler) {
-        // do nothing because not needed
-    }
-
-    @Override
     public boolean refreshNecessary() {
         return false;
     }

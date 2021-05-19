@@ -213,6 +213,16 @@ public class NeuronBasedNeuralNetwork implements NeuralNetwork {
         return this.biasNeuron == null;
     }
 
+    @Override
+    public double getMaxWeightValue() {
+        return this.configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class);
+    }
+
+    @Override
+    public double getMinWeightValue() {
+        return this.configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class);
+    }
+
     public Neuron getNeuron(NeuronID id) {
         // if the neural network uses an on-neuron as bias the 0-0 neuron is the bias neuron
         if (id.getLayerIndex() == 0 && !usesExplicitBias()) {

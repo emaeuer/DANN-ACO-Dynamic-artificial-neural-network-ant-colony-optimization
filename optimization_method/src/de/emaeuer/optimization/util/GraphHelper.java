@@ -2,6 +2,7 @@ package de.emaeuer.optimization.util;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
+import de.emaeuer.state.value.GraphStateValue;
 import de.emaeuer.state.value.GraphStateValue.Connection;
 
 import java.util.ArrayList;
@@ -18,9 +19,9 @@ public class GraphHelper {
      * Just use list of all connections instead of specialized data structures like adjacency list because the graph is
      * small anyways and only refreshed if a new best solution was found. Also the visualization is easier for the list
      */
-    public static List<Connection> transformToConnectionList(NeuralNetwork nn) {
+    public static GraphStateValue.GraphData retrieveGraph(NeuralNetwork nn) {
         if (nn == null) {
-            return Collections.emptyList();
+            return null;
         }
 
         List<Connection> connections = new ArrayList<>();
@@ -36,7 +37,7 @@ public class GraphHelper {
             }
         }
 
-        return connections;
+        return new GraphStateValue.GraphData(connections, nn.getMaxWeightValue(), nn.getMinWeightValue());
     }
 
     private static String getNodeLabel(NeuronID neuron) {

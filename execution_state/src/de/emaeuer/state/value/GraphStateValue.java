@@ -2,34 +2,32 @@ package de.emaeuer.state.value;
 
 import java.util.List;
 
-public class GraphStateValue extends AbstractStateValue<List<GraphStateValue.Connection>, List<GraphStateValue.Connection>> {
+public class GraphStateValue extends AbstractStateValue<GraphStateValue.GraphData, GraphStateValue.GraphData> {
+
+    public static record GraphData(List<Connection> connections, double maxWeight, double minWeight) {}
 
     public static record Connection(String start, double weight, String target) {}
 
-    private List<Connection> connections;
+    private GraphData data;
 
     @Override
-    public Class<? extends List<Connection>> getExpectedInputType() {
-        Class<?> type = List.class;
-        //noinspection unchecked only way to return class with generic is unsafe cast
-        return (Class<? extends List<Connection>>) type;
+    public Class<? extends GraphData> getExpectedInputType() {
+        return GraphData.class;
     }
 
     @Override
-    public Class<? extends List<Connection>> getOutputType() {
-        Class<?> type = List.class;
-        //noinspection unchecked only way to return class with generic is unsafe cast
-        return (Class<? extends List<Connection>>) type;
+    public Class<? extends GraphData> getOutputType() {
+        return GraphData.class;
     }
 
     @Override
-    protected void handleNewValue(List<Connection> value) {
-        this.connections = value;
+    protected void handleNewValue(GraphData value) {
+        this.data = value;
     }
 
     @Override
-    public List<Connection> getValueImpl() {
-        return this.connections;
+    public GraphData getValueImpl() {
+        return this.data;
     }
 
 }

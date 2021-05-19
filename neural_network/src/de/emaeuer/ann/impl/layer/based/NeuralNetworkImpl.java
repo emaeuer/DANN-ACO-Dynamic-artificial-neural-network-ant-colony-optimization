@@ -157,6 +157,16 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         return this.usesExplicitBias;
     }
 
+    @Override
+    public double getMaxWeightValue() {
+        return this.configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MAX, Double.class);
+    }
+
+    @Override
+    public double getMinWeightValue() {
+        return this.configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class);
+    }
+
     public void setUsesExplicitBias(boolean value) {
         this.usesExplicitBias = value;
     }

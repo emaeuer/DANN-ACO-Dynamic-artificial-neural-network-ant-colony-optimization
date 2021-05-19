@@ -15,7 +15,7 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0)),
     PROGRESSION_ITERATIONS("Threshold for number of iterations without progress", new IntegerConfigurationValue(200, 1, Integer.MAX_VALUE)),
     NUMBER_OF_RUNS("Number of runs", new IntegerConfigurationValue(10, 1, Integer.MAX_VALUE)),
-    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE)),
+    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE), true),
     IMPLEMENTATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.ACO))),
     METHOD_NAME("The name of the optimization method", new StringConfigurationValue("ACO", OptimizationMethodNames.getNames()),
             (v, h) -> {
@@ -28,6 +28,7 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     private final AbstractConfigurationValue<?> defaultValue;
     private final Class<? extends AbstractConfigurationValue<?>> type;
     private final BiConsumer<AbstractConfigurationValue<?>, ConfigurationHandler<OptimizationConfiguration>> changeAction;
+    private final boolean disabled;
 
     OptimizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue) {
         this.defaultValue = defaultValue;
@@ -35,6 +36,7 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
         this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
         this.name = name;
         this.changeAction = null;
+        this.disabled = false;
     }
 
     OptimizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue, BiConsumer<AbstractConfigurationValue<?>, ConfigurationHandler<OptimizationConfiguration>> changeAction) {
@@ -43,14 +45,16 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
         this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
         this.name = name;
         this.changeAction = changeAction;
+        this.disabled = false;
     }
 
-    OptimizationConfiguration(String name, Class<?> type) {
-        this.defaultValue = null;
+    OptimizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue, boolean disabled) {
+        this.defaultValue = defaultValue;
         //noinspection unchecked no safe way to cast generic
-        this.type = (Class<? extends AbstractConfigurationValue<?>>) type;
+        this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
         this.name = name;
         this.changeAction = null;
+        this.disabled = disabled;
     }
 
     @Override
@@ -83,5 +87,10 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     @Override
     public String getKeyName() {
         return name();
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return this.disabled;
     }
 }

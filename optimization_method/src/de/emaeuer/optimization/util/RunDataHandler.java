@@ -35,11 +35,13 @@ public class RunDataHandler {
 
     private int evaluationIndex = 0;
     private int numberOfFinishedRuns = 0;
+    private double fitnessUpperBound;
 
     private final StateHandler<OptimizationState> generalState;
 
-    public RunDataHandler(StateHandler<OptimizationState> state) {
+    public RunDataHandler(StateHandler<OptimizationState> state, double maxFitnessScore) {
         this.generalState = state;
+        this.fitnessUpperBound = maxFitnessScore;
     }
 
     public void addSummaryOfRun(RunSummary summary) {
@@ -62,9 +64,8 @@ public class RunDataHandler {
         if (!this.fitnessSeries.containsKey(evaluationCount)) {
             // no previous run needed that many evaluations --> fitness at this iteration was max value
             average = new SimpleDoubleStatistic();
-            // FIXME if the max fitness score is not 10000 the result is wrong
             IntStream.range(0, this.numberOfFinishedRuns)
-                    .forEach(i -> average.addValue(10000));
+                    .forEach(i -> average.addValue(this.fitnessUpperBound));
             this.fitnessSeries.put(evaluationCount, average);
             this.evaluationValues.add(evaluationCount);
         } else {
@@ -82,8 +83,7 @@ public class RunDataHandler {
         for (int i = this.evaluationIndex; i < this.evaluationValues.size(); i++) {
             int evaluationCount = this.evaluationValues.get(i);
             SimpleDoubleStatistic average = this.fitnessSeries.get(evaluationCount);
-            // FIXME if the max fitness score is not 10000 the result is wrong
-            average.addValue(10000);
+            average.addValue(this.fitnessUpperBound);
             this.generalState.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, new AbstractMap.SimpleEntry<>("Average max fitness", new Double[] {(double) evaluationCount, average.getAverage()}));
         }
 

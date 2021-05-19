@@ -25,8 +25,6 @@ public abstract class AbstractEnvironment {
         initialize(configuration);
     }
 
-
-
     protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.maxFitnessScore = configuration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
     }

@@ -11,7 +11,7 @@ public abstract class AbstractStateValue<I, O> {
     public abstract Class<? extends O> getOutputType();
 
     public void newValue(Object value) {
-        if (!getExpectedInputType().isInstance(value)) {
+        if (value != null && !getExpectedInputType().isInstance(value)) {
             throw new IllegalArgumentException(String.format("Expected value of type %s received one of %s instead", getExpectedInputType().getSimpleName(), value.getClass().getSimpleName()));
         }
 

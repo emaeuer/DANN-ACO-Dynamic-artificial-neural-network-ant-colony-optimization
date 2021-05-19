@@ -74,6 +74,9 @@ public class OptimizationEnvironmentHandler {
     }
 
     private void createOptimizationMethod() {
+        // FIXME there may be a better solution then disabling the option in the gui and overriding it here
+        // difficulty is caused by independence of the environment and optimization
+        this.optimizationConfiguration.get().setValue(OptimizationConfiguration.MAX_FITNESS_SCORE, this.maxFitness.get());
         this.maxEvaluations.set(this.optimizationConfiguration.get().getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class));
         this.maxRuns.set(this.optimizationConfiguration.get().getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class));
         this.optimization = OptimizationMethodFactory.createMethodForConfig(this.optimizationConfiguration.get(), this.optimizationState.get());
@@ -101,7 +104,7 @@ public class OptimizationEnvironmentHandler {
     }
 
     private void handleRestart() {
-        // optimization update only if the first iteration finished
+        // optimization update only if the optimization already started
         if (evaluationCounter.get() > 0) {
             this.optimization.update();
         }
@@ -131,6 +134,16 @@ public class OptimizationEnvironmentHandler {
         this.fitness.set(0);
     }
 
+    private void handleNextIteration() {
+        List<AgentController> solutions = this.optimization.nextIteration()
+                .stream()
+                .map(NeuralNetworkAgentController::new)
+                .collect(Collectors.toList());
+        this.environment.setControllers(solutions);
+        this.evaluationCounter.set(this.optimization.getEvaluationCounter());
+        this.fitnessProperty().set(this.optimization.getBestFitness());
+    }
+
     private void exportRunData() {
         SingletonDataExporter.addRunData(OptimizationState.CURRENT_ITERATION, optimization.getState());
         SingletonDataExporter.addRunData(OptimizationState.CURRENT_RUN, optimization.getState());
@@ -144,16 +157,6 @@ public class OptimizationEnvironmentHandler {
         SingletonDataExporter.addData(OptimizationState.FITNESS_DISTRIBUTION, optimization.getState());
         SingletonDataExporter.addData(OptimizationState.CONNECTIONS_DISTRIBUTION, optimization.getState());
         SingletonDataExporter.finishAndExport();
-    }
-
-    private void handleNextIteration() {
-        List<AgentController> solutions = this.optimization.nextIteration()
-                .stream()
-                .map(NeuralNetworkAgentController::new)
-                .collect(Collectors.toList());
-        this.environment.setControllers(solutions);
-        this.evaluationCounter.set(this.optimization.getEvaluationCounter());
-        this.fitnessProperty().set(this.optimization.getBestFitness());
     }
 
     private void step() {

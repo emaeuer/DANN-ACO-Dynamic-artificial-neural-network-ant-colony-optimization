@@ -41,11 +41,6 @@ public enum FlappyBirdConfiguration implements DefaultConfiguration<FlappyBirdCo
     }
 
     @Override
-    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<FlappyBirdConfiguration> handler) {
-        // not necessary
-    }
-
-    @Override
     public boolean refreshNecessary() {
         return false;
     }

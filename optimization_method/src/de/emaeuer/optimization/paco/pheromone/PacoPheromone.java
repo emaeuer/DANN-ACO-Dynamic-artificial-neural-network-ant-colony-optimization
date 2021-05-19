@@ -79,11 +79,10 @@ public class PacoPheromone {
         this.population.removeAnt()
                 .ifPresent(this::removeAnt);
 
-//        this.templatePheromone.forEach((k, v) -> System.out.println(k + " " + v.size()));
+        this.templatePheromone.forEach((k, v) -> System.out.println(k + " " + v.size()));
     }
 
     private void removeAnt(PacoAnt ant) {
-        System.out.println("remove");
         // remove all knowledge of this ant
         removeTemplateOfAnt(ant);
         removeWeightsOfAnt(ant);
@@ -119,7 +118,6 @@ public class PacoPheromone {
     }
 
     protected void addAnt(PacoAnt ant) {
-        System.out.println("add");
         // add all weights of this ant
         addTemplateOfAnt(ant);
         addWeightsOfAnt(ant);
@@ -302,7 +300,6 @@ public class PacoPheromone {
 
         Collection<Double> populationKnowledge = this.weightPheromone.get(startID, endID);
 
-
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
@@ -312,8 +309,10 @@ public class PacoPheromone {
 
         double connectionPheromone = this.configuration.getValue(PHEROMONE_VALUE, Double.class, variables);
 
-        if (template.neuronHasConnectionTo(source, target)) {
+        if (!this.configuration.getValue(ENABLE_NEURON_ISOLATION, Boolean.class) && template.neuronHasConnectionTo(source, target)) {
             return checkNeuronIsNotIsolated(source, target, template) ? 1 - connectionPheromone : 0;
+        }else if (template.neuronHasConnectionTo(source, target)) {
+            return 1 - connectionPheromone;
         } else {
             return connectionPheromone;
         }
@@ -345,16 +344,18 @@ public class PacoPheromone {
     private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<Double> populationValues) {
         double value;
 
+        double maxValue = this.baseNetwork.getMaxWeightValue();
+        double minValue = this.baseNetwork.getMinWeightValue();
+
         if (populationValues == null || populationValues.isEmpty()) {
             // choose value randomly because no knowledge exists
-            value = RandomUtil.getNextDouble(-1, 1);
+            value = RandomUtil.getNextDouble(minValue, maxValue);
         } else {
             double deviation = calculateDeviation(populationValues, srcValue);
-
             // select new value if it is out of bounds
             do {
                 value = RandomUtil.getNormalDistributedValue(srcValue, deviation);
-            } while (value < -1 || value > 1);
+            } while (value < minValue || value > maxValue);
         }
 
         return value;

@@ -12,9 +12,15 @@ public interface DefaultConfiguration<T extends Enum<T> & DefaultConfiguration<T
 
     Class<?> getValueType();
 
-    void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<T> handler);
-
     boolean refreshNecessary();
 
     String getKeyName();
+
+    default void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<T> handler) {
+        // left empty intentionally
+    }
+
+    default boolean isDisabled() {
+        return false;
+    }
 }

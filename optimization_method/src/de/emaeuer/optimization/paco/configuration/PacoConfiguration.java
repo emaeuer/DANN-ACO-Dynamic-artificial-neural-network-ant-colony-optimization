@@ -15,6 +15,7 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     UPDATE_STRATEGY("Population update strategy", new StringConfigurationValue(PopulationUpdateStrategies.AGE.name(), PopulationUpdateStrategies.getNames())),
     DYNAMIC_PROBABILITY("Probability for dynamic change", new ExpressionConfigurationValue("0.75(n/p)^2+0.1", PacoParameter.class)),
     PHEROMONE_VALUE("Pheromone value of a connection", new ExpressionConfigurationValue("(n+1) / (p+1)", PacoParameter.class)),
+    ENABLE_NEURON_ISOLATION("Enable neuron isolation", new BooleanConfigurationValue(false)),
     SPLIT_THRESHOLD("Threshold for splitting a connection instead of removing", new ExpressionConfigurationValue("leq(s/(p - 1), 0.1) * geq(n, p * 0.9)", PacoParameter.class));
 
     private final String name;
@@ -38,11 +39,6 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     @Override
     public Class<?> getValueType() {
         return this.defaultValue.getClass();
-    }
-
-    @Override
-    public void executeChangeAction(AbstractConfigurationValue<?> newValue, ConfigurationHandler<PacoConfiguration> handler) {
-        // do nothing because not needed
     }
 
     @Override

@@ -273,9 +273,11 @@ public class StateValueOutputMapper {
 
     // FIXME nodes in graph lay on top of each other
     private void refreshGraphView(StateParameter<?> stateType, GraphStateValue graphState, String suffix) {
-        if (!graphState.changedSinceLastGet() || graphState.getValue() == null || graphState.getValue().isEmpty()) {
+        if (!graphState.changedSinceLastGet() || graphState.getValue() == null || graphState.getValue().connections().isEmpty()) {
             return;
         }
+
+        GraphStateValue.GraphData graphData = graphState.getValue();
 
         String mapIdentifier = createMapIdentifier(stateType, suffix + ".view");
         if (!this.visualRepresentations.containsKey(mapIdentifier)) {
@@ -293,7 +295,7 @@ public class StateValueOutputMapper {
 
         Set<String> existingVertices = new HashSet<>();
 
-        for (Connection connection : graphState.getValue()) {
+        for (Connection connection : graphData.connections()) {
             if (existingVertices.add(connection.start())) {
                 graph.insertVertex(connection.start());
             }
@@ -301,13 +303,19 @@ public class StateValueOutputMapper {
                 graph.insertVertex(connection.target());
             }
             Edge<Double, String> edge = graph.insertEdge(connection.start(), connection.target(), connection.weight());
-            graphView.setStyle(edge, getEdgeStyle(connection.weight()));
+            graphView.setStyle(edge, getEdgeStyle(connection.weight(), graphData.minWeight(), graphData.maxWeight()));
         }
 
         graphView.update();
     }
 
-    private String getEdgeStyle(double weight) {
+    private String getEdgeStyle(double weight, double lowerBound, double upperBound) {
+        if (weight < 0) {
+            weight /= lowerBound;
+        } else {
+            weight /= upperBound;
+        }
+
         int red = (int) Math.round(-127 * weight + 127);
         int green = (int) Math.round(127 * weight + 127);
         int blue = (int) Math.round(-127 * Math.abs(weight) + 127);
@@ -324,7 +332,7 @@ public class StateValueOutputMapper {
         }
 
         Graph<String, Double> graph = new DigraphEdgeList<>();
-        GraphView<String, Double> graphView = new GraphView<>(graph, properties, null, this.getClass().getResource("/gui/graph/graph.css").toExternalForm());
+        GraphView<String, Double> graphView = new GraphView<>(graph, properties, null, Objects.requireNonNull(this.getClass().getResource("/gui/graph/graph.css")).toExternalForm());
 
         this.visualRepresentations.put(createMapIdentifier(stateType, suffix + ".view"), graphView);
         this.visualRepresentations.put(createMapIdentifier(stateType, suffix + ".graph"), graph);
