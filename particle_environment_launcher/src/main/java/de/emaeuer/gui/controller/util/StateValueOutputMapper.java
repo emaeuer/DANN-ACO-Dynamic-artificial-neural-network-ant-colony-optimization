@@ -43,13 +43,15 @@ public class StateValueOutputMapper {
         this.state = state;
     }
 
-    public List<Node> refreshProperties() {
+    public synchronized List<Node> refreshProperties() {
         if (this.state == null) {
             return Collections.emptyList();
         }
 
+        state.lock();
         state.getCurrentState()
                 .forEach((key, value) -> refreshPropertyOfState(key, value, ""));
+        state.unlock();
 
         List<Node> copy = new ArrayList<>(this.newContent);
         this.newContent.clear();

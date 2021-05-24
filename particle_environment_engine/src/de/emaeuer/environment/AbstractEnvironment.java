@@ -5,6 +5,7 @@ import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -13,7 +14,7 @@ public abstract class AbstractEnvironment {
     private final double width = 800;
     private final double height = 800;
 
-    private final List<AbstractElement> agents = new ArrayList<>();
+    private final List<AbstractElement> agents = Collections.synchronizedList(new ArrayList<>());
 
     private final BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy;
 
@@ -51,7 +52,7 @@ public abstract class AbstractEnvironment {
     }
 
     public List<AbstractElement> getAdditionalEnvironmentElements() {
-        return new ArrayList<>();
+        return Collections.synchronizedList(new ArrayList<>());
     }
 
     public double getWidth() {

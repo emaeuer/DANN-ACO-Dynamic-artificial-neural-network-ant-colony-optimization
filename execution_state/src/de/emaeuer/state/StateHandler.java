@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Persistable<StateHandler<?>> {
 
@@ -26,6 +28,8 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
     private String stateName;
 
     private final Map<T, AbstractStateValue<?, ?>> currentState;
+
+    private final Lock lock = new ReentrantLock(true);
 
     public StateHandler(Class<T> parameterClass) {
         this.parameterClass = parameterClass;
@@ -110,4 +114,11 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
         return STATE_COLLECTION;
     }
 
+    public void lock() {
+        this.lock.lock();
+    }
+
+    public void unlock() {
+        this.lock.unlock();
+    }
 }
