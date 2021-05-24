@@ -12,19 +12,16 @@ import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.factory.OptimizationMethodFactory;
 import de.emaeuer.persistence.SingletonDataExporter;
 import de.emaeuer.state.StateHandler;
-import javafx.application.Platform;
 import javafx.beans.property.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-public class OptimizationEnvironmentHandler implements Runnable {
+public class OptimizationEnvironmentHandler {
+
+    // TODO this should manage a javafx task to decouple the gui and optimization task
 
     private static final Logger LOG = LogManager.getLogger(OptimizationEnvironmentHandler.class);
 
@@ -46,14 +43,6 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     private AbstractEnvironment environment;
     private OptimizationMethod optimization;
-
-    private final Lock updateLock = new ReentrantLock(true);
-
-    private final AtomicInteger updateDelta = new AtomicInteger(1000 / 60);
-    private final AtomicBoolean terminateThread = new AtomicBoolean(false);
-    private final AtomicBoolean pauseThread = new AtomicBoolean(false);
-
-    private Thread updateThread;
 
     public void initialize() {
         if (this.environmentConfiguration.isNotNull().get()) {
@@ -97,18 +86,16 @@ public class OptimizationEnvironmentHandler implements Runnable {
         this.optimization = null;
         this.environment = null;
 
-        this.evaluationCounter.set(0);
-        this.runCounter.set(0);
-        this.fitness.set(0);
-        this.finished.set(false);
-
-        this.terminateThread.set(false);
+        evaluationCounter.set(0);
+        runCounter.set(0);
+        fitness.set(0);
+        finished.set(false);
     }
 
     public void update() {
         if (environment.allAgentsFinished()) {
             handleRestart();
-            Platform.runLater(() -> this.updateNotifier.set(!this.updateNotifier.get()));
+            this.updateNotifier.set(!this.updateNotifier.get());
         }
 
         if (!this.finished.get()) {
@@ -118,7 +105,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     private void handleRestart() {
         // optimization update only if the optimization already started
-        if (optimization.getEvaluationCounter() > 0) {
+        if (evaluationCounter.get() > 0) {
             this.optimization.update();
         }
 
@@ -134,12 +121,17 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private void handleEnd() {
         exportRunData();
         exportData();
-        this.terminateThread.set(true);
+        this.finished.set(true);
+        this.runCounter.set(this.optimization.getRunCounter());
+        this.fitnessProperty().set(this.optimization.getBestFitness());
     }
 
     private void handleNextRun() {
         exportRunData();
         this.optimization.resetAndRestart();
+        this.runCounter.set(this.runCounter.get() + 1);
+        this.evaluationCounter.set(0);
+        this.fitness.set(0);
     }
 
     private void handleNextIteration() {
@@ -148,6 +140,8 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
         this.environment.setControllers(solutions);
+        this.evaluationCounter.set(this.optimization.getEvaluationCounter());
+        this.fitnessProperty().set(this.optimization.getBestFitness());
     }
 
     private void exportRunData() {
@@ -169,48 +163,6 @@ public class OptimizationEnvironmentHandler implements Runnable {
         this.environment.step();
     }
 
-    public void startThreat() {
-        this.pauseThread.set(false);
-
-        this.updateThread = new Thread(this);
-        this.updateThread.setDaemon(true);
-        this.updateThread.start();
-    }
-
-    public void pauseThread() {
-        this.pauseThread.set(true);
-        try {
-            this.updateThread.join();
-        } catch (InterruptedException e) {
-            LOG.warn("Failed to pause thread", e);
-        }
-    }
-
-    @Override
-    public void run() {
-        try {
-            while (!this.terminateThread.get() && !this.pauseThread.get()) {
-                this.updateLock.lock();
-                update();
-                this.updateLock.unlock();
-                if (updateDelta.get() > 0) {
-                    Thread.sleep(updateDelta.get());
-                }
-            }
-        } catch (Exception e) {
-            LOG.warn("Unexpected exception in update thread");
-        }
-    }
-
-    public void refreshProperties() {
-        this.updateLock.lock();
-        this.evaluationCounter.set(this.optimization.getEvaluationCounter());
-        this.runCounter.set(this.optimization.getRunCounter());
-        this.fitness.set(this.optimization.getBestFitness());
-        this.finished.set(this.optimization.isOptimizationFinished());
-        this.updateLock.unlock();
-    }
-
     public ObjectProperty<StateHandler<OptimizationState>> optimizationStateProperty() {
         return optimizationState;
     }
@@ -223,7 +175,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
         return environmentConfiguration;
     }
 
-    public BooleanProperty updatedProperties() {return updateNotifier;}
+    public BooleanProperty updatedProperty() {return updateNotifier;}
 
     public BooleanProperty finishedProperty() {
         return finished;
@@ -260,9 +212,4 @@ public class OptimizationEnvironmentHandler implements Runnable {
     public List<AbstractElement> getAdditionalEnvironmentElements() {
         return this.environment.getAdditionalEnvironmentElements();
     }
-
-    public void setUpdateDelta(int value) {
-        this.updateDelta.set(value);
-    }
-
 }
