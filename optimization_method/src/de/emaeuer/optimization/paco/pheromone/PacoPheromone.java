@@ -381,6 +381,7 @@ public class PacoPheromone {
     //############################################################
 
     public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
+        state.lock();
         //noinspection unchecked safe cast for generic not possible
         Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
@@ -398,6 +399,7 @@ public class PacoPheromone {
                             .boxed()
                             .toArray(Double[]::new)));
         }
+        state.unlock();
     }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, NeuralNetwork nn) {

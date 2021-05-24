@@ -46,7 +46,7 @@ public abstract class OptimizationMethod {
         this.configuration = configuration;
         this.generalState = generalState;
 
-        this.averageHandler = new RunDataHandler(this.generalState, configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
+        this.averageHandler = new RunDataHandler(this.generalState, this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
 
         logConfiguration(configuration);
 
@@ -119,10 +119,12 @@ public abstract class OptimizationMethod {
     public void resetAndRestart() {
         this.runFinished = false;
 
+        this.generalState.lock();
         this.generalState.resetValue(OptimizationState.CURRENT_ITERATION);
         this.generalState.resetValue(OptimizationState.FITNESS_VALUE);
         this.generalState.resetValue(OptimizationState.FITNESS_SERIES);
         this.generalState.resetValue(OptimizationState.BEST_SOLUTION);
+        this.generalState.unlock();
 
         this.currentlyBestSolution = null;
 
@@ -151,7 +153,9 @@ public abstract class OptimizationMethod {
 
     private void incrementGenerationCounter() {
         this.generationCounter++;
+        this.generalState.lock();
         this.generalState.addNewValue(OptimizationState.CURRENT_ITERATION, this.generationCounter);
+        this.generalState.unlock();
 
         LOG.info("Generating solutions for iteration {}", this.generationCounter);
     }
@@ -184,11 +188,13 @@ public abstract class OptimizationMethod {
         DoubleSummaryStatistics currentFitness = getFitnessOfIteration();
         this.bestFitness = Double.max(this.bestFitness, currentFitness.getMax());
 
+        this.generalState.lock();
         this.generalState.addNewValue(OptimizationState.FITNESS_VALUE, this.bestFitness);
         this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(TOTAL_MAX, new Double[] {(double) getEvaluationCounter(), this.bestFitness}));
         this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(MAX, new Double[] {(double) getEvaluationCounter(), currentFitness.getMax()}));
         this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(MIN, new Double[] {(double) getEvaluationCounter(), currentFitness.getMin()}));
         this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(AVERAGE, new Double[] {(double) getEvaluationCounter(), currentFitness.getAverage()}));
+        this.generalState.unlock();
 
         this.averageHandler.addFitnessSummary(getEvaluationCounter(), currentFitness);
     }
@@ -207,7 +213,9 @@ public abstract class OptimizationMethod {
     }
 
     protected void updateBestSolution() {
+        this.generalState.lock();
         this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.retrieveGraph(this.currentlyBestSolution.getNeuralNetwork()));
+        this.generalState.unlock();
     }
 
     protected abstract List<? extends Solution> getCurrentSolutions();

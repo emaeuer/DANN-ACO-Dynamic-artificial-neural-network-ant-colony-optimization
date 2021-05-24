@@ -29,7 +29,7 @@ public class StateController {
         refreshPanel();
     }
 
-    public void refreshPanel() {
+    public synchronized void refreshPanel() {
         // refresh and if new nodes were created add them
         this.panel.getChildren().addAll(mapper.refreshProperties());
     }

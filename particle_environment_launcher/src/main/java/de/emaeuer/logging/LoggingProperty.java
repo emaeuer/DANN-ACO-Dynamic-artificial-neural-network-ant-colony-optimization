@@ -1,5 +1,6 @@
 package de.emaeuer.logging;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -27,6 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 )
 public class LoggingProperty extends AbstractAppender {
 
+    private static final int MAX_LENGTH = 20000;
+
     private static final StringProperty LOG_TEXT = new SimpleStringProperty("");
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -48,9 +51,14 @@ public class LoggingProperty extends AbstractAppender {
     public void append(LogEvent event) {
         readLock.lock();
         try {
-            String log = new String(getLayout().toByteArray(event));
-            System.out.println(log);
-            LOG_TEXT.setValue(LOG_TEXT.getValue() + log);
+            String log = LOG_TEXT.getValue() + new String(getLayout().toByteArray(event));
+            if (log.length() > MAX_LENGTH) {
+                log = log.substring(log.length() - MAX_LENGTH);
+            }
+            // necessary because usage in lambda only allows final variable
+            String finalLog = log;
+
+            Platform.runLater(() -> LOG_TEXT.setValue(finalLog));
         } catch (Exception ex) {
             if (!ignoreExceptions()) {
                 throw new AppenderLoggingException(ex);

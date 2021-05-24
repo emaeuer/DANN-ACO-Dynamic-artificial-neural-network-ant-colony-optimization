@@ -8,10 +8,7 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
-import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.*;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -47,7 +44,6 @@ public class EnvironmentController {
     private AnimationTimer frameTimer;
 
     private double speed = 1;
-    private boolean evenFrameNumber = false;
     private boolean running = false;
     private boolean initialStart = true;
 
@@ -92,6 +88,7 @@ public class EnvironmentController {
             this.finishedProperty.addListener((v,o,n) -> finished(n));
             this.finishedProperty.bind(this.handler.finishedProperty());
             this.nonVisualPanel.visibleProperty().bind(this.visualMode.not().or(this.finishedProperty));
+            this.visualMode.addListener((v,o,n) -> this.handler.setUpdateDelta(0));
         }
     }
 
@@ -104,58 +101,31 @@ public class EnvironmentController {
     }
 
     protected void nextFrame() {
-        // update environment multiple times to increase speed
-        updateEnvironmentAccordingToSpeed();
-        if (this.finishedProperty.get()) {
-            getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
-        } else {
-            drawContent();
+        if (this.visualMode.get()) {
+            // update environment multiple times to increase speed
+            if (this.finishedProperty.get()) {
+                getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
+            } else {
+                drawContent();
+            }
         }
+        this.handler.refreshProperties();
     }
 
     private void drawContent() {
         getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
 
-        this.handler.getAgents()
-                .stream()
-                .limit(this.singleEntityMode.get() ? 1 : Long.MAX_VALUE)
-                .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
-
-        this.handler.getAdditionalEnvironmentElements()
-                .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
-    }
-
-    private void updateEnvironmentAccordingToSpeed() {
-        this.evenFrameNumber = !this.evenFrameNumber;
-
-        double floored = Math.floor(this.speed);
-        for (int i = 0; i < floored; i++) {
-            if (this.finishedProperty.get()) {
-                break;
-            }
-            this.handler.update();
+        synchronized (this.handler.getAgents()) {
+            this.handler.getAgents()
+                    .stream()
+                    .limit(this.singleEntityMode.get() ? 1 : Long.MAX_VALUE)
+                    .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
         }
 
-        if (this.finishedProperty.get()) {
-            return;
+        synchronized (this.handler.getAdditionalEnvironmentElements()) {
+            this.handler.getAdditionalEnvironmentElements()
+                    .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
         }
-
-        // additional iteration every second frame if speed - floor == 0.5
-        if (this.evenFrameNumber && this.speed - floored > 0) {
-            this.handler.update();
-        }
-    }
-
-    private void nonVisualEnvironmentUpdate() {
-        // JavaFX schedules next environment update and calls this method again for next update
-        // no concurrency because finished runnable starts next one
-        Platform.runLater(() -> {
-            // can be null if this task is called after reset
-            if (running && this.handler.finishedProperty().not().get() && this.visualMode.not().get()) {
-                this.handler.update();
-                nonVisualEnvironmentUpdate();
-            }
-        });
     }
 
     public void startEnvironment() {
@@ -167,16 +137,13 @@ public class EnvironmentController {
         }
 
         this.running = true;
+        this.handler.startThreat();
 
-        // either start visual runner or non visual runner
-        if (this.visualMode.get()) {
-            this.frameTimer.start();
-        } else {
-            this.nonVisualEnvironmentUpdate();
-        }
+        this.frameTimer.start();
     }
 
     public void pauseEnvironment() {
+        this.handler.pauseThread();
         this.running = false;
         this.frameTimer.stop();
     }
@@ -194,11 +161,13 @@ public class EnvironmentController {
 
     public void increaseEnvironmentSpeed() {
         speed += speed >= 10 ? 0 : 0.5; // maximum speed is 10
+        this.handler.setUpdateDelta((int) (1000 / (60 * speed)));
         changeSpeedText();
     }
 
     public void decreaseEnvironmentSpeed() {
         speed -= speed <= 0.5 ? 0 : 0.5; // minimum speed is 0.5
+        this.handler.setUpdateDelta((int) (1000 / (60 * speed)));
         changeSpeedText();
     }
 
@@ -224,7 +193,7 @@ public class EnvironmentController {
     }
 
     public BooleanProperty updatedProperty() {
-        return this.handler.updatedProperty();
+        return this.handler.updatedProperties();
     }
 
     public StringProperty speedProperty() {
@@ -241,17 +210,7 @@ public class EnvironmentController {
 
     public void toggleVisualMode() {
         this.visualMode.set(this.visualMode.not().get());
-
-        switchVisualization();
-
-        if (this.running) {
-            // pause to stop old runner and start to execute new one
-            pauseEnvironment();
-            startEnvironment();
-        }
-    }
-
-    private void switchVisualization() {
+        // clear screen
         this.canvas.getGraphicsContext2D().clearRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
     }
 

@@ -52,10 +52,12 @@ public class RunDataHandler {
         this.hiddenNodeNumber.accept(summary.hiddenNodes());
         this.connectionNumber.accept(summary.connections());
 
-        generalState.addNewValue(OptimizationState.ITERATION_DISTRIBUTION, this.neededIterationNumbers.getAverage());
-        generalState.addNewValue(OptimizationState.HIDDEN_NODES_DISTRIBUTION, this.hiddenNodeNumber.getAverage());
-        generalState.addNewValue(OptimizationState.CONNECTIONS_DISTRIBUTION, this.connectionNumber.getAverage());
-        generalState.addNewValue(OptimizationState.FITNESS_DISTRIBUTION, this.maxFitness.getAverage());
+        this.generalState.lock();
+        this.generalState.addNewValue(OptimizationState.ITERATION_DISTRIBUTION, this.neededIterationNumbers.getAverage());
+        this.generalState.addNewValue(OptimizationState.HIDDEN_NODES_DISTRIBUTION, this.hiddenNodeNumber.getAverage());
+        this.generalState.addNewValue(OptimizationState.CONNECTIONS_DISTRIBUTION, this.connectionNumber.getAverage());
+        this.generalState.addNewValue(OptimizationState.FITNESS_DISTRIBUTION, this.maxFitness.getAverage());
+        this.generalState.unlock();
     }
 
     public void addFitnessSummary(int evaluationCount, DoubleSummaryStatistics statistic) {
@@ -74,18 +76,22 @@ public class RunDataHandler {
 
         average.addValue(statistic.getMax());
 
+        this.generalState.lock();
         this.generalState.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, new AbstractMap.SimpleEntry<>("Average max fitness", new Double[] {(double) evaluationCount, average.getAverage()}));
+        this.generalState.unlock();
         this.evaluationIndex++;
     }
 
     private void finishSeries() {
         // if run finished before others add value of max fitness to all following values
+        this.generalState.lock();
         for (int i = this.evaluationIndex; i < this.evaluationValues.size(); i++) {
             int evaluationCount = this.evaluationValues.get(i);
             SimpleDoubleStatistic average = this.fitnessSeries.get(evaluationCount);
             average.addValue(this.fitnessUpperBound);
             this.generalState.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, new AbstractMap.SimpleEntry<>("Average max fitness", new Double[] {(double) evaluationCount, average.getAverage()}));
         }
+        this.generalState.unlock();
 
         this.evaluationIndex = 0;
         this.numberOfFinishedRuns++;

@@ -1,13 +1,14 @@
 package de.emaeuer.state.value;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DataSeriesStateValue extends AbstractStateValue<Map.Entry<String, Double[]>, Map<String, List<Double[]>>> {
 
-    private final Map<String, List<Double[]>> seriesData = new HashMap<>();
+    private final Map<String, List<Double[]>> seriesData = new ConcurrentHashMap<>();
 
-    private final Map<Double, Integer> existingXValues = new HashMap<>();
-    private final Set<Integer> indicesToRefresh = new HashSet<>();
+    private final Map<Double, Integer> existingXValues = new ConcurrentHashMap<>();
+    private final Set<Integer> indicesToRefresh = ConcurrentHashMap.newKeySet();
 
     @Override
     public Class<? extends Map.Entry<String, Double[]>> getExpectedInputType() {
@@ -44,7 +45,7 @@ public class DataSeriesStateValue extends AbstractStateValue<Map.Entry<String, D
 
     private int addNewData(Map.Entry<String, Double[]> value) {
         int indexToRefresh;
-        this.seriesData.putIfAbsent(value.getKey(), new ArrayList<>());
+        this.seriesData.putIfAbsent(value.getKey(), Collections.synchronizedList(new ArrayList<>()));
         this.seriesData.get(value.getKey()).add(value.getValue());
         indexToRefresh = this.seriesData.get(value.getKey()).size() - 1;
         existingXValues.put(value.getValue()[0], indexToRefresh);

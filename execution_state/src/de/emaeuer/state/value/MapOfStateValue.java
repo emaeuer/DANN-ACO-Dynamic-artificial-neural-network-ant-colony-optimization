@@ -3,10 +3,11 @@ package de.emaeuer.state.value;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MapOfStateValue extends AbstractStateValue<Entry<String, AbstractStateValue<?, ?>>, Map<String, AbstractStateValue<?, ?>>> {
 
-    private final Map<String, AbstractStateValue<?,?>> value = new HashMap<>();
+    private final Map<String, AbstractStateValue<?,?>> value = new ConcurrentHashMap<>();
 
     @Override
     public Class<? extends Entry<String, AbstractStateValue<?, ?>>> getExpectedInputType() {
