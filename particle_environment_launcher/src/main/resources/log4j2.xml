@@ -15,6 +15,7 @@
         <Root level="all">
             <AppenderRef ref="FILE"/>
             <AppenderRef ref="PROPERTY"/>
+            <AppenderRef ref="CONSOLE"/>
         </Root>
     </Loggers>
 </Configuration>

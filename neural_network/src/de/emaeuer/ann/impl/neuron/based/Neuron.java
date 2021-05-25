@@ -49,7 +49,7 @@ public class Neuron {
             return this;
         }
 
-        public Neuron build() {
+        public Neuron finish() {
             if (this.neuron.type == NeuronType.BIAS) {
                 activationFunction(ActivationFunction.IDENTITY);
                 bias(0);

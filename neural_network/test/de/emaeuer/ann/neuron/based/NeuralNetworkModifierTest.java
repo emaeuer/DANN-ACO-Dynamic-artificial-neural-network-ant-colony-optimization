@@ -295,6 +295,24 @@ public class NeuralNetworkModifierTest {
         assertConnections(nn, new NeuronID(2, 0));
     }
 
+    @Test
+    public void testRemoveNeuron() {
+        NeuralNetwork nn = buildNeuralNetwork(1, 3, 1);
+
+        nn.modify()
+                .addConnection(new NeuronID(2, 0), new NeuronID(1, 2), 1)
+                .removeNeuron(new NeuronID(1, 1));
+
+        assertEquals(1, nn.getNeuronsOfLayer(0).size());
+        assertEquals(2, nn.getNeuronsOfLayer(1).size());
+        assertEquals(1, nn.getNeuronsOfLayer(2).size());
+
+        assertConnections(nn, new NeuronID(0, 0), new NeuronID(1, 0), new NeuronID(1, 1));
+        assertConnections(nn, new NeuronID(1, 0), new NeuronID(2, 0));
+        assertConnections(nn, new NeuronID(1, 1), new NeuronID(2, 0));
+        assertConnections(nn, new NeuronID(2, 0), new NeuronID(1, 1));
+    }
+
     /*
      ##########################################################
      #################### Helper Methods ######################

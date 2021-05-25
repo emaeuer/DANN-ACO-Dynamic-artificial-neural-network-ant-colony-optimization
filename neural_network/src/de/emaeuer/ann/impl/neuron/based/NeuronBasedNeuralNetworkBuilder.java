@@ -1,7 +1,6 @@
 package de.emaeuer.ann.impl.neuron.based;
 
 import de.emaeuer.ann.ActivationFunction;
-import de.emaeuer.ann.NeuralNetworkBuilder;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
@@ -44,7 +43,7 @@ public class NeuronBasedNeuralNetworkBuilder {
                 .type(NeuronType.BIAS)
                 .activationFunction(ActivationFunction.IDENTITY)
                 .id(new NeuronID(0, 0))
-                .build();
+                .finish();
         return this;
     }
 
@@ -59,7 +58,7 @@ public class NeuronBasedNeuralNetworkBuilder {
                 .map(b -> b.type(NeuronType.INPUT))
                 .map(b -> b.activationFunction(activationFunction))
                 .map(b -> b.bias(0))
-                .map(Neuron.NeuronBuilder::build)
+                .map(Neuron.NeuronBuilder::finish)
                 .collect(Collectors.toList());
 
         return this;
@@ -75,7 +74,7 @@ public class NeuronBasedNeuralNetworkBuilder {
                 .map(b -> b.type(NeuronType.OUTPUT))
                 .map(b -> b.activationFunction(activationFunction))
                 .map(b -> b.bias(0))
-                .map(Neuron.NeuronBuilder::build)
+                .map(Neuron.NeuronBuilder::finish)
                 .collect(Collectors.toList());
 
         fullyConnectToNextLayerIfNecessary(false);
@@ -92,7 +91,7 @@ public class NeuronBasedNeuralNetworkBuilder {
                 .map(b -> b.type(NeuronType.HIDDEN))
                 .map(b -> b.activationFunction(activationFunction))
                 .map(b -> b.bias(0))
-                .map(Neuron.NeuronBuilder::build)
+                .map(Neuron.NeuronBuilder::finish)
                 .collect(Collectors.toList());
 
         fullyConnectToNextLayerIfNecessary(true);

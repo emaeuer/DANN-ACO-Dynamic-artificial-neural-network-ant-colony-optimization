@@ -15,7 +15,7 @@ public class NeuronTest {
                 .activationFunction(function)
                 .type(type)
                 .bias(bias)
-                .build();
+                .finish();
     }
 
     @Test
@@ -41,18 +41,21 @@ public class NeuronTest {
 
     @Test
     public void testAddConnection() {
+        // test invalid connection to bias neuron
         Neuron startA = buildNeuron(new NeuronID(0, 0), ActivationFunction.IDENTITY, NeuronType.HIDDEN, 0);
         Neuron endA = buildNeuron(new NeuronID(0, 1), ActivationFunction.IDENTITY, NeuronType.BIAS, 0);
         assertThrows(UnsupportedOperationException.class, () -> endA.modify().addInput(startA, 0), "A bias neuron can't have incoming connections");
         checkConnections(startA, new Neuron[] {}, new Neuron[] {});
         checkConnections(endA, new Neuron[] {}, new Neuron[] {});
 
+        // test invalid connection to input neuron
         Neuron startB = buildNeuron(new NeuronID(0, 0), ActivationFunction.IDENTITY, NeuronType.HIDDEN, 0);
         Neuron endB = buildNeuron(new NeuronID(0, 1), ActivationFunction.IDENTITY, NeuronType.BIAS, 0);
         assertThrows(UnsupportedOperationException.class, () -> endB.modify().addInput(startB, 0), "An input neuron can't have incoming connections");
         checkConnections(startB, new Neuron[] {}, new Neuron[] {});
         checkConnections(endB, new Neuron[] {}, new Neuron[] {});
 
+        // test valid connection
         Neuron startC = buildNeuron(new NeuronID(0, 0), ActivationFunction.IDENTITY, NeuronType.BIAS, 0);
         Neuron endC = buildNeuron(new NeuronID(0, 1), ActivationFunction.IDENTITY, NeuronType.HIDDEN, 0);
         endC.modify().addInput(startC, 1);
@@ -60,10 +63,11 @@ public class NeuronTest {
         checkConnections(endC, new Neuron[] {startC}, new Neuron[] {});
         assertEquals(1, endC.getWeightOfInput(startC));
 
+        // test direct recurrent connection
         Neuron neuron = buildNeuron(new NeuronID(0, 0), ActivationFunction.IDENTITY, NeuronType.OUTPUT, 0);
         neuron.modify().addInput(neuron, 1);
         checkConnections(neuron, new Neuron[] {neuron}, new Neuron[] {neuron});
-        assertEquals(1, endC.getWeightOfInput(neuron));
+        assertEquals(1, neuron.getWeightOfInput(neuron));
     }
 
     @Test

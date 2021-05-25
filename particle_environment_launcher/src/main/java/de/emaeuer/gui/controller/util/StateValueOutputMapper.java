@@ -101,6 +101,7 @@ public class StateValueOutputMapper {
         yAxis.setLabel("Fitness");
         LineChart<Number, Number> chart = new LineChart<>(xAxis, yAxis);
         chart.setCreateSymbols(false);
+        chart.setAnimated(false);
 
         chart.getStyleClass().add("output_plot");
         this.visualRepresentations.put(createMapIdentifier(stateType, suffix), chart);

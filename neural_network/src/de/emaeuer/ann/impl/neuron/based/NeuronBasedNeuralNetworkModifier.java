@@ -102,7 +102,7 @@ public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
                 .activationFunction(ActivationFunction.valueOf(activationFunction))
                 .id(id)
                 .bias(bias)
-                .build();
+                .finish();
 
         this.nn.getHiddenNeurons().add(neuron);
         this.lastModifiedNeuron = neuron;
@@ -118,11 +118,15 @@ public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
             throw new IllegalArgumentException("Only hidden neurons can be removed");
         }
 
-        int neuronIndex = neuron.getID().getNeuronIndex();
+        int oldNeuronIndex = neuron.getID().getNeuronIndex();
         neuron.modify().disconnectAll();
         this.nn.getHiddenNeurons().remove(neuron);
 
-        // TODO shift ids of remaining neurons
+        // decrease neuron index for all which came later
+        this.nn.getHiddenNeurons()
+                .stream()
+                .skip(oldNeuronIndex)
+                .forEach(n -> n.getID().setNeuronIndex(n.getID().getNeuronIndex() - 1));
 
         this.lastModifiedNeuron = null;
 
