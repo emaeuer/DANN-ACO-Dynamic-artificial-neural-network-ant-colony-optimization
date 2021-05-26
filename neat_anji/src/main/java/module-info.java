@@ -4,6 +4,7 @@ module neat.anji {
     exports org.jgap;
     exports de.emaeuer.neat;
     exports com.anji.integration;
+    exports com.anji.nn;
     requires org.apache.logging.log4j;
     requires regexp;
     requires java.xml;

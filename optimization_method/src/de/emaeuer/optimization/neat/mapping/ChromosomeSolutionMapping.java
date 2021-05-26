@@ -1,8 +1,7 @@
 package de.emaeuer.optimization.neat.mapping;
 
-import com.anji.integration.Activator;
-import com.anji.integration.ActivatorTranscriber;
-import com.anji.integration.TranscriberException;
+import com.anji.integration.*;
+import com.anji.nn.AnjiNet;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.optimization.Solution;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -12,13 +11,13 @@ import org.jgap.Chromosome;
 public class ChromosomeSolutionMapping implements Solution {
 
     private final Chromosome chromosome;
-    private final Activator activator;
+    private final AnjiActivator activator;
 
     private double fitness = 0;
 
     public ChromosomeSolutionMapping(Chromosome chromosome, Activator activator) {
         this.chromosome = chromosome;
-        this.activator = activator;
+        this.activator = (AnjiActivator) activator;
     }
 
     @Override
@@ -41,6 +40,6 @@ public class ChromosomeSolutionMapping implements Solution {
 
     @Override
     public NeuralNetwork getNeuralNetwork() {
-        return null;
+        return AnjiNetToNeuralNetwork.mapToNeuralNetwork(this.activator);
     }
 }

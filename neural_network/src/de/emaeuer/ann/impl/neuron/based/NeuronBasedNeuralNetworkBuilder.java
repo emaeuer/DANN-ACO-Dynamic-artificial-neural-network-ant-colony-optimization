@@ -33,6 +33,20 @@ public class NeuronBasedNeuralNetworkBuilder {
         return buildWithConfiguration(new ConfigurationHandler<>(NeuralNetworkConfiguration.class));
     }
 
+    public static NeuronBasedNeuralNetwork buildFromNeuronCollection(List<Neuron> neurons) {
+        // TODO configuration
+        NeuronBasedNeuralNetworkBuilder builder = build();
+        for (Neuron neuron : neurons) {
+            switch (neuron.getType()) {
+                case INPUT -> builder.inputLayer.add(neuron);
+                case BIAS -> builder.biasNeuron = neuron;
+                case HIDDEN -> builder.hiddenLayer.add(neuron);
+                case OUTPUT -> builder.outputLayer.add(neuron);
+            }
+        }
+        return builder.finish();
+    }
+
     public NeuronBasedNeuralNetworkBuilder fullyConnectToNextLayer() {
         this.fullyConnectToNextLayer = true;
         return this;

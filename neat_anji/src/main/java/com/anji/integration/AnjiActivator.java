@@ -217,4 +217,8 @@ public String getXmld() {
 	return net.getName();
 }
 
+public AnjiNet getNeuralNetwork() {
+	return this.net;
+}
+
 }

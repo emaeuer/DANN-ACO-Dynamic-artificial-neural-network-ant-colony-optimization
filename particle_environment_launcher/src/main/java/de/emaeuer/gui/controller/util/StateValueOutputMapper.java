@@ -288,9 +288,9 @@ public class StateValueOutputMapper {
         }
 
         //noinspection unchecked if creation works properly issues with casting not possible
-        GraphView<String, Double> graphView = (GraphView<String, Double>) this.visualRepresentations.get(mapIdentifier);
+        GraphView<String, String> graphView = (GraphView<String, String>) this.visualRepresentations.get(mapIdentifier);
         //noinspection unchecked if creation works properly issues with casting not possible
-        Graph<String, Double> graph = (Graph<String, Double>) this.visualRepresentations.get(createMapIdentifier(stateType, suffix + ".graph"));
+        Graph<String, String> graph = (Graph<String, String>) this.visualRepresentations.get(createMapIdentifier(stateType, suffix + ".graph"));
 
         // completely reset the graph --> update would be possible but harder to implement and may not save time
         graph.edges().forEach(graph::removeEdge);
@@ -305,7 +305,8 @@ public class StateValueOutputMapper {
             if (existingVertices.add(connection.target())) {
                 graph.insertVertex(connection.target());
             }
-            Edge<Double, String> edge = graph.insertEdge(connection.start(), connection.target(), connection.weight());
+            String edgeLabel = String.format("%s->%s [%.3f]", connection.start(), connection.target(), connection.weight());
+            Edge<String, String> edge = graph.insertEdge(connection.start(), connection.target(), edgeLabel);
             graphView.setStyle(edge, getEdgeStyle(connection.weight(), graphData.minWeight(), graphData.maxWeight()));
         }
 
@@ -314,7 +315,7 @@ public class StateValueOutputMapper {
 
     private String getEdgeStyle(double weight, double lowerBound, double upperBound) {
         if (weight < 0) {
-            weight /= lowerBound;
+            weight /= Math.abs(lowerBound);
         } else {
             weight /= upperBound;
         }

@@ -61,7 +61,7 @@ public NeuronConnection( Neuron anIncoming, double aWeight ) {
 	weight = aWeight;
 }
 
-/**
+	/**
  * @param f new weight
  */
 public void setWeight( double f ) {
@@ -113,14 +113,14 @@ protected long getId() {
 /**
  * @return Neuron input
  */
-protected Neuron getIncomingNode() {
+public Neuron getIncomingNode() {
 	return incomingNode;
 }
 
 /**
  * @return double connection weight
  */
-protected double getWeight() {
+public double getWeight() {
 	return weight;
 }
 

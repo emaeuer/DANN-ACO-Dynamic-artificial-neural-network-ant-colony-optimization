@@ -106,9 +106,8 @@ public class Neuron {
         }
 
         private void validate() {
-            switch (this.neuron.type) {
-                case BIAS -> throw new UnsupportedOperationException("A bias neuron can't have incoming connections");
-                case INPUT -> throw new UnsupportedOperationException("An input neuron can't have incoming connections");
+            if (this.neuron.type == NeuronType.BIAS) {
+                throw new UnsupportedOperationException("A bias neuron can't have incoming connections");
             }
         }
 
