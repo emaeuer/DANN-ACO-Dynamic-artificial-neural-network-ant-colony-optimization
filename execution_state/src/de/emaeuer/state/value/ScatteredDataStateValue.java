@@ -22,11 +22,12 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
     }
 
     @Override
-    protected void handleNewValue(Map.Entry<Integer, Double[]> value) {
+    protected String handleNewValue(Map.Entry<Integer, Double[]> value) {
         if (value != null) {
             this.iterationScatteredData.put(value.getKey(), value.getValue());
             this.indicesToRefresh.add(value.getKey());
         }
+        return null;
     }
 
     @Override
@@ -34,7 +35,13 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
         return this.iterationScatteredData;
     }
 
+    @Override
+    public String getExportValue() {
+        return iterationScatteredData.toString();
+    }
+
     public Set<Integer> getIndicesToRefresh() {
         return this.indicesToRefresh;
     }
+
 }

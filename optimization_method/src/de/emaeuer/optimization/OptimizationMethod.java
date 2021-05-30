@@ -3,19 +3,18 @@ package de.emaeuer.optimization;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
+import de.emaeuer.optimization.configuration.OptimizationRunState;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.util.GraphHelper;
 import de.emaeuer.optimization.util.ProgressionHandler;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
-import de.emaeuer.persistence.SingletonDataExporter;
 import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.GraphStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.stream.Collectors;
 
 public abstract class OptimizationMethod {
 
@@ -33,8 +32,10 @@ public abstract class OptimizationMethod {
 
     private final ConfigurationHandler<OptimizationConfiguration> configuration;
     private final StateHandler<OptimizationState> generalState;
+    private final StateHandler<OptimizationRunState> runState;
 
     private Solution currentlyBestSolution;
+    private Solution overallBestSolution;
 
     private ProgressionHandler progressionHandler;
     private final RunDataHandler averageHandler;
@@ -45,6 +46,8 @@ public abstract class OptimizationMethod {
     protected OptimizationMethod(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         this.configuration = configuration;
         this.generalState = generalState;
+        this.runState = new StateHandler<>(OptimizationRunState.class, generalState);
+        this.generalState.execute(t -> t.addNewValue(OptimizationState.STATE_OF_CURRENT_RUN, this.runState));
 
         this.averageHandler = new RunDataHandler(this.generalState, this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
 
@@ -85,6 +88,7 @@ public abstract class OptimizationMethod {
         List<? extends Solution> solutions = generateSolutions();
 
         this.evaluationCounter += solutions.size();
+        this.runState.execute(t -> t.addNewValue(OptimizationRunState.EVALUATION_NUMBER, this.evaluationCounter));
 
         return solutions;
     }
@@ -95,7 +99,7 @@ public abstract class OptimizationMethod {
             return;
         }
 
-        updateFitnessScore();
+        updateState();
 
         this.progressionHandler.addFitnessScore(this.bestFitness);
         if (this.progressionHandler.doesStagnate()) {
@@ -108,27 +112,23 @@ public abstract class OptimizationMethod {
             this.optimizationFinished = true;
 
             // final update of optimization state
+            updateRunState();
+            updateGeneralState();
             updateRunStatistics();
+            exportSummary();
         } else if (checkCurrentRunFinished()) {
             // only the current run finished restart new optimization
             this.runFinished = true;
+            updateGeneralState();
+            updateRunState();
             updateRunStatistics();
         }
     }
 
     public void resetAndRestart() {
-        this.runFinished = false;
-
-        this.generalState.lock();
-        this.generalState.resetValue(OptimizationState.CURRENT_ITERATION);
-        this.generalState.resetValue(OptimizationState.FITNESS_VALUE);
-        this.generalState.resetValue(OptimizationState.FITNESS_SERIES);
-        this.generalState.resetValue(OptimizationState.BEST_SOLUTION);
-        this.generalState.unlock();
-
-        this.currentlyBestSolution = null;
-
         incrementRunCounter();
+        this.currentlyBestSolution = null;
+        this.runFinished = false;
         this.generationCounter = 0;
         this.evaluationCounter = 0;
         this.bestFitness = 0;
@@ -136,6 +136,45 @@ public abstract class OptimizationMethod {
         this.progressionHandler = new ProgressionHandler(
                 configuration.getValue(OptimizationConfiguration.PROGRESSION_ITERATIONS, Integer.class),
                 configuration.getValue(OptimizationConfiguration.PROGRESSION_THRESHOLD, Double.class));
+    }
+
+    private void updateGeneralState() {
+        boolean finishedPremature = this.bestFitness >= this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
+
+        this.generalState.execute(t -> {
+            t.addNewValue(OptimizationState.EVALUATION_DISTRIBUTION, Integer.valueOf(this.evaluationCounter).doubleValue());
+            t.addNewValue(OptimizationState.FITNESS_DISTRIBUTION, this.bestFitness);
+            t.addNewValue(OptimizationState.FINISHED_RUN_DISTRIBUTION, finishedPremature ? 1.0 : 0.0);
+        });
+
+        if (this.currentlyBestSolution != null && this.currentlyBestSolution.getNeuralNetwork() != null) {
+            double numberOfHiddenNodes = NeuralNetworkUtil.countHiddenNodes(this.currentlyBestSolution.getNeuralNetwork());
+            double numberOfConnections = NeuralNetworkUtil.countConnections(this.currentlyBestSolution.getNeuralNetwork());
+
+
+
+            this.generalState.execute(t -> {
+                t.addNewValue(OptimizationState.HIDDEN_NODES_DISTRIBUTION, numberOfHiddenNodes);
+                t.addNewValue(OptimizationState.CONNECTIONS_DISTRIBUTION, numberOfConnections);
+            });
+        }
+    }
+
+    private void updateRunState() {
+        boolean finishedPremature = this.bestFitness >= this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
+
+        this.runState.execute(t -> {
+            t.export(OptimizationRunState.CURRENT_BEST_SOLUTION);
+            t.addNewValue(OptimizationRunState.RUN_FINISHED, finishedPremature ? 1 : 0);
+            t.resetValue(OptimizationRunState.FITNESS_VALUE);
+            t.resetValue(OptimizationRunState.CURRENT_BEST_SOLUTION);
+            t.resetValue(OptimizationRunState.RUN_FINISHED);
+            t.resetValue(OptimizationRunState.RUN_NUMBER);
+            t.resetValue(OptimizationRunState.FITNESS_VALUES);
+            t.resetValue(OptimizationRunState.EVALUATION_NUMBER);
+            t.resetValue(OptimizationRunState.USED_CONNECTIONS);
+            t.resetValue(OptimizationRunState.USED_HIDDEN_NODES);
+        });
     }
 
     protected void updateRunStatistics() {
@@ -151,19 +190,26 @@ public abstract class OptimizationMethod {
         this.averageHandler.addSummaryOfRun(summary);
     }
 
+    private void exportSummary() {
+        this.generalState.execute(t -> {
+            t.export(OptimizationState.EVALUATION_DISTRIBUTION);
+            t.export(OptimizationState.FITNESS_DISTRIBUTION);
+            t.export(OptimizationState.HIDDEN_NODES_DISTRIBUTION);
+            t.export(OptimizationState.CONNECTIONS_DISTRIBUTION);
+            t.export(OptimizationState.FINISHED_RUN_DISTRIBUTION);
+            t.export(OptimizationState.GLOBAL_BEST_SOLUTION);
+        });
+    }
+
     private void incrementGenerationCounter() {
         this.generationCounter++;
-        this.generalState.lock();
-        this.generalState.addNewValue(OptimizationState.CURRENT_ITERATION, this.generationCounter);
-        this.generalState.unlock();
-
         LOG.info("Generating solutions for iteration {}", this.generationCounter);
     }
 
     protected void incrementRunCounter() {
         this.runCounter++;
-        this.generalState.addNewValue(OptimizationState.CURRENT_RUN, this.runCounter);
-
+        this.runState.setName("RUN_" + this.runCounter);
+        this.runState.execute(t -> t.addNewValue(OptimizationRunState.RUN_NUMBER, this.runCounter));
         LOG.info("Starting run {}", this.runCounter);
     }
 
@@ -182,40 +228,53 @@ public abstract class OptimizationMethod {
         this.progressionHandler.resetProgression();
     }
 
-    protected void updateFitnessScore() {
-        exportFitnessValues();
+    protected void updateState() {
+        List<Double> fitnessValues = new ArrayList<>();
+        List<Double> hiddenNodeNumbers = new ArrayList<>();
+        List<Double> connectionNumbers = new ArrayList<>();
 
-        DoubleSummaryStatistics currentFitness = getFitnessOfIteration();
-        this.bestFitness = Double.max(this.bestFitness, currentFitness.getMax());
+        for (Solution solution : getCurrentSolutions()) {
+            double fitness = solution.getFitness();
+            double hiddenNodeCount = NeuralNetworkUtil.countHiddenNodes(solution.getNeuralNetwork());
+            double connectionCount = NeuralNetworkUtil.countConnections(solution.getNeuralNetwork());
 
-        this.generalState.lock();
-        this.generalState.addNewValue(OptimizationState.FITNESS_VALUE, this.bestFitness);
-        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(TOTAL_MAX, new Double[] {(double) getEvaluationCounter(), this.bestFitness}));
-        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(MAX, new Double[] {(double) getEvaluationCounter(), currentFitness.getMax()}));
-        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(MIN, new Double[] {(double) getEvaluationCounter(), currentFitness.getMin()}));
-        this.generalState.addNewValue(OptimizationState.FITNESS_SERIES, new SimpleEntry<>(AVERAGE, new Double[] {(double) getEvaluationCounter(), currentFitness.getAverage()}));
-        this.generalState.unlock();
+            fitnessValues.add(fitness);
+            hiddenNodeNumbers.add(hiddenNodeCount);
+            connectionNumbers.add(connectionCount);
+            this.bestFitness = Double.max(this.bestFitness, fitness);
+        }
 
-        this.averageHandler.addFitnessSummary(getEvaluationCounter(), currentFitness);
-    }
+        this.runState.execute(t -> {
+            t.addNewValue(OptimizationRunState.FITNESS_VALUE, this.bestFitness);
+            t.addNewValue(OptimizationRunState.FITNESS_VALUES, fitnessValues);
+            t.addNewValue(OptimizationRunState.USED_HIDDEN_NODES, hiddenNodeNumbers);
+            t.addNewValue(OptimizationRunState.USED_CONNECTIONS, connectionNumbers);
+        });
 
-    protected void exportFitnessValues() {
-        List<Double> fitnessValues = getCurrentSolutions()
-                .stream()
-                .map(Solution::getFitness)
-                .collect(Collectors.toList());
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("evaluation", getEvaluationCounter());
-        data.put("values", fitnessValues);
-
-        SingletonDataExporter.addRunData("fitness", data, true);
+        this.averageHandler.addFitnessSummary(getEvaluationCounter(), getFitnessOfIteration());
     }
 
     protected void updateBestSolution() {
-        this.generalState.lock();
-        this.generalState.addNewValue(OptimizationState.BEST_SOLUTION, GraphHelper.retrieveGraph(this.currentlyBestSolution.getNeuralNetwork()));
-        this.generalState.unlock();
+        GraphStateValue.GraphData graphData = GraphHelper.retrieveGraph(this.currentlyBestSolution.getNeuralNetwork());
+
+        if (isBestOverAllSolution()) {
+            this.overallBestSolution = this.currentlyBestSolution;
+            this.generalState.execute(t -> t.addNewValue(OptimizationState.GLOBAL_BEST_SOLUTION, graphData));
+        }
+
+        this.runState.execute(t -> t.addNewValue(OptimizationRunState.CURRENT_BEST_SOLUTION, graphData));
+    }
+
+    private boolean isBestOverAllSolution() {
+        if (this.overallBestSolution == null) {
+            return true;
+        }
+
+        if (this.currentlyBestSolution.getFitness() < this.overallBestSolution.getFitness()) {
+            return false;
+        }
+
+        return NeuralNetworkUtil.isSmaller(this.currentlyBestSolution.getNeuralNetwork(), this.overallBestSolution.getNeuralNetwork());
     }
 
     protected abstract List<? extends Solution> getCurrentSolutions();
@@ -233,7 +292,11 @@ public abstract class OptimizationMethod {
     }
 
     protected void setCurrentlyBestSolution(Solution currentBest) {
-        if (currentBest != null && currentBest.getFitness() > this.bestFitness) {
+        if (currentBest == null || currentBest.getFitness() < this.bestFitness) {
+            return;
+        }
+
+        if (this.currentlyBestSolution == null || NeuralNetworkUtil.isSmaller(currentBest.getNeuralNetwork(), this.currentlyBestSolution.getNeuralNetwork())) {
             this.currentlyBestSolution = currentBest;
             updateBestSolution();
         }
@@ -251,24 +314,8 @@ public abstract class OptimizationMethod {
         return bestFitness;
     }
 
-    public double getFitnessThreshold() {
-        return this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
-    }
-
-    public int getEvaluationThreshold() {
-        return this.configuration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
-    }
-
     public int getRunCounter() {
         return this.runCounter;
-    }
-
-    public int getMaxNumberOfRuns() {
-        return this.configuration.getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class);
-    }
-
-    public int getGenerationCounter() {
-        return generationCounter;
     }
 
     public ConfigurationHandler<OptimizationConfiguration> getOptimizationConfiguration() {

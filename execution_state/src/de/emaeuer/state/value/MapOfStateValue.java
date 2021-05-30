@@ -24,16 +24,22 @@ public class MapOfStateValue extends AbstractStateValue<Entry<String, AbstractSt
     }
 
     @Override
-    protected void handleNewValue(Entry<String, AbstractStateValue<?, ?>> value) {
+    protected String handleNewValue(Entry<String, AbstractStateValue<?, ?>> value) {
         if (value instanceof EmbeddedState || value instanceof MapOfStateValue) {
             throw new UnsupportedOperationException("MapOfStateValue doesn't support selection of embedded states or further selections");
         }
 
         this.value.put(value.getKey(), value.getValue());
+        return null;
     }
 
     @Override
     public Map<String, AbstractStateValue<?,?>> getValueImpl() {
         return this.value;
+    }
+
+    @Override
+    public String getExportValue() {
+        return null;
     }
 }

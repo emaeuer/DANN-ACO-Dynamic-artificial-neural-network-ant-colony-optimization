@@ -10,7 +10,7 @@ public abstract class AbstractStateValue<I, O> {
     public abstract Class<? extends I> getExpectedInputType();
     public abstract Class<? extends O> getOutputType();
 
-    public void newValue(Object value) {
+    public String newValue(Object value) {
         if (value != null && !getExpectedInputType().isInstance(value)) {
             throw new IllegalArgumentException(String.format("Expected value of type %s received one of %s instead", getExpectedInputType().getSimpleName(), value.getClass().getSimpleName()));
         }
@@ -18,10 +18,10 @@ public abstract class AbstractStateValue<I, O> {
         this.changedSinceLastGet = true;
 
         //noinspection unchecked no safe way to cast generics but was checked
-        handleNewValue((I) value);
+        return handleNewValue((I) value);
     }
 
-    protected abstract void handleNewValue(I value);
+    protected abstract String handleNewValue(I value);
 
     public O getValue() {
         this.changedSinceLastGet = false;
@@ -34,4 +34,5 @@ public abstract class AbstractStateValue<I, O> {
         return changedSinceLastGet;
     }
 
+    public abstract String getExportValue();
 }

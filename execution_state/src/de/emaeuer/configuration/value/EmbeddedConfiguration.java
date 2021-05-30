@@ -43,6 +43,7 @@ public class EmbeddedConfiguration<S extends Enum<S> & DefaultConfiguration<S>> 
     @Override
     public AbstractConfigurationValue<ConfigurationHandler<S>> copy() {
         ConfigurationHandler<S> handlerCopy = new ConfigurationHandler<>(this.value.getKeyClass());
+        handlerCopy.setName(this.value.getName());
         return new EmbeddedConfiguration<>(handlerCopy);
     }
 }

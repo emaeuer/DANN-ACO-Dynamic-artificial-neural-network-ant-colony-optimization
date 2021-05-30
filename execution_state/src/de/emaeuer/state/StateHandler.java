@@ -1,27 +1,22 @@
 package de.emaeuer.state;
 
-import de.emaeuer.persistence.Persistable;
+import de.emaeuer.persistence.BackgroundFileWriter;
 import de.emaeuer.state.value.AbstractStateValue;
 import de.emaeuer.state.value.StateValueFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.Serial;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
-public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Persistable<StateHandler<?>> {
+public class StateHandler<T extends Enum<T> & StateParameter<T>> implements AutoCloseable {
 
     private final static Logger LOG = LogManager.getLogger(StateHandler.class);
-
-    @Serial
-    private static final long serialVersionUID = 8227804954777422372L;
-
-    private static final String STATE_COLLECTION = "state";
 
     private final Class<T> parameterClass;
 
@@ -31,11 +26,32 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
 
     private final Lock lock = new ReentrantLock(true);
 
+    private final StateHandler<?> parent;
+    private final String parentPrefix;
+
+    private final BackgroundFileWriter writer;
+
     public StateHandler(Class<T> parameterClass) {
+        this(parameterClass, null, null);
+    }
+
+    public StateHandler(Class<T> parameterClass, BackgroundFileWriter writer) {
+        this(parameterClass, null, writer);
+    }
+
+    public StateHandler(Class<T> parameterClass, StateHandler<?> parent) {
+        this(parameterClass, parent, parent == null ? null : parent.writer);
+    }
+
+    public StateHandler(Class<T> parameterClass, StateHandler<?> parent, BackgroundFileWriter writer) {
         this.parameterClass = parameterClass;
 
         this.stateName = parameterClass.getName() + "_" +
                 new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+
+        this.parent = parent;
+        this.parentPrefix = this.parent == null ? null : this.parent.getPrefix();
+        this.writer = writer;
 
         this.currentState = createInitializedState();
     }
@@ -60,7 +76,8 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
         AbstractStateValue<?, ?> value = this.currentState.get(key);
 
         try {
-            value.newValue(newValue);
+            String result = value.newValue(newValue);
+            persistValue(key, result);
         } catch (IllegalArgumentException e) {
             LOG.warn("An exception occurred while adding a new value, ignoring this value", e);
         }
@@ -77,11 +94,36 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
         return (S) value.getValue();
     }
 
+    public void export(T key) {
+        if (key == null) {
+            return;
+        }
+
+        AbstractStateValue<?, ?> value = this.currentState.get(key);
+
+        if (value != null) {
+            writer.writeLine(String.format("%s.%s = %s", getPrefix(), key.getKeyName() , value.getExportValue()));
+        }
+    }
+
+    private void persistValue(T key, String value) {
+        if (writer != null && value != null && key.export()) {
+            writer.writeLine(String.format("%s.%s = %s", getPrefix(), key.getKeyName() , value));
+        }
+    }
+
+    private String getPrefix() {
+        if (this.parentPrefix == null) {
+            return getName();
+        } else {
+            return String.format("%s.%s", parent.getPrefix(), getName());
+        }
+    }
+
     public Map<T, AbstractStateValue<?, ?>> getCurrentState() {
         return currentState;
     }
 
-    @Override
     public String getName() {
         return this.stateName;
     }
@@ -91,34 +133,17 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Pers
     }
 
     @Override
-    public String getClassName() {
-        return this.parameterClass.getSimpleName();
+    public void close() throws Exception {
+        this.writer.close();
     }
 
-    @Override
-    public void applyOther(StateHandler<?> other) {
-        if (!this.parameterClass.equals(other.parameterClass)) {
-            throw new IllegalArgumentException("Failed to apply state because of different key types");
+    public void execute(Consumer<StateHandler<T>> consumer) {
+        try {
+            this.lock.lock();
+            consumer.accept(this);
+        } finally {
+            this.lock.unlock();
         }
-
-        //noinspection unchecked no safe way to cast generic but was checked
-        this.currentState.putAll((Map<? extends T, ? extends AbstractStateValue<?, ?>>) other.currentState);
     }
 
-    public Class<T> getParameterClass() {
-        return parameterClass;
-    }
-
-    @Override
-    public String getCollectionName() {
-        return STATE_COLLECTION;
-    }
-
-    public void lock() {
-        this.lock.lock();
-    }
-
-    public void unlock() {
-        this.lock.unlock();
-    }
 }

@@ -29,6 +29,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.IntStream;
 
 public class StateValueOutputMapper {
 
@@ -48,10 +49,8 @@ public class StateValueOutputMapper {
             return Collections.emptyList();
         }
 
-        state.lock();
-        state.getCurrentState()
-                .forEach((key, value) -> refreshPropertyOfState(key, value, ""));
-        state.unlock();
+        state.execute(t -> state.getCurrentState()
+                .forEach((key, value) -> refreshPropertyOfState(key, value, "")));
 
         List<Node> copy = new ArrayList<>(this.newContent);
         this.newContent.clear();
@@ -73,6 +72,8 @@ public class StateValueOutputMapper {
             refreshDistributionState(stateType, distributionState, suffix);
         } else if (stateValue instanceof ScatteredDataStateValue scatteredValue) {
             refreshScatteredDataState(stateType, scatteredValue, suffix);
+        } else if (stateValue instanceof CollectionDistributionStateValue collectionValue) {
+            refreshCollectionDistributionState(stateType, collectionValue, suffix);
         }
     }
 
@@ -123,26 +124,37 @@ public class StateValueOutputMapper {
         }
 
         for (Series<Number, Number> series : property) {
-            List<Double[]> data = seriesData.remove(series.getName());
+            // copy list to prevent parallel access
+            List<Double[]> data = new ArrayList<>(seriesData.remove(series.getName()));
             int seriesSize = series.getData().size();
 
             // create copy of all indices which have to be refreshed
             // copy because other series of this chart need to refresh the same indices
             Set<Integer> indicesToRefresh = new HashSet<>(dataSeries.getIndicesToRefresh());
 
+            if (seriesSize > data.size() && indicesToRefresh.size() == data.size()) {
+                series.getData().clear();
+                seriesSize = 0;
+            }
+
             // add all points which are completely new use this extra loop because the indices to refresh are saved in a
             // set without order which may mess with the order of the indices
-            if (seriesSize < data.size()) {
+            if (seriesSize <= data.size()) {
                 data.subList(seriesSize, data.size())
                         .stream()
                         .map(p -> new XYChart.Data<Number, Number>(p[0], p[1]))
                         .forEach(d -> series.getData().add(d));
 
-                indicesToRefresh.remove(seriesSize - 1);
+                IntStream.range(seriesSize, data.size())
+                        .forEach(indicesToRefresh::remove);
             }
 
             for (int index : indicesToRefresh) {
-                series.getData().get(index).setYValue(data.get(index)[1]);
+                if (index >= series.getData().size()) {
+                    continue;
+                }
+                series.getData().get(index)
+                        .setYValue(data.get(index)[1]);
             }
         }
 
@@ -448,6 +460,14 @@ public class StateValueOutputMapper {
         Arrays.stream(xValues)
                 .map(x -> new XYChart.Data<Number, Number>(x, yValue))
                 .forEach(d -> series.getData().add(d));
+    }
+
+    // **************************************************
+    // Methods for handling collection distribution value
+    // **************************************************
+
+    private void refreshCollectionDistributionState(StateParameter<?> stateType, CollectionDistributionStateValue collectionValue, String suffix) {
+        refreshPropertyOfState(stateType, collectionValue.getAlternativeRepresentation(), suffix);
     }
 
     // *********************************************

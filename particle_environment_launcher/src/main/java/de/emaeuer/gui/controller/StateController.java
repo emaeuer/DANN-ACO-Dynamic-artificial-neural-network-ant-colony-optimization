@@ -1,30 +1,46 @@
 package de.emaeuer.gui.controller;
 
-import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.gui.controller.util.StateValueOutputMapper;
 import de.emaeuer.optimization.configuration.OptimizationState;
+import de.emaeuer.persistence.BackgroundFileWriter;
 import de.emaeuer.state.StateHandler;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.List;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class StateController {
+
+    private final static Logger LOG = LogManager.getLogger(StateController.class);
 
     @FXML
     private VBox panel;
 
     private final ObjectProperty<StateHandler<OptimizationState>> state = new SimpleObjectProperty<>(new StateHandler<>(OptimizationState.class));
 
+    private final ObjectProperty<BackgroundFileWriter> writer = new SimpleObjectProperty<>();
+
     private StateValueOutputMapper mapper = new StateValueOutputMapper(getState());
 
-    @FXML
-    public void initialize() {
+    public void init() {
         panel.getChildren().clear();
-        this.state.set(new StateHandler<>(OptimizationState.class));
+
+        try {
+            String fileName = "temp/execution_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date()) + ".txt";
+            this.writer.set(new BackgroundFileWriter(fileName));
+            this.state.set(new StateHandler<>(OptimizationState.class, writer.get()));
+        } catch (IOException e) {
+            LOG.warn("Disabled data export because the creation of the writer failed", e);
+            this.state.set(new StateHandler<>(OptimizationState.class));
+        }
+
+        this.state.get().setName("GENERAL_STATE");
         this.mapper = new StateValueOutputMapper(getState());
         refreshPanel();
     }
@@ -35,7 +51,12 @@ public class StateController {
     }
 
     public void reset() {
-        initialize();
+        try {
+            this.state.get().close();
+        } catch (Exception e) {
+            LOG.warn("Failed to reset state", e);
+        }
+        init();
     }
 
     public StateHandler<OptimizationState> getState() {
@@ -46,4 +67,7 @@ public class StateController {
         return state;
     }
 
+    public ObjectProperty<BackgroundFileWriter> writerProperty() {
+        return writer;
+    }
 }

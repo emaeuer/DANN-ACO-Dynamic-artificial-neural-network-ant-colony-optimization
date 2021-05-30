@@ -10,7 +10,6 @@ import de.emaeuer.optimization.OptimizationMethod;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.factory.OptimizationMethodFactory;
-import de.emaeuer.persistence.SingletonDataExporter;
 import de.emaeuer.state.StateHandler;
 import javafx.application.Platform;
 import javafx.beans.property.*;
@@ -69,14 +68,6 @@ public class OptimizationEnvironmentHandler implements Runnable {
             LOG.warn("The optimization state or the optimization configuration was not set");
             throw new IllegalStateException("The optimization state or the optimization configuration was not set");
         }
-
-        initDataExporter();
-    }
-
-    private void initDataExporter() {
-        SingletonDataExporter.reset();
-        SingletonDataExporter.exportConfiguration("OPTIMIZATION_CONFIGURATION", this.optimizationConfiguration.get());
-        SingletonDataExporter.exportConfiguration("ENVIRONMENT_CONFIGURATION", this.environmentConfiguration.get());
     }
 
     private void createEnvironment() {
@@ -132,13 +123,10 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     private void handleEnd() {
-        exportRunData();
-        exportData();
         this.terminateThread.set(true);
     }
 
     private void handleNextRun() {
-        exportRunData();
         this.optimization.resetAndRestart();
     }
 
@@ -148,21 +136,6 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
         this.environment.setControllers(solutions);
-    }
-
-    private void exportRunData() {
-        SingletonDataExporter.addRunData(OptimizationState.CURRENT_ITERATION, optimization.getState());
-        SingletonDataExporter.addRunData(OptimizationState.CURRENT_RUN, optimization.getState());
-        SingletonDataExporter.addRunData(OptimizationState.FITNESS_VALUE, optimization.getState());
-        SingletonDataExporter.finishRun();
-    }
-
-    private void exportData() {
-        SingletonDataExporter.addData(OptimizationState.ITERATION_DISTRIBUTION, optimization.getState());
-        SingletonDataExporter.addData(OptimizationState.HIDDEN_NODES_DISTRIBUTION, optimization.getState());
-        SingletonDataExporter.addData(OptimizationState.FITNESS_DISTRIBUTION, optimization.getState());
-        SingletonDataExporter.addData(OptimizationState.CONNECTIONS_DISTRIBUTION, optimization.getState());
-        SingletonDataExporter.finishAndExport();
     }
 
     private void step() {

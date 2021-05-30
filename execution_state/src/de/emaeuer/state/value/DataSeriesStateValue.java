@@ -25,7 +25,7 @@ public class DataSeriesStateValue extends AbstractStateValue<Map.Entry<String, D
     }
 
     @Override
-    protected void handleNewValue(Map.Entry<String, Double[]> value) {
+    protected String handleNewValue(Map.Entry<String, Double[]> value) {
         Double[] point = value.getValue();
         int indexToRefresh;
 
@@ -41,6 +41,7 @@ public class DataSeriesStateValue extends AbstractStateValue<Map.Entry<String, D
         }
 
         this.indicesToRefresh.add(indexToRefresh);
+        return null;
     }
 
     private int addNewData(Map.Entry<String, Double[]> value) {
@@ -55,6 +56,11 @@ public class DataSeriesStateValue extends AbstractStateValue<Map.Entry<String, D
     @Override
     public Map<String, List<Double[]>> getValueImpl() {
         return this.seriesData;
+    }
+
+    @Override
+    public String getExportValue() {
+        return this.seriesData.toString();
     }
 
     public Set<Integer> getIndicesToRefresh() {

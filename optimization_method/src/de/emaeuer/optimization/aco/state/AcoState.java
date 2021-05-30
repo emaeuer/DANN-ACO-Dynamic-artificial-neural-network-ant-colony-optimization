@@ -31,4 +31,9 @@ public enum AcoState implements StateParameter<AcoState> {
     public String getKeyName() {
         return name();
     }
+
+    @Override
+    public boolean export() {
+        return false;
+    }
 }

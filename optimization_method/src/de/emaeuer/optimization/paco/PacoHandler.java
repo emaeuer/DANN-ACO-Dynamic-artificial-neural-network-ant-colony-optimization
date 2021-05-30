@@ -61,9 +61,7 @@ public class PacoHandler extends OptimizationMethod {
     public void resetAndRestart() {
         super.resetAndRestart();
 
-        this.state.lock();
-        this.state.resetValue(PacoState.CONNECTION_WEIGHTS_SCATTERED);
-        this.state.unlock();
+        this.state.execute(t -> t.resetValue(PacoState.CONNECTION_WEIGHTS_SCATTERED));
 
         initialize();
     }

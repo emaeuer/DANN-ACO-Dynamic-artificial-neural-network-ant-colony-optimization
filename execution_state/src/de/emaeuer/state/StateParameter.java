@@ -14,4 +14,6 @@ public interface StateParameter<T extends Enum<T> & StateParameter<T>> {
 
     String getKeyName();
 
+    boolean export();
+
 }

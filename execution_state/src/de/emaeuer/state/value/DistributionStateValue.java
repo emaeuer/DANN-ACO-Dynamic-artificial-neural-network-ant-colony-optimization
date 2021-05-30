@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 public class DistributionStateValue  extends AbstractStateValue<Double, List<Double>> {
@@ -26,7 +28,7 @@ public class DistributionStateValue  extends AbstractStateValue<Double, List<Dou
     }
 
     @Override
-    protected void handleNewValue(Double value) {
+    protected String handleNewValue(Double value) {
         if (value == null) {
             value = 0.0;
         }
@@ -34,11 +36,21 @@ public class DistributionStateValue  extends AbstractStateValue<Double, List<Dou
         this.values.add(value);
         this.sum += value;
         this.sumOfSquares += Math.pow(value, 2);
+
+        return Double.toString(value);
     }
 
     @Override
     protected List<Double> getValueImpl() {
         return this.values;
+    }
+
+    @Override
+    public String getExportValue() {
+        String valuesString = this.values.stream()
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
+        return String.format("[mean=%f,deviation=%f,values=[%s]]", getMean(), getStandardDeviation(), valuesString);
     }
 
     public double getMean() {

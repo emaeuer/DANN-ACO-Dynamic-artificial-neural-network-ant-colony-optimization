@@ -9,15 +9,15 @@ public enum NeuralNetworkConfiguration implements DefaultConfiguration<NeuralNet
     INPUT_LAYER_SIZE("Number of input neurons", new IntegerConfigurationValue(1, 1, Integer.MAX_VALUE)),
     OUTPUT_LAYER_SIZE("Number of output neurons", new IntegerConfigurationValue(1, 1, Integer.MAX_VALUE)),
 
-    WEIGHT_MAX("Upper bound for connection weights", new DoubleConfigurationValue(1, 1, 500)),
-    WEIGHT_MIN("Lower bound for connection weights", new DoubleConfigurationValue(-1, -500, -1)),
+    WEIGHT_MAX("Upper bound for connection weights", new DoubleConfigurationValue(5, 1, 500)),
+    WEIGHT_MIN("Lower bound for connection weights", new DoubleConfigurationValue(-5, -500, -1)),
 
     // TODO implement
 //    BIAS_AS_ON_NEURON("Realize bias as on neuron", new BooleanConfigurationValue(false)),
 
-    OUTPUT_ACTIVATION_FUNCTION("Output layer activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames())),
-    INPUT_ACTIVATION_FUNCTION("Input layer activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames())),
-    HIDDEN_ACTIVATION_FUNCTION("Hidden layer activation function", new StringConfigurationValue(ActivationFunction.SIGMOID.name(), ActivationFunction.getNames()));
+    OUTPUT_ACTIVATION_FUNCTION("Output layer activation function", new StringConfigurationValue(ActivationFunction.TANH.name(), ActivationFunction.getNames())),
+    INPUT_ACTIVATION_FUNCTION("Input layer activation function", new StringConfigurationValue(ActivationFunction.TANH.name(), ActivationFunction.getNames())),
+    HIDDEN_ACTIVATION_FUNCTION("Hidden layer activation function", new StringConfigurationValue(ActivationFunction.TANH.name(), ActivationFunction.getNames()));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;

@@ -1,6 +1,7 @@
 package de.emaeuer.state.value;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GraphStateValue extends AbstractStateValue<GraphStateValue.GraphData, GraphStateValue.GraphData> {
 
@@ -21,8 +22,9 @@ public class GraphStateValue extends AbstractStateValue<GraphStateValue.GraphDat
     }
 
     @Override
-    protected void handleNewValue(GraphData value) {
+    protected String handleNewValue(GraphData value) {
         this.data = value;
+        return null;
     }
 
     @Override
@@ -30,4 +32,10 @@ public class GraphStateValue extends AbstractStateValue<GraphStateValue.GraphDat
         return this.data;
     }
 
+    @Override
+    public String getExportValue() {
+        return data.connections.stream()
+                .map(c -> String.format("[%s-{%f}->%s]", c.start(), c.weight(), c.target()))
+                .collect(Collectors.joining(""));
+    }
 }

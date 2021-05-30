@@ -21,8 +21,14 @@ public class EmbeddedState extends AbstractStateValue<StateHandler<?>, StateHand
     }
 
     @Override
-    protected void handleNewValue(StateHandler<?> value) {
+    protected String handleNewValue(StateHandler<?> value) {
         this.value = value;
+        return null;
+    }
+
+    @Override
+    public String getExportValue() {
+        return null;
     }
 
     @Override

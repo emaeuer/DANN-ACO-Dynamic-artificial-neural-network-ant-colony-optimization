@@ -404,21 +404,21 @@ public class PacoPheromone {
     }
 
     public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
-        state.lock();
-        //noinspection unchecked safe cast for generic not possible
-        Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
-
-        for (Map.Entry<Integer, Multiset<Double>> connection : this.weightPheromone.entrySet()) {
-            currentState.putIfAbsent(connection.getKey().toString(), new ScatteredDataStateValue());
-
-            currentState.get(connection.getKey().toString()).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
-                    Objects.requireNonNull(connection.getValue())
-                            .stream()
-                            .mapToDouble(d -> d)
-                            .boxed()
-                            .toArray(Double[]::new)));
-        }
-        state.unlock();
+//        state.lock();
+//        //noinspection unchecked safe cast for generic not possible
+//        Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
+//
+//        for (Map.Entry<Integer, Multiset<Double>> connection : this.weightPheromone.entrySet()) {
+//            currentState.putIfAbsent(connection.getKey().toString(), new ScatteredDataStateValue());
+//
+//            currentState.get(connection.getKey().toString()).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
+//                    Objects.requireNonNull(connection.getValue())
+//                            .stream()
+//                            .mapToDouble(d -> d)
+//                            .boxed()
+//                            .toArray(Double[]::new)));
+//        }
+//        state.unlock();
     }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, String templateKey) {

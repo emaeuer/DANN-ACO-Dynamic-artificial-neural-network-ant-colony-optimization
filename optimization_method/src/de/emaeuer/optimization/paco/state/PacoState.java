@@ -29,4 +29,9 @@ public enum PacoState implements StateParameter<PacoState> {
     public String getKeyName() {
         return name();
     }
+
+    @Override
+    public boolean export() {
+        return false;
+    }
 }

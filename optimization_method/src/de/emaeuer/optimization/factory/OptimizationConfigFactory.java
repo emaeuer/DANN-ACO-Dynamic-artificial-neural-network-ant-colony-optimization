@@ -8,13 +8,14 @@ import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 
 public class OptimizationConfigFactory {
 
-    private OptimizationConfigFactory() {}
+    private OptimizationConfigFactory() {
+    }
 
     public static ConfigurationHandler<?> createOptimizationConfiguration(OptimizationMethodNames name) {
         return switch (name) {
-            case ACO -> new ConfigurationHandler<>(AcoConfiguration.class);
-            case NEAT -> new ConfigurationHandler<>(NeatConfiguration.class);
-            case PACO, PACO_COLONY -> new ConfigurationHandler<>(PacoConfiguration.class);
+            case ACO -> new ConfigurationHandler<>(AcoConfiguration.class, "ACO");
+            case NEAT -> new ConfigurationHandler<>(NeatConfiguration.class, "NEAT");
+            case PACO, PACO_COLONY -> new ConfigurationHandler<>(PacoConfiguration.class, "PACO");
         };
     }
 

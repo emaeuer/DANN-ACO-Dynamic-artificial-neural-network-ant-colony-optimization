@@ -10,8 +10,8 @@ public class EnvironmentConfigurationFactory {
     
     public static ConfigurationHandler<?> createEnvironmentConfiguration(EnvironmentImplementations name) {
         return switch (name) {
-            case FLAPPY_BIRD -> new ConfigurationHandler<>(FlappyBirdConfiguration.class);
-            case CART_POLE -> new ConfigurationHandler<>(CartPoleConfiguration.class);
+            case FLAPPY_BIRD -> new ConfigurationHandler<>(FlappyBirdConfiguration.class, "FLAPPY_BIRD");
+            case CART_POLE -> new ConfigurationHandler<>(CartPoleConfiguration.class, "CART_POLE");
             case XOR -> null;
         };
     }

@@ -60,6 +60,8 @@ public class GuiController {
         this.environmentAreaController.finishedProperty().addListener((v, o, n) -> handleEnvironmentEnd(n));
         this.playButton.disableProperty().bind(this.environmentAreaController.finishedProperty());
 
+        this.configurationPanelController.writerProperty().bind(this.statePanelController.writerProperty());
+
         this.environmentAreaController.initializeController();
     }
 
@@ -74,11 +76,18 @@ public class GuiController {
         }
     }
 
+    private boolean isFirstStart = true;
+
     @FXML
     public void start() {
-        this.configurationPanelController.setDisable(true);
-        this.environmentAreaController.startEnvironment();
+        if (this.isFirstStart) {
+            isFirstStart = false;
+            this.configurationPanelController.setDisable(true);
+            this.statePanelController.init();
+            this.configurationPanelController.writeConfig();
+        }
 
+        this.environmentAreaController.startEnvironment();
         togglePlaying(true);
     }
 

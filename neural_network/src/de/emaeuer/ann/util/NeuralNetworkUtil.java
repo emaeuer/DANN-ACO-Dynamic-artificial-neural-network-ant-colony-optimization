@@ -114,4 +114,24 @@ public class NeuralNetworkUtil {
         return builder.toString();
     }
 
+    public static boolean isSmaller(NeuralNetwork nn1, NeuralNetwork nn2) {
+        if (nn1 == null || nn2 == null) {
+            throw new NullPointerException("Can't compare null neural network");
+        }
+
+        int hiddenNodes1 = NeuralNetworkUtil.countHiddenNodes(nn1);
+        int hiddenNodes2 = NeuralNetworkUtil.countHiddenNodes(nn2);
+
+        if (hiddenNodes1 < hiddenNodes2) {
+            return true;
+        } else if (hiddenNodes1 > hiddenNodes2) {
+            return false;
+        }
+
+        int connections1 = NeuralNetworkUtil.countConnections(nn1);
+        int connections2 = NeuralNetworkUtil.countConnections(nn2);
+
+        return connections1 < connections2;
+    }
+
 }
