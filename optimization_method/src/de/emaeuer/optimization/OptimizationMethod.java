@@ -254,6 +254,36 @@ public abstract class OptimizationMethod {
         this.averageHandler.addFitnessSummary(getEvaluationCounter(), getFitnessOfIteration());
     }
 
+    protected abstract List<? extends Solution> getCurrentSolutions();
+
+    protected abstract DoubleSummaryStatistics getFitnessOfIteration();
+
+    protected abstract List<? extends Solution> generateSolutions();
+
+    public int getEvaluationCounter() {
+        return this.evaluationCounter;
+    }
+
+    public Solution getCurrentlyBestSolution() {
+        return currentlyBestSolution;
+    }
+
+    protected void setCurrentlyBestSolution(Solution currentBest) {
+        if (this.currentlyBestSolution == null) {
+            this.currentlyBestSolution = currentBest;
+            updateBestSolution();
+            return;
+        } else if (currentBest == null || currentBest.getFitness() < this.currentlyBestSolution.getFitness()) {
+            return;
+        }
+
+        if (currentBest.getFitness() > this.currentlyBestSolution.getFitness()
+                || NeuralNetworkUtil.isSmaller(currentBest.getNeuralNetwork(), this.currentlyBestSolution.getNeuralNetwork())) {
+            this.currentlyBestSolution = currentBest;
+            updateBestSolution();
+        }
+    }
+
     protected void updateBestSolution() {
         GraphStateValue.GraphData graphData = GraphHelper.retrieveGraph(this.currentlyBestSolution.getNeuralNetwork());
 
@@ -274,32 +304,8 @@ public abstract class OptimizationMethod {
             return false;
         }
 
-        return NeuralNetworkUtil.isSmaller(this.currentlyBestSolution.getNeuralNetwork(), this.overallBestSolution.getNeuralNetwork());
-    }
-
-    protected abstract List<? extends Solution> getCurrentSolutions();
-
-    protected abstract DoubleSummaryStatistics getFitnessOfIteration();
-
-    protected abstract List<? extends Solution> generateSolutions();
-
-    public int getEvaluationCounter() {
-        return this.evaluationCounter;
-    }
-
-    public Solution getCurrentlyBestSolution() {
-        return currentlyBestSolution;
-    }
-
-    protected void setCurrentlyBestSolution(Solution currentBest) {
-        if (currentBest == null || currentBest.getFitness() < this.bestFitness) {
-            return;
-        }
-
-        if (this.currentlyBestSolution == null || NeuralNetworkUtil.isSmaller(currentBest.getNeuralNetwork(), this.currentlyBestSolution.getNeuralNetwork())) {
-            this.currentlyBestSolution = currentBest;
-            updateBestSolution();
-        }
+        return this.currentlyBestSolution.getFitness() > this.overallBestSolution.getFitness() ||
+                NeuralNetworkUtil.isSmaller(this.currentlyBestSolution.getNeuralNetwork(), this.overallBestSolution.getNeuralNetwork());
     }
 
     public boolean isOptimizationFinished() {

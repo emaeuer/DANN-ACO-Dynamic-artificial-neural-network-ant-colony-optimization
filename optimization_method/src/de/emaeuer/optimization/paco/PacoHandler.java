@@ -49,8 +49,6 @@ public class PacoHandler extends OptimizationMethod {
                 .implicitBias()
                 .inputLayer()
                 .fullyConnectToNextLayer()
-                .hiddenLayer(1)
-                .fullyConnectToNextLayer()
                 .outputLayer()
                 .finish();
 
