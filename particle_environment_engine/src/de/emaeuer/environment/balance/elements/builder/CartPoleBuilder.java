@@ -1,16 +1,11 @@
-package de.emaeuer.environment.cartpole.elements.builder;
+package de.emaeuer.environment.balance.elements.builder;
 
-import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.environment.AgentController;
-import de.emaeuer.environment.bird.FlappyBirdEnvironment;
-import de.emaeuer.environment.bird.elements.FlappyBird;
-import de.emaeuer.environment.bird.elements.builder.FlappyBirdBuilder;
-import de.emaeuer.environment.cartpole.CartPoleEnvironment;
-import de.emaeuer.environment.cartpole.configuration.CartPoleConfiguration;
-import de.emaeuer.environment.cartpole.elements.Cart;
+import de.emaeuer.environment.balance.CartPoleEnvironment;
+import de.emaeuer.environment.balance.GeneralCartPoleData;
+import de.emaeuer.environment.balance.elements.Cart;
 import de.emaeuer.environment.elements.builder.ElementBuilder;
-import de.emaeuer.optimization.Solution;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 public class CartPoleBuilder extends ElementBuilder<Cart, CartPoleBuilder> {
 
@@ -20,8 +15,8 @@ public class CartPoleBuilder extends ElementBuilder<Cart, CartPoleBuilder> {
         borderColor(0, 0, 0);
     }
 
-    public CartPoleBuilder configuration(ConfigurationHandler<CartPoleConfiguration> configuration) {
-        getElement().configure(configuration);
+    public CartPoleBuilder configuration(GeneralCartPoleData cartPoleData) {
+        getElement().configure(cartPoleData);
         return getThis();
     }
 

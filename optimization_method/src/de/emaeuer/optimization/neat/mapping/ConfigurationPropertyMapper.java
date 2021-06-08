@@ -108,8 +108,15 @@ public class ConfigurationPropertyMapper {
 
         for (NeuralNetworkConfiguration key : nnConfiguration.getConfigurationValues().keySet()) {
             String keyString = enumToKey(key);
+
             if (KEY_MAPPINGS.containsKey(keyString)) {
                 String value = nnConfiguration.getValue(key, Object.class).toString();
+
+                if (key == NeuralNetworkConfiguration.INPUT_LAYER_SIZE) {
+                    // bias is input neuron for neat
+                    value = Integer.toString(Integer.parseInt(value) + 1);
+                }
+
                 value = VALUE_MAPPING.getOrDefault(value, value);
                 properties.setProperty(KEY_MAPPINGS.get(keyString), value);
             }

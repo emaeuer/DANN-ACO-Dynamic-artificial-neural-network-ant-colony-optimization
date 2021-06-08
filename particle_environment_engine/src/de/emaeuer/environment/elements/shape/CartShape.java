@@ -1,6 +1,6 @@
 package de.emaeuer.environment.elements.shape;
 
-import de.emaeuer.environment.cartpole.elements.Cart;
+import de.emaeuer.environment.balance.elements.Cart;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -12,9 +12,15 @@ public class CartShape implements Shape<Cart> {
         ShapeEntity cartShape = getShapeForCart(element);
 
         ShapeEntity joint = getShapeForJoint(element);
-        ShapeEntity poleShape = getShapeForPole(element);
+        ShapeEntity poleOneShape = getShapeForPole(element, element.getPoleData().poleOneLength(), element.getPoleOneAngle());
 
-        return List.of(cartShape, poleShape, joint);
+        if (element.getPoleData().twoPoles()) {
+            ShapeEntity poleTwoShape = getShapeForPole(element, element.getPoleData().poleTwoLength(), element.getPoleTwoAngle());
+            return List.of(cartShape, poleOneShape, poleTwoShape, joint);
+        } else {
+            return List.of(cartShape, poleOneShape, joint);
+        }
+
     }
 
     private ShapeEntity getShapeForCart(Cart element) {
@@ -31,20 +37,19 @@ public class CartShape implements Shape<Cart> {
 
     private ShapeEntity getShapeForJoint(Cart element) {
         double x = element.getPosition().getX();
-        double y = element.getPosition().getY();
+        double y = element.getPosition().getY() - (element.getSize().getY() / 2);
 
         return new ShapeEntity(BasicShape.CIRCLE, new double[] {x - 5, 10}, new double[] {y - 5, 10});
     }
 
-    private ShapeEntity getShapeForPole(Cart element) {
-        double length = element.getPoleLength() * 100;
+    private ShapeEntity getShapeForPole(Cart element, double poleLength, double poleAngle) {
+        double length = poleLength * 1000;
         double width = 10;
         double x = element.getPosition().getX();
-        double y = element.getPosition().getY();
-        double theta = element.getTheta();
+        double y = element.getPosition().getY() - (element.getSize().getY() / 2);
 
-        double rotationSin = Math.sin(theta);
-        double rotationCos = Math.cos(theta);
+        double rotationSin = Math.sin(poleAngle);
+        double rotationCos = Math.cos(poleAngle);
 
         double[] xPrototype = new double[] {0.5, 0.5, -0.5, -0.5};
         double[] yPrototype = new double[] {0, -1, -1, 0};

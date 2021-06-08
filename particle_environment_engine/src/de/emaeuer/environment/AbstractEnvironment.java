@@ -19,6 +19,7 @@ public abstract class AbstractEnvironment {
     private final BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy;
 
     private double maxFitnessScore = 1000;
+    private double maxStepNumber = 1000;
 
     public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.borderStrategy = borderStrategy;
@@ -28,6 +29,7 @@ public abstract class AbstractEnvironment {
 
     protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.maxFitnessScore = configuration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
+        this.maxStepNumber = configuration.getValue(EnvironmentConfiguration.MAX_STEP_NUMBER, Double.class);
     }
 
     public void setControllers(List<AgentController> controllers) {
@@ -69,7 +71,11 @@ public abstract class AbstractEnvironment {
 
     public abstract boolean allAgentsFinished();
 
-    protected double getMaxFitnessScore() {
+    public double getMaxFitnessScore() {
         return this.maxFitnessScore;
+    }
+
+    public double getMaxStepNumber() {
+        return maxStepNumber;
     }
 }

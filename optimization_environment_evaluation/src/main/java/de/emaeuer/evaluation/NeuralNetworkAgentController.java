@@ -13,14 +13,8 @@ public class NeuralNetworkAgentController implements AgentController {
     }
 
     @Override
-    public int getAction(double[] agentData) {
-        double[] result = brain.process(new ArrayRealVector(agentData)).toArray();
-
-        if (result[0] > 0.5) {
-            return 1;
-        } else {
-            return 0;
-        }
+    public double[] getAction(double[] agentData) {
+        return brain.process(new ArrayRealVector(agentData)).toArray();
     }
 
     @Override

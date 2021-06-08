@@ -6,12 +6,12 @@ import de.emaeuer.configuration.value.AbstractConfigurationValue;
 import de.emaeuer.configuration.value.DoubleConfigurationValue;
 import de.emaeuer.configuration.value.EmbeddedConfiguration;
 import de.emaeuer.configuration.value.StringConfigurationValue;
-import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 
 import java.util.function.BiConsumer;
 
 public enum EnvironmentConfiguration implements DefaultConfiguration<EnvironmentConfiguration> {
-    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(10000, 50, Double.MAX_VALUE)),
+    MAX_STEP_NUMBER("Step number threshold", new DoubleConfigurationValue(10000, 1, Double.MAX_VALUE)),
+    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(10000, 0, Double.MAX_VALUE)),
     ENVIRONMENT_IMPLEMENTATION("The configuration of the selected environment implementation", new EmbeddedConfiguration<>(EnvironmentConfigurationFactory.createEnvironmentConfiguration(EnvironmentImplementations.FLAPPY_BIRD))),
     ENVIRONMENT_IMPLEMENTATION_NAME("Environment implementation", new StringConfigurationValue("FLAPPY_BIRD", EnvironmentImplementations.getNames()),
             (v, h) -> {

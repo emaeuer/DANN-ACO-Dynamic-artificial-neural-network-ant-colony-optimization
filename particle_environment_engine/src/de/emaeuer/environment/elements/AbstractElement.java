@@ -103,4 +103,5 @@ public abstract class AbstractElement {
     public Vector2D getSize() {
         return size;
     }
+
 }

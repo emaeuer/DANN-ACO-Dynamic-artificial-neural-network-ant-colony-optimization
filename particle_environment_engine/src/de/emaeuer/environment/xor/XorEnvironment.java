@@ -72,7 +72,7 @@ public class XorEnvironment extends AbstractEnvironment  {
                     input = new double[] {testPair.input()[1], testPair.input()[0]};
                 }
 
-                double result = controller.getAction(input);
+                double result = controller.getAction(input)[0];
                 rss += Math.pow(result - testPair.target(), 2);
             }
             controller.setScore((1 - (rss / maxError)) * 100);

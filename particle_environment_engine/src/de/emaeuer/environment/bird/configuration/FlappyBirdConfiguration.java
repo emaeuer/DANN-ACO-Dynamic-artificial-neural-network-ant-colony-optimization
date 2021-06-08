@@ -1,13 +1,8 @@
 package de.emaeuer.environment.bird.configuration;
 
-import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
 import de.emaeuer.configuration.value.IntegerConfigurationValue;
-import de.emaeuer.environment.configuration.EnvironmentConfiguration;
-import de.emaeuer.optimization.configuration.OptimizationConfiguration;
-
-import java.util.function.BiConsumer;
 
 public enum FlappyBirdConfiguration implements DefaultConfiguration<FlappyBirdConfiguration> {
     GAP_SIZE("Gap size", new IntegerConfigurationValue(300, 150, 600)),

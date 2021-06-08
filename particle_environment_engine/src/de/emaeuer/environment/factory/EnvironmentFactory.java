@@ -3,12 +3,10 @@ package de.emaeuer.environment.factory;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
-import de.emaeuer.environment.cartpole.CartPoleEnvironment;
+import de.emaeuer.environment.balance.CartPoleEnvironment;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.configuration.EnvironmentImplementations;
 import de.emaeuer.environment.xor.XorEnvironment;
-import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.state.StateHandler;
 
 public class EnvironmentFactory {
 

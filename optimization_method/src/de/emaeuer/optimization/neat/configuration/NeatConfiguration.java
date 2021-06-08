@@ -7,7 +7,7 @@ import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 
 public enum NeatConfiguration implements DefaultConfiguration<NeatConfiguration> {
     SURVIVAL_RATE("Percentage of the population which survives and reproduces", new DoubleConfigurationValue(0.2, 0.1, 0.5)),
-    TOPOLOGY_MUTATION_CLASSIC("Topology mutation mode (true = original NEAT, false = ANJI", new BooleanConfigurationValue(false)),
+    TOPOLOGY_MUTATION_CLASSIC("Topology mutation mode (true = original NEAT, false = ANJI", new BooleanConfigurationValue(true)),
     POPULATION_SIZE("Number of individuals in the starting population", new IntegerConfigurationValue(50, 50, 1000)),
     CHROM_COMPAT_EXCESS_COEFF("Adjustment of compatibility value based on the number of excess genes", new DoubleConfigurationValue(1)),
     CHROM_COMPAT_DISJOINT_COEFF("Adjustment of compatibility value based on the number of disjoint genes", new DoubleConfigurationValue(1)),

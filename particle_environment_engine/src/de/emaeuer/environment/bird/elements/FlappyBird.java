@@ -4,7 +4,6 @@ import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.elements.Particle;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.math.Vector2D;
-import de.emaeuer.optimization.Solution;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
@@ -42,7 +41,7 @@ public class FlappyBird extends Particle {
         RealVector input = new ArrayRealVector();
 
         // process input and let the neural network decide when to jump
-        boolean jump = this.controller.getAction(new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe}) == 1;
+        boolean jump = this.controller.getAction(new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe})[0] > 0.5;
         if (jump) {
             jump();
         }

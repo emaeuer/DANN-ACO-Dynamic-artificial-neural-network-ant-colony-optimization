@@ -2,7 +2,7 @@ package de.emaeuer.environment.configuration;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
-import de.emaeuer.environment.cartpole.configuration.CartPoleConfiguration;
+import de.emaeuer.environment.balance.configuration.CartPoleConfiguration;
 
 public class EnvironmentConfigurationFactory {
     
