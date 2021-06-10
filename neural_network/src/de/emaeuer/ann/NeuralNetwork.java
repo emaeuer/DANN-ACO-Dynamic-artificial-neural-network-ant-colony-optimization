@@ -46,4 +46,5 @@ public interface NeuralNetwork {
     double getMaxWeightValue();
 
     double getMinWeightValue();
+
 }

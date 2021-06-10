@@ -1,6 +1,8 @@
 package de.emaeuer.paco.pheromone;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.impl.AgeBasedPopulation;
 import de.emaeuer.optimization.paco.population.impl.FitnessBasedPopulation;
 import org.junit.jupiter.api.Test;
@@ -19,9 +21,16 @@ public class PopulationTest {
         return ant;
     }
 
+    private ConfigurationHandler<PacoConfiguration> createConfiguration(int maxSize, boolean useElitism) {
+        ConfigurationHandler<PacoConfiguration> config = new ConfigurationHandler<>(PacoConfiguration.class);
+        config.setValue(PacoConfiguration.POPULATION_SIZE, maxSize);
+        config.setValue(PacoConfiguration.ELITISM, useElitism);
+        return config;
+    }
+
     @Test
     public void testAgeBasedWithoutElitism() {
-        AgeBasedPopulation population = new AgeBasedPopulation(5, false);
+        AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, false));
 
         List<PacoAnt> ants = new ArrayList<>();
 
@@ -48,7 +57,7 @@ public class PopulationTest {
 
     @Test
     public void testAgeBasedWithElitism() {
-        AgeBasedPopulation population = new AgeBasedPopulation(5, true);
+        AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, true));
 
         List<PacoAnt> ants = new ArrayList<>();
 
@@ -81,7 +90,7 @@ public class PopulationTest {
 
     @Test
     public void testFitnessBased() {
-        FitnessBasedPopulation population = new FitnessBasedPopulation(5);
+        FitnessBasedPopulation population = new FitnessBasedPopulation(createConfiguration(5, false));
 
         List<PacoAnt> ants = new ArrayList<>();
 

@@ -83,29 +83,11 @@ public class PacoHandler extends OptimizationMethod {
 
     @Override
     public void update() {
-        PacoAnt bestOfThisIteration;
-        if (this.pheromone.getPopulationSize() == 0) {
-            // initially all ant update regardless of the fitness to fill the population
-            bestOfThisIteration = this.currentAnts.stream()
-                    .peek(this.pheromone::addAntToPopulation)
-                    .max(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .orElse(null);
-        } else if (this.pheromone.getPopulationSize() < this.pheromone.getMaximalPopulationSize() - this.configuration.getValue(UPDATES_PER_ITERATION, Integer.class)) {
-            int skipCount = Math.max(0, this.currentAnts.size() - this.pheromone.getMaximalPopulationSize() + this.pheromone.getPopulationSize());
-            bestOfThisIteration = this.currentAnts.stream()
-                    .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .skip(skipCount)
-                    .peek(this.pheromone::addAntToPopulation)
-                    .max(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .orElse(null);
-        } else {
-            bestOfThisIteration = this.currentAnts.stream()
-                    .sorted(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .skip(this.currentAnts.size() - this.configuration.getValue(UPDATES_PER_ITERATION, Integer.class))
-                    .peek(this.pheromone::addAntToPopulation)
-                    .max(Comparator.comparingDouble(PacoAnt::getFitness))
-                    .orElse(null);
-        }
+        this.pheromone.acceptAntsOfThisIteration(this.currentAnts);
+
+        PacoAnt bestOfThisIteration = this.currentAnts.stream()
+                .max(Comparator.comparingDouble(PacoAnt::getFitness))
+                .orElse(null);
 
         this.pheromone.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
 

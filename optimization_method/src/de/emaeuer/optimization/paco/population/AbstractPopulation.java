@@ -1,24 +1,66 @@
 package de.emaeuer.optimization.paco.population;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
+
+    private final ConfigurationHandler<PacoConfiguration> configuration;
 
     private final boolean useElitism;
 
     private final int maxSize;
+    private final int updatesPerIteration;
 
     private PacoAnt globalBest = null;
 
     private final T population;
 
-    protected AbstractPopulation(int maxSize, boolean useElitism, T emptyPopulation) {
-        this.maxSize = maxSize;
-        this.useElitism = useElitism;
+    protected AbstractPopulation(ConfigurationHandler<PacoConfiguration> configuration, T emptyPopulation) {
+        this.configuration = configuration;
+        this.maxSize = configuration.getValue(PacoConfiguration.POPULATION_SIZE, Integer.class);
+        this.useElitism = configuration.getValue(PacoConfiguration.ELITISM, Boolean.class);
+        this.updatesPerIteration = configuration.getValue(PacoConfiguration.UPDATES_PER_ITERATION, Integer.class);
         this.population = emptyPopulation;
+    }
+
+    public List<PacoAnt>[] acceptAntsOfThisIteration(List<PacoAnt> ants) {
+        //noinspection unchecked only way to return class with generic is unsafe cast
+        List<PacoAnt>[] populationChange = (List<PacoAnt>[]) new List[2];
+
+        populationChange[0] = ants.stream()
+                .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
+                .limit(calculateNumberOfAntsToAdd())
+                .peek(a -> System.out.print(a.getFitness() + " "))
+                .map(this::addAnt)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        System.out.println();
+
+        populationChange[1] = IntStream.range(0, populationChange[0].size())
+                .mapToObj(i -> this.removeAnt())
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        System.out.printf("Adding %d, Removing %d%n", populationChange[0].size(), populationChange[1].size());
+
+        return populationChange;
+    }
+
+    protected int calculateNumberOfAntsToAdd() {
+        if (getSize() < getMaxSize()) {
+            return getMaxSize() - getSize();
+        } else {
+            return getUpdatesPerIteration();
+        }
     }
 
     public abstract Optional<PacoAnt> addAnt(PacoAnt ant);
@@ -38,16 +80,16 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
         return this.maxSize;
     }
 
+    protected int getUpdatesPerIteration() {
+        return updatesPerIteration;
+    }
+
     protected boolean usesElitism() {
         return this.useElitism;
     }
 
     protected PacoAnt getGlobalBest() {
         return this.globalBest;
-    }
-
-    protected void setGlobalBest(PacoAnt globalBest) {
-        this.globalBest = globalBest;
     }
 
     protected T getPopulation() {
@@ -57,4 +99,5 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
     public int getSize() {
         return getPopulation().size();
     }
+
 }

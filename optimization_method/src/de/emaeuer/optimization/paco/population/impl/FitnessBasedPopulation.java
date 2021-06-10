@@ -1,16 +1,18 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.PriorityQueue;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class FitnessBasedPopulation extends AbstractPopulation<PriorityQueue<PacoAnt>> {
 
-    public FitnessBasedPopulation(int maxSize) {
-        super(maxSize, false, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getFitness)));
+    public FitnessBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
+        super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getFitness)));
     }
 
     @Override

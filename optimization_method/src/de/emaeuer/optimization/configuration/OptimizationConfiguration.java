@@ -17,7 +17,7 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     NUMBER_OF_RUNS("Number of runs", new IntegerConfigurationValue(10, 1, Integer.MAX_VALUE)),
     MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE), true),
     IMPLEMENTATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.PACO))),
-    METHOD_NAME("The name of the optimization method", new StringConfigurationValue("ACO", OptimizationMethodNames.getNames()),
+    METHOD_NAME("The name of the optimization method", new StringConfigurationValue("PACO", OptimizationMethodNames.getNames()),
             (v, h) -> {
                 OptimizationMethodNames methodName = OptimizationMethodNames.valueOf(v.getStringRepresentation());
                 ConfigurationHandler<?> configuration = OptimizationConfigFactory.createOptimizationConfiguration(methodName);

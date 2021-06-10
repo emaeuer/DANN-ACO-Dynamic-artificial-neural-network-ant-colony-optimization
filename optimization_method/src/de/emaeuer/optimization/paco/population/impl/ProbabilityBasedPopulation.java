@@ -1,6 +1,8 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 import de.emaeuer.optimization.util.RandomUtil;
 
@@ -13,8 +15,8 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     private PacoAnt removedAnt = null;
 
-    public ProbabilityBasedPopulation(int maxSize, boolean useElitism) {
-        super(maxSize, useElitism, new ArrayList<>(maxSize + 1));
+    public ProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
+        super(configuration, new ArrayList<>());
     }
 
     @Override

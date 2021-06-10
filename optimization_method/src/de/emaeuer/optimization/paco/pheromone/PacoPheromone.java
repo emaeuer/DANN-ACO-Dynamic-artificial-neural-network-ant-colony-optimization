@@ -70,13 +70,16 @@ public class PacoPheromone {
     //############### Methods for pheromone update ###############
     //############################################################
 
-    public void addAntToPopulation(PacoAnt ant) {
-        // if the population adds the ant (added ant is returned) adjust the pheromone accordingly
-        this.population.addAnt(ant)
-                .ifPresent(this::addAnt);
-        // if the population removes an ant (ant to remove is present) adjust the pheromone accordingly
-        this.population.removeAnt()
-                .ifPresent(this::removeAnt);
+    public void acceptAntsOfThisIteration(List<PacoAnt> ants) {
+        List<PacoAnt>[] populationChange = this.population.acceptAntsOfThisIteration(ants);
+
+        // add all new ants
+        Optional.ofNullable(populationChange[0])
+                .ifPresent(l -> l.forEach(this::addAnt));
+
+        // remove all ants
+        Optional.ofNullable(populationChange[1])
+                .ifPresent(l -> l.forEach(this::removeAnt));
 
         this.templatePheromone.forEach((k, v) -> System.out.println(k + " " + v.size()));
     }
@@ -461,4 +464,5 @@ public class PacoPheromone {
     public int getPopulationSize() {
         return this.population.getSize();
     }
+
 }

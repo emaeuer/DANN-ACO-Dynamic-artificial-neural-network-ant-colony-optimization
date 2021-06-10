@@ -1,13 +1,15 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 
 import java.util.Optional;
 
 public class AgeAndProbabilityBasedPopulation extends ProbabilityBasedPopulation {
 
-    public AgeAndProbabilityBasedPopulation(int maxSize, boolean useElitism) {
-        super(maxSize, useElitism);
+    public AgeAndProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
+        super(configuration);
     }
 
     @Override

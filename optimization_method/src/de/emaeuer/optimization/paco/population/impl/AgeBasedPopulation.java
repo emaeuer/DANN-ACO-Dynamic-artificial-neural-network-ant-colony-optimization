@@ -1,15 +1,18 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
+import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 
-import java.util.LinkedList;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> {
 
-    public AgeBasedPopulation(int maxSize, boolean useElitism) {
-        super(maxSize, useElitism, new LinkedList<>());
+    public AgeBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
+        super(configuration, new LinkedList<>());
     }
 
     @Override
