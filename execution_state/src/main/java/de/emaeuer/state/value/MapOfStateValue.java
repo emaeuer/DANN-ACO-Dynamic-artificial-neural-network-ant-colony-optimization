@@ -1,6 +1,5 @@
 package de.emaeuer.state.value;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,9 +1,10 @@
 package de.emaeuer.optimization.neat.configuration;
 
-import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
-import de.emaeuer.configuration.value.*;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.configuration.value.AbstractConfigurationValue;
+import de.emaeuer.configuration.value.BooleanConfigurationValue;
+import de.emaeuer.configuration.value.DoubleConfigurationValue;
+import de.emaeuer.configuration.value.IntegerConfigurationValue;
 
 public enum NeatConfiguration implements DefaultConfiguration<NeatConfiguration> {
     SURVIVAL_RATE("Percentage of the population which survives and reproduces", new DoubleConfigurationValue(0.2, 0.1, 0.5)),

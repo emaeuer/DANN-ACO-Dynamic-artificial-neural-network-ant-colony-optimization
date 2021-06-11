@@ -1,0 +1,32 @@
+{
+    "PROGRESSION_ITERATIONS": "200",
+    "CONFIG_TYPE": "de.emaeuer.optimization.configuration.OptimizationConfiguration",
+    "MAX_FITNESS_SCORE": "10000.0",
+    "NUMBER_OF_RUNS": "10",
+    "IMPLEMENTATION_CONFIGURATION": {
+        "SPLIT_THRESHOLD": "leq(s/(p - 1), 0.15) * geq(n, p * 0.9)",
+        "ENABLE_NEURON_ISOLATION": "false",
+        "ANTS_PER_ITERATION": "10",
+        "CONFIG_TYPE": "de.emaeuer.optimization.paco.configuration.PacoConfiguration",
+        "DYNAMIC_PROBABILITY": "0.75(n/p)^2+0.1",
+        "PHEROMONE_VALUE": "(n+1) / (p+2)",
+        "DEVIATION_FUNCTION": "s/(p - 1) + 0.05",
+        "ELITISM": "false",
+        "UPDATE_STRATEGY": "AGE",
+        "UPDATES_PER_ITERATION": "1",
+        "POPULATION_SIZE": "20"
+    },
+    "METHOD_NAME": "PACO",
+    "PROGRESSION_THRESHOLD": "0.0",
+    "NEURAL_NETWORK_CONFIGURATION": {
+        "OUTPUT_ACTIVATION_FUNCTION": "TANH",
+        "CONFIG_TYPE": "de.emaeuer.ann.configuration.NeuralNetworkConfiguration",
+        "OUTPUT_LAYER_SIZE": "1",
+        "INPUT_ACTIVATION_FUNCTION": "TANH",
+        "INPUT_LAYER_SIZE": "4",
+        "WEIGHT_MIN": "-5.0",
+        "WEIGHT_MAX": "5.0",
+        "HIDDEN_ACTIVATION_FUNCTION": "TANH"
+    },
+    "MAX_NUMBER_OF_EVALUATIONS": "20000"
+}

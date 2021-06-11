@@ -1,7 +1,9 @@
 package de.emaeuer.configuration;
 
+import de.emaeuer.persistence.ConfigurationIOHandler;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -65,6 +67,14 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
         return this.configurationValues.get(key).getStringRepresentation();
     }
 
+    public <S> S getValue(String key, Class<S> configurationHandlerClass) {
+        return Arrays.stream(this.keyEnum.getEnumConstants())
+                .filter(k -> k.name().equals(key))
+                .findFirst()
+                .map(t -> getValue(t, configurationHandlerClass))
+                .orElse(null);
+    }
+
     public <S> S getValue(T key, Class<S> expectedValueType) {
         return getValue(key, expectedValueType, Collections.emptyMap());
     }
@@ -93,6 +103,14 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getStringRepresentation()));
     }
 
+    public void exportConfig(File file) {
+        ConfigurationIOHandler.exportConfiguration(this, file);
+    }
+
+    public void importConfig(File file) {
+        ConfigurationIOHandler.importConfiguration(this, file);
+    }
+
     public EnumMap<T, AbstractConfigurationValue<?>> getConfigurationValues() {
         return this.configurationValues;
     }
@@ -108,4 +126,5 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
     public void setName(String configurationName) {
         this.configurationName = configurationName;
     }
+
 }

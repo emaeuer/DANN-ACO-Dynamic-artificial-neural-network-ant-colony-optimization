@@ -1,7 +1,10 @@
 package de.emaeuer.optimization.configuration;
 
 import de.emaeuer.state.StateParameter;
-import de.emaeuer.state.value.*;
+import de.emaeuer.state.value.AbstractStateValue;
+import de.emaeuer.state.value.CollectionDistributionStateValue;
+import de.emaeuer.state.value.GraphStateValue;
+import de.emaeuer.state.value.NumberStateValue;
 
 public enum OptimizationRunState implements StateParameter<OptimizationRunState> {
     RUN_NUMBER("Number of run", NumberStateValue.class, true),

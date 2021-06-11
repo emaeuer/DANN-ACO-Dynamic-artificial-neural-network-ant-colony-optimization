@@ -1,12 +1,9 @@
 package de.emaeuer.state.value;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 public class DistributionStateValue  extends AbstractStateValue<Double, List<Double>> {
 

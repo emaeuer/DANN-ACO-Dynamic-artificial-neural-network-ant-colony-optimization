@@ -6,7 +6,6 @@ import de.emaeuer.state.value.GraphStateValue;
 import de.emaeuer.state.value.GraphStateValue.Connection;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class GraphHelper {

@@ -15,8 +15,6 @@ import de.emaeuer.optimization.paco.population.PopulationFactory;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.state.StateHandler;
-import de.emaeuer.state.value.AbstractStateValue;
-import de.emaeuer.state.value.ScatteredDataStateValue;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -263,12 +261,8 @@ public class PacoPheromone {
             }
 
             int index;
-            if (connection.start().equals(splitResult) || !this.connectionMapping.contains(oldTemplateKey, connectionKey)) {
+            if (!this.connectionMapping.contains(oldTemplateKey, connectionKey)) {
                 index = this.connectionMappingCounter.getAndIncrement();
-            } else if (connection.end().equals(splitResult)) {
-                String oldConnectionKey = createConnectionKey(dynamicElement);
-                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateKey, oldConnectionKey),
-                        String.format("Mapping for (%s, %s) doesn't exist", oldTemplateKey, oldConnectionKey));
             } else {
                 index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateKey, connectionKey),
                         String.format("Mapping for (%s, %s) doesn't exist", oldTemplateKey, connectionKey));

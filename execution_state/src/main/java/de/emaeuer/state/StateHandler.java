@@ -101,7 +101,7 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Auto
 
         AbstractStateValue<?, ?> value = this.currentState.get(key);
 
-        if (value != null) {
+        if (value != null && writer != null) {
             writer.writeLine(String.format("%s.%s = %s", getPrefix(), key.getKeyName() , value.getExportValue()));
         }
     }

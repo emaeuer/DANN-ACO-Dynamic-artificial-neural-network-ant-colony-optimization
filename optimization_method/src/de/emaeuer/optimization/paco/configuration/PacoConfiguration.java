@@ -1,6 +1,5 @@
 package de.emaeuer.optimization.paco.configuration;
 
-import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.*;
 import de.emaeuer.optimization.paco.population.PopulationUpdateStrategies;

@@ -1,8 +1,8 @@
 package de.emaeuer.configuration;
 
-import de.emaeuer.configuration.value.AbstractConfigurationValue;
 import de.emaeuer.configuration.value.EmbeddedConfiguration;
 import de.emaeuer.persistence.BackgroundFileWriter;
+import de.emaeuer.configuration.value.AbstractConfigurationValue;
 
 import java.util.Map;
 

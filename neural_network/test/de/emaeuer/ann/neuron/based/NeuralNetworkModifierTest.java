@@ -3,17 +3,12 @@ package de.emaeuer.ann.neuron.based;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
-import de.emaeuer.ann.impl.layer.based.NeuralNetworkBuilderImpl;
-import de.emaeuer.ann.impl.layer.based.NeuralNetworkImpl;
-import de.emaeuer.ann.impl.layer.based.NeuralNetworkLayerImpl;
-import de.emaeuer.ann.impl.neuron.based.Neuron;
 import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetwork;
 import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;

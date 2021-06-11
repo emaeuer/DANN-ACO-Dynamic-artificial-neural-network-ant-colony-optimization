@@ -6,8 +6,6 @@ import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> {
 

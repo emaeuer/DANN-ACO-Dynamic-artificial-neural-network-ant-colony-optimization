@@ -2,6 +2,7 @@ module optimization {
     exports de.emaeuer.optimization;
     exports de.emaeuer.optimization.configuration;
     exports de.emaeuer.optimization.factory;
+    exports de.emaeuer.optimization.paco.configuration;
 
     requires commons.math3;
     requires exp4j;

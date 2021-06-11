@@ -2,7 +2,6 @@ package de.emaeuer.gui.controller;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationUtil;
-import de.emaeuer.configuration.value.AbstractConfigurationValue;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.gui.controller.util.ConfigurationValueInputMapper;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
@@ -12,8 +11,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
-
-import java.util.Map;
 
 public class ConfigurationController {
 
@@ -30,8 +27,8 @@ public class ConfigurationController {
         environmentConfiguration.get().setName("ENVIRONMENT_CONFIGURATION");
         optimizationConfiguration.get().setName("OPTIMIZATION_CONFIGURATION");
 
-        panel.getChildren().addAll(ConfigurationValueInputMapper.createPaneForConfiguration(getOptimizationConfiguration(), this::refreshPanel, "Optimization configuration"));
-        panel.getChildren().addAll(ConfigurationValueInputMapper.createPaneForConfiguration(getEnvironmentConfiguration(), this::refreshPanel, "Environment configuration"));
+        panel.getChildren().addAll(ConfigurationValueInputMapper.createPaneForConfiguration(getOptimizationConfiguration(), this::refreshPanel, "Optimization configuration", panel));
+        panel.getChildren().addAll(ConfigurationValueInputMapper.createPaneForConfiguration(getEnvironmentConfiguration(), this::refreshPanel, "Environment configuration", panel));
     }
 
     public void writeConfig() {

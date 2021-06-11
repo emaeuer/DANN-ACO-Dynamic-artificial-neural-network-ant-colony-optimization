@@ -4,20 +4,13 @@ import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuralNetworkBuilder;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
-import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetwork;
 import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
-import de.emaeuer.ann.util.MathUtil;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.ann.util.NeuralNetworkUtil.Connection;
 import de.emaeuer.configuration.ConfigurationHandler;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
