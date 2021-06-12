@@ -9,13 +9,18 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.state.StateHandler;
-import javafx.application.Platform;
+import de.emaeuer.state.value.DistributionStateValue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class CliLauncher {
+
+    private static final Logger LOG = LogManager.getLogger(CliLauncher.class);
 
     private OptimizationEnvironmentHandler optimization = new OptimizationEnvironmentHandler();
 
@@ -23,31 +28,32 @@ public class CliLauncher {
     private final ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration = new ConfigurationHandler<>(OptimizationConfiguration.class);
     private final ConfigurationHandler<EnvironmentConfiguration> environmentConfiguration = new ConfigurationHandler<>(EnvironmentConfiguration.class);
 
+    private long timeMillis = -1;
+
     public static void main(String[] args) {
+        CliLauncher launcher = new CliLauncher(args);
+        launcher.run();
+        System.out.println((-1 * launcher.getCost()) + " [" + launcher.getTimeMillis() + "]");
+    }
+
+    public CliLauncher(String[] args) {
+        LOG.debug("CLI-Call-Parameters: " + Arrays.toString(args));
+
         CliParameter parameters = new CliParameter();
         new CommandLine(parameters).parseArgs(args);
 
-        Platform.startup(() -> {});
-
-        CliLauncher launcher = new CliLauncher(parameters);
-        launcher.run();
-
-        Platform.exit();
-    }
-
-    public CliLauncher(CliParameter parameters) {
         initEnvironmentConfiguration(parameters.getEnvironmentConfig());
         initOptimizationConfiguration(parameters.getOptimizationConfig(), parameters);
     }
 
     private void initEnvironmentConfiguration(File file) {
-        if (file.exists()) {
+        if (file != null && file.exists()) {
             this.environmentConfiguration.importConfig(file);
         }
     }
 
     private void initOptimizationConfiguration(File file, CliParameter parameters) {
-        if (file.exists()) {
+        if (file != null && file.exists()) {
             this.optimizationConfiguration.importConfig(file);
         }
 
@@ -70,13 +76,26 @@ public class CliLauncher {
         Optional.ofNullable(parameters.isNeuronIsolation()).ifPresent(v -> config.setValue(PacoConfiguration.ENABLE_NEURON_ISOLATION, v));
     }
 
-    private void run() {
-        this.optimization.optimizationStateProperty().set(this.optimizationState);
-        this.optimization.optimizationConfigurationProperty().set(this.optimizationConfiguration);
-        this.optimization.environmentConfigurationProperty().set(this.environmentConfiguration);
+    public void run() {
+        this.optimization.setOptimizationState(this.optimizationState);
+        this.optimization.setOptimizationConfiguration(this.optimizationConfiguration);
+        this.optimization.setEnvironmentConfiguration(this.environmentConfiguration);
         this.optimization.setUpdateDelta(0);
 
         this.optimization.initialize();
+
+        long startTime = System.nanoTime();
         this.optimization.run();
+        this.timeMillis = (System.nanoTime() - startTime) / 1000;
+    }
+
+    public double getCost() {
+        double averageFitness = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FITNESS_DISTRIBUTION)).getMean();
+        double averageEvaluations = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean();
+        return averageEvaluations;
+    }
+
+    public long getTimeMillis() {
+        return this.timeMillis;
     }
 }

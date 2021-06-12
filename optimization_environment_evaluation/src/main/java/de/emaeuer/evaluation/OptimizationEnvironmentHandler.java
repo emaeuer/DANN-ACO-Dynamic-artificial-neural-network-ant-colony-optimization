@@ -11,8 +11,6 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.factory.OptimizationMethodFactory;
 import de.emaeuer.state.StateHandler;
-import javafx.application.Platform;
-import javafx.beans.property.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,21 +25,20 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     private static final Logger LOG = LogManager.getLogger(OptimizationEnvironmentHandler.class);
 
-    private final IntegerProperty maxEvaluations = new SimpleIntegerProperty(1);
-    private final IntegerProperty maxRuns = new SimpleIntegerProperty(1);
-    private final DoubleProperty maxFitness = new SimpleDoubleProperty(1);
+    private int maxEvaluations = 1;
+    private int maxRuns = 1;
+    private double maxFitness = 1;
 
-    private final IntegerProperty evaluationCounter = new SimpleIntegerProperty(0);
-    private final IntegerProperty runCounter = new SimpleIntegerProperty(0);
-    private final DoubleProperty fitness = new SimpleDoubleProperty(0);
+    private int evaluationCounter = 0;
+    private int runCounter = 0;
+    private double fitness = 0;
 
-    private final BooleanProperty finished = new SimpleBooleanProperty(false);
-    // property which gets toggled every time something changed
-    private final BooleanProperty updateNotifier = new SimpleBooleanProperty(false);
+    private boolean finished = false;
+    private boolean updateNotifier = false;
 
-    private final ObjectProperty<StateHandler<OptimizationState>> optimizationState = new SimpleObjectProperty<>();
-    private final ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfiguration = new SimpleObjectProperty<>();
-    private final ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfiguration = new SimpleObjectProperty<>();
+    private StateHandler<OptimizationState> optimizationState;
+    private ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration;
+    private ConfigurationHandler<EnvironmentConfiguration> environmentConfiguration;
 
     private AbstractEnvironment environment;
     private OptimizationMethod optimization;
@@ -55,14 +52,14 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private Thread updateThread;
 
     public void initialize() {
-        if (this.environmentConfiguration.isNotNull().get()) {
+        if (this.environmentConfiguration != null) {
             createEnvironment();
         } else {
             LOG.warn("The environment configuration was not set");
             throw new IllegalStateException("The environment configuration was not set");
         }
 
-        if (this.optimizationState.isNotNull().get() && this.optimizationConfiguration.isNotNull().get()) {
+        if (this.optimizationState != null && this.optimizationConfiguration != null) {
             createOptimizationMethod();
         } else {
             LOG.warn("The optimization state or the optimization configuration was not set");
@@ -71,27 +68,27 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     private void createEnvironment() {
-        this.maxFitness.set(this.environmentConfiguration.get().getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class));
-        this.environment = EnvironmentFactory.createEnvironment(this.environmentConfiguration.get());
+        this.maxFitness = this.environmentConfiguration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
+        this.environment = EnvironmentFactory.createEnvironment(this.environmentConfiguration);
     }
 
     private void createOptimizationMethod() {
         // FIXME there may be a better solution then disabling the option in the gui and overriding it here
         // difficulty is caused by independence of the environment and optimization
-        this.optimizationConfiguration.get().setValue(OptimizationConfiguration.MAX_FITNESS_SCORE, this.maxFitness.get());
-        this.maxEvaluations.set(this.optimizationConfiguration.get().getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class));
-        this.maxRuns.set(this.optimizationConfiguration.get().getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class));
-        this.optimization = OptimizationMethodFactory.createMethodForConfig(this.optimizationConfiguration.get(), this.optimizationState.get());
+        this.optimizationConfiguration.setValue(OptimizationConfiguration.MAX_FITNESS_SCORE, this.maxFitness);
+        this.maxEvaluations = this.optimizationConfiguration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
+        this.maxRuns = this.optimizationConfiguration.getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class);
+        this.optimization = OptimizationMethodFactory.createMethodForConfig(this.optimizationConfiguration, this.optimizationState);
     }
 
     public void reset() {
         this.optimization = null;
         this.environment = null;
 
-        this.evaluationCounter.set(0);
-        this.runCounter.set(0);
-        this.fitness.set(0);
-        this.finished.set(false);
+        this.evaluationCounter = 0;
+        this.runCounter = 0;
+        this.fitness = 0;
+        this.finished = false;
 
         this.terminateThread.set(false);
     }
@@ -99,10 +96,10 @@ public class OptimizationEnvironmentHandler implements Runnable {
     public void update() {
         if (environment.allAgentsFinished()) {
             handleRestart();
-            Platform.runLater(() -> this.updateNotifier.set(!this.updateNotifier.get()));
+            this.updateNotifier = !this.updateNotifier;
         }
 
-        if (!this.finished.get()) {
+        if (!this.finished) {
             step();
         }
     }
@@ -180,53 +177,11 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     public void refreshProperties() {
         this.updateLock.lock();
-        this.evaluationCounter.set(this.optimization.getEvaluationCounter());
-        this.runCounter.set(this.optimization.getRunCounter());
-        this.fitness.set(this.optimization.getBestFitness());
-        this.finished.set(this.optimization.isOptimizationFinished());
+        this.evaluationCounter = this.optimization.getEvaluationCounter();
+        this.runCounter = this.optimization.getRunCounter();
+        this.fitness = this.optimization.getBestFitness();
+        this.finished = this.optimization.isOptimizationFinished();
         this.updateLock.unlock();
-    }
-
-    public ObjectProperty<StateHandler<OptimizationState>> optimizationStateProperty() {
-        return optimizationState;
-    }
-
-    public ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfigurationProperty() {
-        return optimizationConfiguration;
-    }
-
-    public ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfigurationProperty() {
-        return environmentConfiguration;
-    }
-
-    public BooleanProperty updatedProperties() {return updateNotifier;}
-
-    public BooleanProperty finishedProperty() {
-        return finished;
-    }
-
-    public IntegerProperty maxEvaluationsProperty() {
-        return maxEvaluations;
-    }
-
-    public IntegerProperty evaluationCounterProperty() {
-        return evaluationCounter;
-    }
-
-    public IntegerProperty maxRunsProperty() {
-        return maxRuns;
-    }
-
-    public IntegerProperty runCounterProperty() {
-        return runCounter;
-    }
-
-    public DoubleProperty maxFitnessProperty() {
-        return maxFitness;
-    }
-
-    public DoubleProperty fitnessProperty() {
-        return fitness;
     }
 
     public List<AbstractElement> getAgents() {
@@ -241,4 +196,47 @@ public class OptimizationEnvironmentHandler implements Runnable {
         this.updateDelta.set(value);
     }
 
+    public void setOptimizationState(StateHandler<OptimizationState> optimizationState) {
+        this.optimizationState = optimizationState;
+    }
+
+    public void setOptimizationConfiguration(ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration) {
+        this.optimizationConfiguration = optimizationConfiguration;
+    }
+
+    public void setEnvironmentConfiguration(ConfigurationHandler<EnvironmentConfiguration> environmentConfiguration) {
+        this.environmentConfiguration = environmentConfiguration;
+    }
+
+    public int getMaxRuns() {
+        return maxRuns;
+    }
+
+    public int getRunCounter() {
+        return runCounter;
+    }
+
+    public int getEvaluationCounter() {
+        return evaluationCounter;
+    }
+
+    public int getMaxEvaluations() {
+        return maxEvaluations;
+    }
+
+    public double getFitness() {
+        return fitness;
+    }
+
+    public double getMaxFitness() {
+        return maxFitness;
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public boolean isUpdateNotifier() {
+        return updateNotifier;
+    }
 }

@@ -1,0 +1,38 @@
+## Template for parameter description file for Iterated Race.
+##
+## The format is one parameter per line. Each line contains:
+##
+## 1: Name of the parameter. An unquoted alphanumeric string,
+##    example: ants
+
+## 2: Switch to pass the parameter. A quoted (possibly empty) string, 
+##    if the value and the switch must be separated, add a space at
+##    the end of the string. Example : "--version1 --ants "
+
+## 3: Type. An unquoted single letter, among 
+##     i: Integer, c: categorical, o: ordinal, r: real.
+
+## 4: For c and o: All possible values, that is, a variable number of
+##    quoted or unquoted strings separated by commas within
+##    parenthesis. Empty strings and strings containing commas or
+##    spaces must be quoted.
+##    For i,r: a pair of unquoted numbers representing minimum and
+##    maximum values. 
+
+## 5: A conditional parameter can be defined according to the values of
+##    one or several other parameters.  This is done by adding a
+##    character '|' followed by an R expression involving the names of
+##    other parameters. This expression must return TRUE if the 
+##    condition is satisfied, FALSE otherwise.
+
+# 1:                    2:                          3:  4:                                              5:
+populationSize          "--populationSize "         i   (5, 50)
+numberOfUpdates         "--numberOfUpdates "        i   (1, 10)
+antsPerIteration        "--antsPerIteration "       i   (5, 50)
+#deviationFunction      "--deviationFunction "      c   ('max(s/(p-1),0.05)')
+populationStrategy      "--populationStrategy "     c   ("AGE", "FITNESS", "INNOVATION_PROTECTING")
+#changeProbability      "--changeProbability "      c   ("0.75(n/p)^2+0.1")
+#pheromoneValue         "--pheromoneValue "         c   ("(n+1) / (p+2)")
+#spitThreshold          "--spitThreshold "          c   ("leq(s/(p - 1), 0.15) * geq(n, p * 0.9)")
+elitism                 ""                          c   ("", "--elitism ")
+neuronIsolation         ""                          c   ("", "--neuronIsolation ")

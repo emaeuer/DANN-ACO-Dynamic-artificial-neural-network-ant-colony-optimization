@@ -8,7 +8,6 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
 import javafx.animation.AnimationTimer;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -51,6 +50,7 @@ public class EnvironmentController {
     private final ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfiguration = new SimpleObjectProperty<>();
     private final ObjectProperty<StateHandler<OptimizationState>> optimizationState = new SimpleObjectProperty<>();
 
+    private final BooleanProperty updatedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty singleEntityMode = new SimpleBooleanProperty(false);
     private final BooleanProperty finishedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty visualMode = new SimpleBooleanProperty(true);
@@ -68,25 +68,18 @@ public class EnvironmentController {
 
     public void initializeController() {
         if (this.environmentConfiguration.isNotNull().get() && this.optimizationConfiguration.isNotNull().get() && this.optimizationState.isNotNull().get()) {
-            this.handler.environmentConfigurationProperty().bind(this.environmentConfiguration);
-            this.handler.optimizationConfigurationProperty().bind(this.optimizationConfiguration);
-            this.handler.optimizationStateProperty().bind(this.optimizationState);
+            this.handler.setEnvironmentConfiguration(this.environmentConfiguration.get());
+            this.handler.setOptimizationConfiguration(this.optimizationConfiguration.get());
+            this.handler.setOptimizationState(this.optimizationState.get());
 
-            this.runProgress.progressProperty().bind(Bindings.createDoubleBinding(() ->
-                            (double) this.handler.runCounterProperty().get() / this.handler.maxRunsProperty().get(),
-                    this.handler.runCounterProperty(), this.handler.maxRunsProperty()));
-            this.evaluationProgress.progressProperty().bind(Bindings.createDoubleBinding(() ->
-                            (double) this.handler.evaluationCounterProperty().get() / this.handler.maxEvaluationsProperty().get(),
-                            this.handler.evaluationCounterProperty(), this.handler.maxEvaluationsProperty()));
-            this.fitnessProgress.progressProperty().bind(Bindings.createDoubleBinding(() ->
-                    this.handler.fitnessProperty().get() / this.handler.maxFitnessProperty().get(),
-                    this.handler.fitnessProperty(), this.handler.maxFitnessProperty()));
+            this.environmentConfiguration.addListener((v, o, n) -> this.handler.setEnvironmentConfiguration(n));
+            this.optimizationConfiguration.addListener((v, o, n) -> this.handler.setOptimizationConfiguration(n));
+            this.optimizationState.addListener((v, o, n) -> this.handler.setOptimizationState(n));
 
             this.canvas.setWidth(800);
             this.canvas.setHeight(800);
 
             this.finishedProperty.addListener((v,o,n) -> finished(n));
-            this.finishedProperty.bind(this.handler.finishedProperty());
             this.nonVisualPanel.visibleProperty().bind(this.visualMode.not().or(this.finishedProperty));
             this.visualMode.addListener((v,o,n) -> this.handler.setUpdateDelta(0));
         }
@@ -109,7 +102,16 @@ public class EnvironmentController {
                 drawContent();
             }
         }
+        refreshProperties();
+    }
+
+    private void refreshProperties() {
         this.handler.refreshProperties();
+        this.runProgress.progressProperty().set(((double) this.handler.getRunCounter()) / this.handler.getMaxRuns());
+        this.evaluationProgress.progressProperty().set(((double) this.handler.getEvaluationCounter()) / this.handler.getMaxEvaluations());
+        this.fitnessProgress.progressProperty().set(this.handler.getFitness() / this.handler.getMaxFitness());
+        this.finishedProperty.set(this.handler.isFinished());
+        this.updatedProperty.set(this.handler.isUpdateNotifier());
     }
 
     private void drawContent() {
@@ -193,7 +195,7 @@ public class EnvironmentController {
     }
 
     public BooleanProperty updatedProperty() {
-        return this.handler.updatedProperties();
+        return this.updatedProperty;
     }
 
     public StringProperty speedProperty() {

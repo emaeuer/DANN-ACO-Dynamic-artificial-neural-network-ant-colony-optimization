@@ -1,11 +1,10 @@
-module optimization.environment.evaluation {
+module OptimizationEnvironmentEvaluation {
     exports de.emaeuer.evaluation;
     exports de.emaeuer.cli;
 
-    requires optimization;
     requires particle.environment.engine;
     requires execution.state;
-    requires javafx.controls;
+    requires optimization;
     requires commons.math3;
     requires org.apache.logging.log4j;
     requires info.picocli;

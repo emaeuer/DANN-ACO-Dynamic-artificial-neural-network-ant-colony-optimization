@@ -82,7 +82,7 @@ public String toNetworkXml( String chromId ) throws Exception {
  * @throws Exception
  */
 public static void main( String[] args ) throws Exception {
-	System.out.println( Copyright.STRING );
+//	System.out.println( Copyright.STRING );
 	if ( args.length < 2 ) {
 		printUsage();
 		System.exit( -1 );

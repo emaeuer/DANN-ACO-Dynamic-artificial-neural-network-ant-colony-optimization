@@ -77,7 +77,7 @@ public class Reset {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-        System.out.println(Copyright.STRING);
+//        System.out.println(Copyright.STRING);
         if (args.length < 1) {
             System.err.println("usage: <cmd> <properties-file>");
             System.exit(-1);

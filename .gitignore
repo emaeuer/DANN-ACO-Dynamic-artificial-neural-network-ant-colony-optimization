@@ -77,3 +77,5 @@ fabric.properties
 /particle_environment_gui.iml
 *.zip
 /particle_environment_launcher/target/
+*/target/*
+*.jar

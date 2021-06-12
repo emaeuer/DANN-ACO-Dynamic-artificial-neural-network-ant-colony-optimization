@@ -245,7 +245,7 @@ public class Evolver implements Configurable {
      */
     public static void main(String[] args) throws Throwable {
         try {
-            System.out.println(Copyright.STRING);
+//            System.out.println(Copyright.STRING);
 
             if (args.length != 1) {
                 usage();
