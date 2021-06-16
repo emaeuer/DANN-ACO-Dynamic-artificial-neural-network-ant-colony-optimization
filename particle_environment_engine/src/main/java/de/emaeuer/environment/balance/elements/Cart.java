@@ -54,6 +54,7 @@ public class Cart extends AbstractElement {
 
         // get the action of the agent controller
         double activation = this.controller.getAction(input)[0];
+        activation = adjustActivation(activation, controller);
 
         if (data.twoPoles()) {
             updateCartTwoPolesState(activation);
@@ -86,6 +87,17 @@ public class Cart extends AbstractElement {
             this.fitness = this.step + 1;
         }
         this.controller.setScore(this.fitness);
+    }
+
+    private double adjustActivation(double activation, AgentController controller) {
+        // 10 and -10 are arbitrary bounds in case of unlimited values
+        double maxActivation = Math.min(controller.getMaxAction(), 10);
+        double minActivation = Math.max(controller.getMinAction(), -10);
+        double activationRange = maxActivation - minActivation;
+        double middle = (maxActivation + minActivation) / 2;
+
+        // adjust to [-1:1]
+        return (2 * (activation - middle)) / activationRange;
     }
 
     private void refreshCartPosition() {
@@ -135,7 +147,7 @@ public class Cart extends AbstractElement {
     }
 
     private void stepTwoPoles(double action, double[] st, double[] derivations) {
-        double force = (action - 0.5) * data.forceMagnitude() * 2;
+        double force = action * data.forceMagnitude();
 
         double poleOneCosTheta = Math.cos(st[2]);
         double poleOneSinTheta = Math.sin(st[2]);
@@ -213,7 +225,7 @@ public class Cart extends AbstractElement {
     }
 
     private void stepOnePole(double action, double[] st, double[] derivations) {
-        double force = (action - 0.5) * data.forceMagnitude() * 2;
+        double force = action * data.forceMagnitude();
 
         double poleOneCosTheta = Math.cos(st[2]);
         double poleOneSinTheta = Math.sin(st[2]);

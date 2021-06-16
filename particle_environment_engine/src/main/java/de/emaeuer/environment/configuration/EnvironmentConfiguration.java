@@ -2,14 +2,12 @@ package de.emaeuer.environment.configuration;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.DefaultConfiguration;
-import de.emaeuer.configuration.value.AbstractConfigurationValue;
-import de.emaeuer.configuration.value.DoubleConfigurationValue;
-import de.emaeuer.configuration.value.EmbeddedConfiguration;
-import de.emaeuer.configuration.value.StringConfigurationValue;
+import de.emaeuer.configuration.value.*;
 
 import java.util.function.BiConsumer;
 
 public enum EnvironmentConfiguration implements DefaultConfiguration<EnvironmentConfiguration> {
+    SEED("Seed for generating the environment", new IntegerConfigurationValue(9369319)),
     MAX_STEP_NUMBER("Step number threshold", new DoubleConfigurationValue(10000, 1, Double.MAX_VALUE)),
     MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(10000, 0, Double.MAX_VALUE)),
     ENVIRONMENT_IMPLEMENTATION("The configuration of the selected environment implementation", new EmbeddedConfiguration<>(EnvironmentConfigurationFactory.createEnvironmentConfiguration(EnvironmentImplementations.FLAPPY_BIRD))),

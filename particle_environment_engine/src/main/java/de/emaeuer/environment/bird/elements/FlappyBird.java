@@ -38,11 +38,13 @@ public class FlappyBird extends Particle {
         double yVelocity = getVelocity().getY() / getMaxVelocity();
         double nextGapHeight = this.environment.getHeightOfNextGap() / this.environment.getHeight();
         double distanceToNextPipe = this.environment.getDistanceToNextPipeEnd() / this.environment.getWidth();
-        RealVector input = new ArrayRealVector();
+        double[] input = new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe};
 
-        // process input and let the neural network decide when to jump
-        boolean jump = this.controller.getAction(new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe})[0] > 0.5;
-        if (jump) {
+        // get the action of the agent controller
+        double activation = this.controller.getAction(input)[0];
+        activation = adjustActivation(activation, controller);
+
+        if (activation == 1) {
             jump();
         }
 
@@ -50,6 +52,16 @@ public class FlappyBird extends Particle {
         if (this.environment.collidesWithNextPipe(this)) {
             setDead(true);
         }
+    }
+
+    private double adjustActivation(double activation, AgentController controller) {
+        // 10 and -10 are arbitrary bounds in case of unlimited values
+        double maxActivation = Math.min(controller.getMaxAction(), 10);
+        double minActivation = Math.max(controller.getMinAction(), -10);
+        double middle = (maxActivation + minActivation) / 2;
+
+        // either 0 (do nothing) or 1 (jump)
+        return activation > middle ? 1 : 0;
     }
 
     public void setController(AgentController controller) {

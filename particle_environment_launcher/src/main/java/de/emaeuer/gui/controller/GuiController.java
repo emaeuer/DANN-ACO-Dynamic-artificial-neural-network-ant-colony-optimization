@@ -82,9 +82,9 @@ public class GuiController {
     public void start() {
         if (this.isFirstStart) {
             isFirstStart = false;
-            this.configurationPanelController.setDisable(true);
             this.statePanelController.init();
             this.configurationPanelController.writeConfig();
+            this.configurationPanelController.setDisable(true);
         }
 
         this.environmentAreaController.startEnvironment();
@@ -103,6 +103,7 @@ public class GuiController {
         this.configurationPanelController.setDisable(false);
         this.statePanelController.reset();
         this.environmentAreaController.restartEnvironment();
+        this.isFirstStart = true;
 
         togglePlaying(false);
     }

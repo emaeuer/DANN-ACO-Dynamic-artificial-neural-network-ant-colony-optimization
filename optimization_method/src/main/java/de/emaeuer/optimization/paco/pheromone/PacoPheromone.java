@@ -3,18 +3,17 @@ package de.emaeuer.optimization.paco.pheromone;
 import com.google.common.collect.*;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
+import de.emaeuer.ann.impl.neuron.based.Neuron;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetwork;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.ann.util.NeuralNetworkUtil.Connection;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationVariablesBuilder;
+import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoParameter;
-import de.emaeuer.optimization.paco.population.AbstractPopulation;
-import de.emaeuer.optimization.paco.population.PopulationFactory;
-import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
-import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,24 +35,23 @@ public class PacoPheromone {
 
     private final NeuralNetwork baseNetwork;
 
-    private final AbstractPopulation<?> population;
-
     private final Map<String, List<NeuralNetwork>> templatePheromone = new HashMap<>();
 
     private final AtomicInteger connectionMappingCounter = new AtomicInteger(0);
     private final Table<String, String, Integer> connectionMapping = HashBasedTable.create();
     private final Map<Integer, Multiset<Double>> weightPheromone = new HashMap<>();
 
+    private final RandomUtil rng;
 
     //############################################################
     //################ Methods for initialization ################
     //############################################################
 
-    public PacoPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork) {
+    public PacoPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         this.configuration = configuration;
         this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
         this.baseNetwork = baseNetwork;
-        this.population = PopulationFactory.create(configuration);
+        this.rng = rng;
 
         initializeMapping();
     }
@@ -72,21 +70,7 @@ public class PacoPheromone {
     //############### Methods for pheromone update ###############
     //############################################################
 
-    public void acceptAntsOfThisIteration(List<PacoAnt> ants) {
-        List<PacoAnt>[] populationChange = this.population.acceptAntsOfThisIteration(ants);
-
-        // add all new ants
-        Optional.ofNullable(populationChange[0])
-                .ifPresent(l -> l.forEach(this::addAnt));
-
-        // remove all ants
-        Optional.ofNullable(populationChange[1])
-                .ifPresent(l -> l.forEach(this::removeAnt));
-
-        this.templatePheromone.forEach((k, v) -> LOG.debug(k + " " + v.size()));
-    }
-
-    private void removeAnt(PacoAnt ant) {
+    public void removeAnt(PacoAnt ant) {
         // remove all knowledge of this ant
         String templateKey = removeTemplateOfAnt(ant);
         removeWeightsOfAnt(ant, templateKey);
@@ -122,7 +106,7 @@ public class PacoPheromone {
         }
     }
 
-    protected void addAnt(PacoAnt ant) {
+    public void addAnt(PacoAnt ant) {
         // add all weights of this ant
         String templateKey = addTemplateOfAnt(ant);
         addWeightsOfAnt(ant, templateKey);
@@ -175,12 +159,12 @@ public class PacoPheromone {
             selectionProbabilities.add(v.size());
         });
 
-        int templateIndex = RandomUtil.selectRandomElementFromVector(selectionProbabilities.stream().mapToInt(i -> i).toArray());
+        int templateIndex = this.rng.selectRandomElementFromVector(selectionProbabilities.stream().mapToInt(i -> i).toArray());
         // every instance of the selected template has the same probability
         int[] instanceProbabilities = IntStream.range(0, templates.get(templateIndex).size())
                 .map(i -> 1)
                 .toArray();
-        int instanceIndex = RandomUtil.selectRandomElementFromVector(instanceProbabilities);
+        int instanceIndex = this.rng.selectRandomElementFromVector(instanceProbabilities);
 
         return templates.get(templateIndex).get(instanceIndex).copy();
     }
@@ -198,7 +182,7 @@ public class PacoPheromone {
                 .getVariables();
 
         // if many ants use this template it is more dynamic
-        if (this.configuration.getValue(DYNAMIC_PROBABILITY, Double.class, variables) > RandomUtil.getNextDouble(0, 1)) {
+        if (this.configuration.getValue(DYNAMIC_PROBABILITY, Double.class, variables) > this.rng.getNextDouble(0, 1)) {
             List<NeuronID> possibleSources = IntStream.range(0, template.getDepth())
                     .mapToObj(template::getNeuronsOfLayer)
                     .flatMap(Collection::stream)
@@ -215,12 +199,21 @@ public class PacoPheromone {
             for (NeuronID source : possibleSources) {
                 for (NeuronID target : possibleTargets) {
                     Connection connection = new Connection(source, target, 0);
-                    decisions.add(connection);
-                    pheromoneValues.add(calculatePheromoneValueOfConnection(connection, template, templateKey));
+
+                    double pheromone = calculatePheromoneValueOfConnection(connection, template, templateKey);
+
+                    if (pheromone > 0) {
+                        decisions.add(connection);
+                        pheromoneValues.add(pheromone);
+                    }
                 }
             }
 
-            int decisionIndex = RandomUtil.selectRandomElementFromVector(pheromoneValues.stream().mapToDouble(d -> d).toArray());
+            if (decisions.isEmpty()) {
+                return;
+            }
+
+            int decisionIndex = this.rng.selectRandomElementFromVector(pheromoneValues.stream().mapToDouble(d -> d).toArray());
             Connection dynamicElement = decisions.get(decisionIndex);
 
             // if dynamic element already exists --> remove or split else add
@@ -239,6 +232,20 @@ public class PacoPheromone {
                 createMappingsIfNecessary(template, templateKey, dynamicElement, null);
             }
         }
+    }
+
+    private boolean isValidDecision(Connection connection, NeuralNetwork template) {
+        if (!template.recurrentIsDisabled()) {
+            return true;
+        } else if (connection.start().getLayerIndex() != connection.end().getLayerIndex()) {
+            return connection.start().getLayerIndex() < connection.end().getLayerIndex();
+        } else if (template instanceof NeuronBasedNeuralNetwork nn) {
+            Neuron start = nn.getNeuron(connection.start());
+            Neuron end = nn.getNeuron(connection.end());
+
+            return start.getRecurrentID() < end.getRecurrentID();
+        }
+        return false;
     }
 
     private boolean splitIsValid(Connection dynamicElement, NeuralNetwork nn) {
@@ -321,8 +328,10 @@ public class PacoPheromone {
             return checkNeuronIsNotIsolated(connection, template, templateKey) ? 1 - connectionPheromone : 0;
         }else if (template.neuronHasConnectionTo(start, end)) {
             return 1 - connectionPheromone;
-        } else {
+        } else if (isValidDecision(connection, template)) {
             return connectionPheromone;
+        } else {
+            return 0;
         }
     }
 
@@ -338,7 +347,7 @@ public class PacoPheromone {
             return template.isOutputNeuron(start);
         }
 
-        return template.getIncomingConnectionsOfNeuron(end).size() != 1;
+        return template.getIncomingConnectionsOfNeuron(end).size() > 1;
     }
 
     protected void adjustWeights(NeuralNetwork nn, String templateKey) {
@@ -360,12 +369,12 @@ public class PacoPheromone {
 
         if (populationValues == null || populationValues.isEmpty()) {
             // choose value randomly because no knowledge exists
-            value = RandomUtil.getNextDouble(minValue, maxValue);
+            value = this.rng.getNextDouble(minValue, maxValue);
         } else {
             double deviation = calculateDeviation(populationValues, srcValue);
             // select new value if it is out of bounds
             do {
-                value = RandomUtil.getNormalDistributedValue(srcValue, deviation);
+                value = this.rng.getNormalDistributedValue(srcValue, deviation);
             } while (value < minValue || value > maxValue);
         }
 
@@ -404,7 +413,8 @@ public class PacoPheromone {
         return NeuralNetworkUtil.getTopologySummary(nn);
     }
 
-    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
+//    TODO implement again
+//    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
 //        state.lock();
 //        //noinspection unchecked safe cast for generic not possible
 //        Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
@@ -420,7 +430,7 @@ public class PacoPheromone {
 //                            .toArray(Double[]::new)));
 //        }
 //        state.unlock();
-    }
+//    }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, String templateKey) {
         String connectionKey = createConnectionKey(start, end);
@@ -454,13 +464,4 @@ public class PacoPheromone {
 
         return result;
     }
-
-    public int getMaximalPopulationSize() {
-        return maximalPopulationSize;
-    }
-
-    public int getPopulationSize() {
-        return this.population.getSize();
-    }
-
 }

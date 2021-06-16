@@ -62,6 +62,8 @@ public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
         addNeuron(1, 0);
         Neuron intermediate = this.lastModifiedNeuron;
 
+        refreshRecurrentIDsIfNecessary(end, intermediate);
+
         end.modify().addInput(intermediate, 1);
         intermediate.modify().addInput(start, weight);
         end.modify().removeInput(start);
@@ -69,14 +71,35 @@ public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
         return this;
     }
 
+    private void refreshRecurrentIDsIfNecessary(Neuron end, Neuron intermediate) {
+        boolean recurrentDisabled = this.nn.getConfiguration().getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
+
+        if (!recurrentDisabled) {
+            return;
+        }
+
+        intermediate.setRecurrentID(end.getRecurrentID());
+        end.modify().increaseRecurrentID();
+    }
+
     @Override
     public NeuralNetworkModifier addConnection(NeuronID startID, NeuronID endID, double weight) {
         Neuron start = nn.getNeuron(startID);
         Neuron end = nn.getNeuron(endID);
 
+        validateRecurrent(startID.getLayerIndex(), endID.getLayerIndex(), start, end);
+
         end.modify().addInput(start, weight);
         this.lastModifiedNeuron = null;
         return this;
+    }
+
+    private void validateRecurrent(int startLayer, int endLayer, Neuron start, Neuron end) {
+        boolean recurrentDisabled = this.nn.getConfiguration().getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
+
+        if (recurrentDisabled && startLayer >= endLayer && start.getRecurrentID() >= end.getRecurrentID()) {
+            throw new IllegalStateException("Tried to create recurrent connection, but is disabled");
+        }
     }
 
     @Override

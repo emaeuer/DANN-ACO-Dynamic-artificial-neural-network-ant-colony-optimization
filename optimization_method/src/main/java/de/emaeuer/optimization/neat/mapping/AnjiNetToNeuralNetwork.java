@@ -61,7 +61,7 @@ public class AnjiNetToNeuralNetwork {
 
         for (com.anji.nn.Neuron neuron : net.getAllNeurons()) {
             Neuron end = idNeuronMapping.get(neuron.getId());
-            for (Connection c : neuron.getIncomingConnections()) {
+            for (Object c : neuron.getIncomingConnections()) {
                 if (c instanceof NeuronConnection connection) {
                     Neuron start = idNeuronMapping.get(connection.getIncomingNode().getId());
                     end.modify().addInput(start, connection.getWeight());

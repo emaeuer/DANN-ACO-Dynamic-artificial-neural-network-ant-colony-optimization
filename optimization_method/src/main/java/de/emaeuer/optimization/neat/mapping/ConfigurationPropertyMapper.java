@@ -38,6 +38,14 @@ public class ConfigurationPropertyMapper {
             put(enumToKey(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION), "initial.topology.activation.output");
             put(enumToKey(NeuralNetworkConfiguration.INPUT_LAYER_SIZE), "stimulus.size");
             put(enumToKey(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE), "response.size");
+            put(enumToKey(NeatConfiguration.ADD_CONNECTION_MUTATION_RATE), "add.connection.mutation.rate");
+            put(enumToKey(NeatConfiguration.ADD_NEURON_MUTATION_RATE), "add.neuron.mutation.rate");
+            put(enumToKey(NeatConfiguration.REMOVE_CONNECTION_MUTATION_RATE), "remove.connection.mutation.rate");
+            put(enumToKey(NeatConfiguration.REMOVE_CONNECTION_MAX_WEIGHT), "remove.connection.max.weight");
+            put(enumToKey(NeatConfiguration.PRUNE_MUTATION_RATE), "prune.mutation.rate");
+            put(enumToKey(NeatConfiguration.WEIGHT_MUTATION_RATE), "weight.mutation.rate");
+            put(enumToKey(NeatConfiguration.WEIGHT_MUTATION_DEVIATION), "weight.mutation.std.dev");
+            put(enumToKey(NeatConfiguration.RECURRENT_ALLOWED), "recurrent");
         }
     };
 

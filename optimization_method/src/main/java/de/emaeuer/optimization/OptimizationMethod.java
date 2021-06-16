@@ -7,6 +7,7 @@ import de.emaeuer.optimization.configuration.OptimizationRunState;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.util.GraphHelper;
 import de.emaeuer.optimization.util.ProgressionHandler;
+import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
 import de.emaeuer.state.StateHandler;
@@ -43,11 +44,14 @@ public abstract class OptimizationMethod {
     private boolean optimizationFinished = false;
     private boolean runFinished = false;
 
+    private RandomUtil rng;
+
     protected OptimizationMethod(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         this.configuration = configuration;
         this.generalState = generalState;
         this.runState = new StateHandler<>(OptimizationRunState.class, generalState);
         this.generalState.execute(t -> t.addNewValue(OptimizationState.STATE_OF_CURRENT_RUN, this.runState));
+        this.rng = new RandomUtil(configuration.getValue(OptimizationConfiguration.SEED, Integer.class));
 
         this.averageHandler = new RunDataHandler(this.generalState, this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
 
@@ -330,6 +334,10 @@ public abstract class OptimizationMethod {
 
     public StateHandler<OptimizationState> getState() {
         return this.generalState;
+    }
+
+    protected RandomUtil getRNG() {
+        return this.rng;
     }
 
 }

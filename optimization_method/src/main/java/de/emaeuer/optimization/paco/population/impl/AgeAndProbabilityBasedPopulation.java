@@ -1,15 +1,17 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.Optional;
 
 public class AgeAndProbabilityBasedPopulation extends ProbabilityBasedPopulation {
 
-    public AgeAndProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
-        super(configuration);
+    public AgeAndProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+        super(configuration, baseNetwork, rng);
     }
 
     @Override

@@ -2,6 +2,9 @@ module particle.environment.engine {
     requires commons.math3;
     requires com.google.common;
     requires execution.state;
+    requires optimization;
+    requires org.apache.logging.log4j;
+    requires org.apache.logging.log4j.core;
 
     exports de.emaeuer.environment;
     exports de.emaeuer.environment.elements;

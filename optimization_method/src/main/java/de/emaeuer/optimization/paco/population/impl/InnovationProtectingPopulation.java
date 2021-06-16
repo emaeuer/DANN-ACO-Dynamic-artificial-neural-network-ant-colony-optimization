@@ -1,9 +1,11 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,22 +13,19 @@ import java.util.stream.IntStream;
 
 public class InnovationProtectingPopulation extends AgeBasedPopulation {
 
-    private List<Set<String>> addedTopologies = new ArrayList<>();
+    private final List<Set<String>> addedTopologies = new ArrayList<>();
 
-    public InnovationProtectingPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
-        super(configuration);
+    public InnovationProtectingPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+        super(configuration, baseNetwork, rng);
     }
 
-    public List<PacoAnt>[] acceptAntsOfThisIteration(List<PacoAnt> ants) {
+    @Override
+    public void updatePheromone() {
         addedTopologies.clear();
 
-        //noinspection unchecked only way to return class with generic is unsafe cast
-        List<PacoAnt>[] populationChange = (List<PacoAnt>[]) new List[2];
-        populationChange[0] = new ArrayList<>();
-
-        ants.sort(Comparator.comparingDouble(PacoAnt::getFitness).reversed());
+        getCurrentAnts().sort(Comparator.comparingDouble(PacoAnt::getFitness).reversed());
         int remainingAntUpdates = calculateNumberOfAntsToAdd();
-        for (PacoAnt ant : ants) {
+        for (PacoAnt ant : getCurrentAnts()) {
             if (remainingAntUpdates <= 0) {
                 break;
             }
@@ -34,18 +33,16 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
             Optional<PacoAnt> addResult = addAnt(ant);
 
             if (addResult.isPresent()) {
-                populationChange[0].add(ant);
+                getPheromone().addAnt(ant);
                 remainingAntUpdates--;
             }
         }
 
-        populationChange[1] = IntStream.range(0, populationChange[0].size())
+        IntStream.range(0, Math.max(0, getSize() - getMaxSize()))
                 .mapToObj(i -> this.removeAnt())
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
-
-        return populationChange;
+                .forEach(getPheromone()::removeAnt);
     }
 
     @Override

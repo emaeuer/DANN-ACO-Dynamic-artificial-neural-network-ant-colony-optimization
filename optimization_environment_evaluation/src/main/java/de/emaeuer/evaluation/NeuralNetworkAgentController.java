@@ -22,4 +22,14 @@ public class NeuralNetworkAgentController implements AgentController {
         brain.setFitness(score);
     }
 
+    @Override
+    public double getMaxAction() {
+        return this.brain.getNeuralNetwork().getMaxActivation();
+    }
+
+    @Override
+    public double getMinAction() {
+        return this.brain.getNeuralNetwork().getMinActivation();
+    }
+
 }

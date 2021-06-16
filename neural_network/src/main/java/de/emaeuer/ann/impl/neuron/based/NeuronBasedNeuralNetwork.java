@@ -79,6 +79,9 @@ public class NeuronBasedNeuralNetwork implements NeuralNetwork {
         this.hiddenNeurons.forEach(Neuron::activate);
         this.outputNeurons.forEach(Neuron::activate);
 
+        this.hiddenNeurons.forEach(Neuron::reactivate);
+        this.outputNeurons.forEach(Neuron::reactivate);
+
         double[] result = outputNeurons.stream()
                 .mapToDouble(Neuron::getActivation)
                 .toArray();
@@ -221,6 +224,23 @@ public class NeuronBasedNeuralNetwork implements NeuralNetwork {
     @Override
     public double getMinWeightValue() {
         return this.configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class);
+    }
+
+    @Override
+    public double getMaxActivation() {
+        Neuron output = this.outputNeurons.get(0);
+        return output.getActivationFunction().getMaxActivation();
+    }
+
+    @Override
+    public double getMinActivation() {
+        Neuron output = this.outputNeurons.get(0);
+        return output.getActivationFunction().getMinActivation();
+    }
+
+    @Override
+    public boolean recurrentIsDisabled() {
+        return this.configuration.getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
     }
 
     public Neuron getNeuron(NeuronID id) {

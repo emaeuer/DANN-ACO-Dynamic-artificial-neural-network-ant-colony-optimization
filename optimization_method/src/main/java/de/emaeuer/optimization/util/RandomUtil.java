@@ -1,21 +1,27 @@
 package de.emaeuer.optimization.util;
 
-import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.random.JDKRandomGenerator;
+import org.apache.commons.math3.random.RandomGenerator;
 
 import java.util.Arrays;
-import java.util.Random;
+import java.util.Collections;
+import java.util.List;
 
 public class RandomUtil {
 
-    private static final Random RNG = new Random();
+    private final int seed;
+    private final JDKRandomGenerator rng;
 
-    private RandomUtil() {}
+    public RandomUtil(int seed) {
+        this.seed = seed;
+        this.rng = new JDKRandomGenerator(seed);
+    }
 
-    public static int selectRandomElementFromVector(int[] vector) {
+    public int selectRandomElementFromVector(int[] vector) {
         int sum = Arrays.stream(vector).sum();
-        int selectionValue = RNG.nextInt(sum) + 1;
+        int selectionValue = this.rng.nextInt(sum) + 1;
         int cumulatedSum = 0;
 
         for (int i = 0; i < vector.length; i++) {
@@ -28,13 +34,13 @@ public class RandomUtil {
         throw new IllegalArgumentException("Failed to select a random element from the vector " + Arrays.toString(vector));
     }
 
-    public static int selectRandomElementFromVector(RealVector vector) {
+    public int selectRandomElementFromVector(RealVector vector) {
         return selectRandomElementFromVector(vector.toArray());
     }
 
-    public static int selectRandomElementFromVector(double[] vector) {
+    public int selectRandomElementFromVector(double[] vector) {
         double sum = Arrays.stream(vector).sum();
-        double selectionValue = RNG.nextDouble() * sum;
+        double selectionValue = this.rng.nextDouble() * sum;
         double cumulatedSum = 0;
 
         for (int i = 0; i < vector.length; i++) {
@@ -47,7 +53,7 @@ public class RandomUtil {
         throw new IllegalArgumentException("Failed to select a random element from the vector " + Arrays.toString(vector));
     }
 
-    public static int selectRandomElementFromVector(RealVector vector, boolean invertedProbabilities) {
+    public int selectRandomElementFromVector(RealVector vector, boolean invertedProbabilities) {
         if (invertedProbabilities) {
             double sum = vector.getL1Norm();
             vector = vector.map(v -> v == 0
@@ -58,24 +64,29 @@ public class RandomUtil {
         return selectRandomElementFromVector(vector);
     }
 
-    public static double getNormalDistributedValue(double mean, double deviation) {
-        return new NormalDistribution(mean, deviation).sample();
+    public double getNormalDistributedValue(double mean, double deviation) {
+        return new NormalDistribution(this.rng, mean, deviation).sample();
     }
 
-    public static double getBetaDistributedValue(double mean, double deviation) {
-        mean = (mean + 1) / 2;
-        double normal = mean * (1 - mean) / Math.pow(deviation, 2);
-        double alpha = mean * normal;
-        double beta = (1 - mean) * normal;
-
-        return new BetaDistribution(alpha, beta).sample() * 2 - 1;
+    public int getNextInt(int min, int max) {
+        return this.rng.nextInt(max - min) + min;
     }
 
-    public static int getNextInt(int min, int max) {
-        return RNG.nextInt(max - min) + min;
+    public double getNextDouble(double min, double max) {
+        return this.rng.nextDouble() * (max - min) + min;
     }
 
-    public static double getNextDouble(double min, double max) {
-        return RNG.nextDouble() * (max - min) + min;
+    public double nextDouble() {
+        return this.rng.nextDouble();
     }
+
+    public void reset() {
+        this.rng.setSeed(this.seed);
+    }
+
+    public void shuffleCollection(List<?> shuffledInput) {
+        Collections.shuffle(shuffledInput, this.rng);
+    }
+
+
 }

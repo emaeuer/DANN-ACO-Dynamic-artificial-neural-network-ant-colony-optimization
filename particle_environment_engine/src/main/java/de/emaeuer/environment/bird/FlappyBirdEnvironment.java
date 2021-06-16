@@ -43,8 +43,6 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
     private final List<Pipe> pipes = new ArrayList<>();
 
-    private Random randomGenerator = new Random( 9369319);
-
     private Map<Integer, Integer[]> colors;
     private FlappyBird bestParticle;
 
@@ -90,7 +88,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
     @Override
     public void restart() {
-        randomGenerator = new Random(9369319);
+        super.restart();
         this.areAllBirdsDead = false;
         this.pipes.clear();
     }
@@ -191,7 +189,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
                 .setStartPosition(getWidth(), 0)
                 .size(new Vector2D(this.pipeWidth, getHeight()))
                 .initialImpulse(p -> p.applyForce(new Vector2D(-1, 0)))
-                .gapPosition(this.randomGenerator.nextDouble() * (getHeight() - 60 - this.gapSize) + 30)
+                .gapPosition(getRNG().nextDouble() * (getHeight() - 60 - this.gapSize) + 30)
                 .gapSize(this.gapSize)
                 .color(0, 255,0)
                 .build();

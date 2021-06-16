@@ -5,16 +5,20 @@ import java.util.function.DoubleFunction;
 
 public enum ActivationFunction implements DoubleFunction<Double> {
 
-    LINEAR_UNTIL_SATURATION(v -> Math.max(Math.min(v, 1), 0)),
-    IDENTITY(v -> v),
-    RELU(v -> Math.max(0, v)),
-    SIGMOID(v -> 1 / (1 + Math.exp(-v))),
-    TANH(Math::tanh);
+    LINEAR_UNTIL_SATURATION(v -> Math.max(Math.min(v, 1), 0), 0, 1),
+    IDENTITY(v -> v, Integer.MIN_VALUE, Integer.MAX_VALUE),
+    RELU(v -> Math.max(0, v), 0, Integer.MAX_VALUE),
+    SIGMOID(v -> 1 / (1 + Math.exp(-v * 4.924273)), 0, 1),
+    TANH(Math::tanh, -1 , 1);
 
     private final DoubleFunction<Double> activationFunction;
+    private final double minActivation;
+    private final double maxActivation;
 
-    private ActivationFunction(DoubleFunction<Double> activationFunction) {
+    ActivationFunction(DoubleFunction<Double> activationFunction, double minActivation, double maxActivation) {
         this.activationFunction = activationFunction;
+        this.minActivation = minActivation;
+        this.maxActivation = maxActivation;
     }
 
     public static String[] getNames() {
@@ -32,4 +36,11 @@ public enum ActivationFunction implements DoubleFunction<Double> {
         return this.activationFunction.apply(value);
     }
 
+    public double getMaxActivation() {
+        return maxActivation;
+    }
+
+    public double getMinActivation() {
+        return minActivation;
+    }
 }

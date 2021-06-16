@@ -53,6 +53,7 @@ public class CartPoleEnvironment extends AbstractEnvironment {
 
     @Override
     public void restart() {
+        super.restart();
         this.areAllCartsDead = false;
     }
 

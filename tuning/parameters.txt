@@ -29,10 +29,13 @@
 populationSize          "--populationSize "         i   (5, 50)
 numberOfUpdates         "--numberOfUpdates "        i   (1, 10)
 antsPerIteration        "--antsPerIteration "       i   (5, 50)
-#deviationFunction      "--deviationFunction "      c   ('max(s/(p-1),0.05)')
+deviationFunction      "--deviationFunction "       c   ("max(s/(p-1),0.05)")
 populationStrategy      "--populationStrategy "     c   ("AGE", "FITNESS", "INNOVATION_PROTECTING")
 #changeProbability      "--changeProbability "      c   ("0.75(n/p)^2+0.1")
 #pheromoneValue         "--pheromoneValue "         c   ("(n+1) / (p+2)")
-#spitThreshold          "--spitThreshold "          c   ("leq(s/(p - 1), 0.15) * geq(n, p * 0.9)")
-elitism                 ""                          c   ("", "--elitism ")
+#spitThreshold          "--spitThreshold "          c   ("leq(s/(p - 1), 0.15) * geq(n/p, 0.9)")
+elitism                 ""                          c   ("", "--elitism ")                              | populationStrategy != "FITNESS"
 neuronIsolation         ""                          c   ("", "--neuronIsolation ")
+
+
+#(-(2(x-0.5))^3 + 0.1)*((2(y-0.6))^3+0.1)

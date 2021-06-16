@@ -3,6 +3,7 @@ package de.emaeuer.ann.impl.layer.based;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
+import de.emaeuer.ann.impl.neuron.based.Neuron;
 import de.emaeuer.configuration.ConfigurationHandler;
 import org.apache.commons.math3.linear.RealVector;
 
@@ -165,6 +166,21 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public double getMinWeightValue() {
         return this.configuration.getValue(NeuralNetworkConfiguration.WEIGHT_MIN, Double.class);
+    }
+
+    @Override
+    public double getMaxActivation() {
+        return getLayer(getDepth() - 1).getActivationFunction().getMaxActivation();
+    }
+
+    @Override
+    public double getMinActivation() {
+        return getLayer(getDepth() - 1).getActivationFunction().getMinActivation();
+    }
+
+    @Override
+    public boolean recurrentIsDisabled() {
+        return this.configuration.getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
     }
 
     public void setUsesExplicitBias(boolean value) {

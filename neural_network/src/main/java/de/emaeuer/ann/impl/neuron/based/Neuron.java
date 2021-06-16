@@ -4,6 +4,8 @@ import de.emaeuer.ann.ActivationFunction;
 import de.emaeuer.ann.NeuronID;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Neuron {
 
@@ -39,6 +41,7 @@ public class Neuron {
                 return this;
             }
 
+            this.neuron.recurrentID = id.getNeuronIndex();
             this.neuron.id = id;
             this.necessaryModificationFlag &= 0b101;
             return this;
@@ -111,16 +114,41 @@ public class Neuron {
             }
         }
 
-        public void disconnectAll() {
+        public NeuronModifier disconnectAll() {
             List<Neuron> outgoingCopy = new ArrayList<>(this.neuron.getOutgoingConnections());
             List<Neuron> incomingCopy = new ArrayList<>(this.neuron.getIncomingConnections());
 
             outgoingCopy.forEach(t -> t.modify().removeInput(this.neuron));
             incomingCopy.forEach(s -> this.neuron.modify().removeInput(s));
+
+            return this;
+        }
+
+        public NeuronModifier increaseRecurrentID() {
+            int minRecurrentID = 1 + this.neuron.getIncomingConnections()
+                    .stream()
+                    .filter(n -> n.id.getLayerIndex() == this.neuron.id.getLayerIndex())
+                    .mapToInt(Neuron::getRecurrentID)
+                    .max()
+                    .orElse(-1);
+
+
+            Set<Neuron> neuronsToRefresh = this.neuron.getOutgoingConnections()
+                    .stream()
+                    .filter(n -> n.id.getLayerIndex() == this.neuron.id.getLayerIndex())
+                    .filter(n -> n.getRecurrentID() > this.neuron.getRecurrentID())
+                    .collect(Collectors.toSet());
+
+            this.neuron.setRecurrentID(minRecurrentID);
+
+            neuronsToRefresh.forEach(n -> n.modify().increaseRecurrentID());
+
+            return this;
         }
     }
 
     private NeuronID id;
+    private int recurrentID;
 
     private final Map<Neuron, Double> inputs = new HashMap<>();
     private final Set<Neuron> outputs = new HashSet<>();
@@ -131,6 +159,8 @@ public class Neuron {
 
     private double lastActivation = 0;
     private double bias = 0;
+
+    private boolean wasAlreadyActivated = false;
 
     private final NeuronModifier modifier = new NeuronModifier(this);
 
@@ -152,21 +182,31 @@ public class Neuron {
         }
     }
 
-    public void activate() {
+    public double activate() {
         // activation of input and bias neurons is changed externally
-        if (this.type == NeuronType.BIAS || this.type == NeuronType.INPUT) {
-            return;
+        if (this.type == NeuronType.BIAS || this.type == NeuronType.INPUT || this.wasAlreadyActivated) {
+            return this.lastActivation;
         }
+
+        this.wasAlreadyActivated = true;
 
         double weightedSum = this.inputs.entrySet()
                 .stream()
-                .map(c -> c.getKey().lastActivation * c.getValue())
+                .map(this::getInputValue)
                 .mapToDouble(Double::doubleValue)
                 .sum();
 
         weightedSum += this.bias;
 
         this.lastActivation = this.activationFunction.apply(weightedSum);
+        return this.lastActivation;
+    }
+
+    private double getInputValue(Map.Entry<Neuron, Double> input) {
+        double weight = input.getValue();
+        double activation = input.getKey().activate();
+
+        return activation * weight;
     }
 
     public Neuron copyWithoutConnections() {
@@ -176,6 +216,10 @@ public class Neuron {
         copy.type = this.type;
         copy.id = new NeuronID(this.id.getLayerIndex(), this.id.getNeuronIndex());
         copy.bias = this.bias;
+
+        if (this.type == NeuronType.BIAS) {
+            copy.lastActivation = this.lastActivation;
+        }
 
         return copy;
     }
@@ -231,5 +275,17 @@ public class Neuron {
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
+    }
+
+    public int getRecurrentID() {
+        return recurrentID;
+    }
+
+    public void setRecurrentID(int recurrentID) {
+        this.recurrentID = recurrentID;
+    }
+
+    public void reactivate() {
+        this.wasAlreadyActivated = false;
     }
 }

@@ -9,4 +9,13 @@
 ## then the configuration is discarded.
 ##
 ## Examples of valid logical operators are: ==  !=  >=  <=  >  <  &  |  !  %in%
-# TODO implement if necessary
+
+populationSize < numberOfUpdates
+antsPerIteration < numberOfUpdates
+
+# more than 3 updates with FITNESS strategy is not useful because the most ants don't update
+# anyways because they are worse than the ones already in the population
+populationStrategy == "FITNESS" & numberOfUpdates > 3
+
+#forbidden because it is equal to AGE with numberOfUpdates = 1
+populationStrategy == "INNOVATION_PROTECTING" & numberOfUpdates == 1

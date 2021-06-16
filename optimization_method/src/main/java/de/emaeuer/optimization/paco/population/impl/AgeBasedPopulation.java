@@ -1,16 +1,18 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
+import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
 
 public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> {
 
-    public AgeBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
-        super(configuration, new LinkedList<>());
+    public AgeBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+        super(configuration, new LinkedList<>(), baseNetwork, rng);
     }
 
     @Override

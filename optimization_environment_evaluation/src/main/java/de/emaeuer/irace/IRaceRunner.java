@@ -19,12 +19,12 @@ public class IRaceRunner {
 
 //        long configurationID = Long.parseLong(args[0]);
 //        long instanceID = Long.parseLong(args[1]);
-//        long seed = Long.parseLong(args[2]);
+        int seed = Integer.parseInt(args[2]);
 //        String instancePathName = args[3];
 
         String[] algParameters = Arrays.copyOfRange(args, 4, args.length);
 
-        CliLauncher algorithmRunner = new CliLauncher(algParameters);
+        CliLauncher algorithmRunner = new CliLauncher(algParameters, seed);
         algorithmRunner.run();
         // multiply by -1 because irace always minimizes
         System.out.println((algorithmRunner.getCost()) + " " + algorithmRunner.getTimeMillis());

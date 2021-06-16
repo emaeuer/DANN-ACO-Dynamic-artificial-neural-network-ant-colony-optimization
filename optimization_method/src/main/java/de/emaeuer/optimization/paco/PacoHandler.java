@@ -11,6 +11,8 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.pheromone.PacoPheromone;
+import de.emaeuer.optimization.paco.population.AbstractPopulation;
+import de.emaeuer.optimization.paco.population.PopulationFactory;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.state.StateHandler;
 import org.apache.logging.log4j.LogManager;
@@ -25,9 +27,7 @@ public class PacoHandler extends OptimizationMethod {
 
     private final static Logger LOG = LogManager.getLogger(PacoHandler.class);
 
-    private PacoPheromone pheromone;
-
-    private final List<PacoAnt> currentAnts = new ArrayList<>();
+    private AbstractPopulation<?> population;
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
     private final StateHandler<PacoState> state = new StateHandler<>(PacoState.class);
@@ -52,7 +52,7 @@ public class PacoHandler extends OptimizationMethod {
                 .outputLayer()
                 .finish();
 
-        this.pheromone = new PacoPheromone(this.configuration, baseNetwork);
+        this.population = PopulationFactory.create(configuration, baseNetwork, getRNG());
     }
 
     @Override
@@ -66,30 +66,20 @@ public class PacoHandler extends OptimizationMethod {
 
     @Override
     protected List<? extends Solution> generateSolutions() {
-        this.currentAnts.clear();
-
-        // if pheromone matrix is empty create the necessary number of ants to fill the population completely
-        int antsPerIteration = this.configuration.getValue(ANTS_PER_ITERATION, Integer.class);
-        if (this.pheromone.getPopulationSize() < this.pheromone.getMaximalPopulationSize()) {
-            antsPerIteration = Math.max(this.pheromone.getMaximalPopulationSize() - this.pheromone.getPopulationSize(), antsPerIteration);
-        }
-
-        IntStream.range(this.currentAnts.size(), antsPerIteration)
-                .mapToObj(i -> this.pheromone.createAntFromPopulation())
-                .forEach(this.currentAnts::add);
-
-        return this.currentAnts;
+        return this.population.nextGeneration();
     }
 
     @Override
     public void update() {
-        this.pheromone.acceptAntsOfThisIteration(this.currentAnts);
+        this.population.updatePheromone();
 
-        PacoAnt bestOfThisIteration = this.currentAnts.stream()
+        PacoAnt bestOfThisIteration = this.population.getCurrentAnts()
+                .stream()
                 .max(Comparator.comparingDouble(PacoAnt::getFitness))
                 .orElse(null);
 
-        this.pheromone.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
+        // TODO implement again
+        // this.pheromone.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix
@@ -108,12 +98,12 @@ public class PacoHandler extends OptimizationMethod {
 
     @Override
     protected List<? extends Solution> getCurrentSolutions() {
-        return this.currentAnts;
+        return this.population.getCurrentAnts();
     }
 
     @Override
     protected DoubleSummaryStatistics getFitnessOfIteration() {
-        return this.currentAnts
+        return this.population.getCurrentAnts()
                 .stream()
                 .mapToDouble(PacoAnt::getFitness)
                 .summaryStatistics();

@@ -1,5 +1,6 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
@@ -15,8 +16,8 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     private PacoAnt removedAnt = null;
 
-    public ProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
-        super(configuration, new ArrayList<>());
+    public ProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+        super(configuration, new ArrayList<>(), baseNetwork, rng);
     }
 
     @Override
@@ -39,12 +40,12 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     protected void determineAntToRemove() {
         double[] removeProbabilities = calculateRemoveProbabilities();
-        int indexToRemove = RandomUtil.selectRandomElementFromVector(removeProbabilities);
+        int indexToRemove = getRNG().selectRandomElementFromVector(removeProbabilities);
         PacoAnt antToRemove = getPopulation().get(indexToRemove);
 
         // if elitism is used select new ant to remove if the global best ant should be removed
         while (usesElitism() && antToRemove == getGlobalBest()) {
-            indexToRemove = RandomUtil.selectRandomElementFromVector(removeProbabilities);
+            indexToRemove = getRNG().selectRandomElementFromVector(removeProbabilities);
             antToRemove = getPopulation().get(indexToRemove);
         }
 

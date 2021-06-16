@@ -19,7 +19,16 @@
  */
 package com.anji.nn;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.anji.neat.NeuronType;
 import com.anji.util.XmlPersistable;
@@ -50,7 +59,7 @@ public class Neuron implements XmlPersistable {
         /**
          * @param aNeuron neuron this meta data describes
          */
-        public NeuronMetaData(Neuron aNeuron) {
+        public NeuronMetaData( Neuron aNeuron ) {
             neuron = aNeuron;
         }
 
@@ -71,14 +80,14 @@ public class Neuron implements XmlPersistable {
         /**
          * @param i new hint layer
          */
-        public void setHintLayer(int i) {
+        public void setHintLayer( int i ) {
             hintLayer = i;
         }
 
         /**
          * @param f new hint position in layer
          */
-        public void setHintPosition(float f) {
+        public void setHintPosition( float f ) {
             hintPosition = f;
         }
 
@@ -92,7 +101,7 @@ public class Neuron implements XmlPersistable {
         /**
          * @param aType type of neuron
          */
-        public void setType(NeuronType aType) {
+        public void setType( NeuronType aType ) {
             this.type = aType;
         }
 
@@ -125,6 +134,10 @@ public class Neuron implements XmlPersistable {
         }
     }
 
+    public Collection getIncomingConnections() {
+        return this.incomingConns;
+    }
+
     /**
      * Sorts <code>NeuronMetaData</code> objects based on position in layer.
      *
@@ -142,21 +155,21 @@ public class Neuron implements XmlPersistable {
          * @return singleton instance
          */
         public static NeuronMetaDataPositionComparator getInstance() {
-            if (instance == null)
+            if ( instance == null )
                 instance = new NeuronMetaDataPositionComparator();
             return instance;
         }
 
         /**
-         * @see Comparator#compare(Object, Object)
+         * @see Comparator#compare(java.lang.Object, java.lang.Object)
          */
-        public int compare(Object o1, Object o2) {
+        public int compare( Object o1, Object o2 ) {
             NeuronMetaData hc1 = (NeuronMetaData) o1;
             NeuronMetaData hc2 = (NeuronMetaData) o2;
             float result = hc1.getHintPosition() - hc2.getHintPosition();
-            if (result > 0)
+            if ( result > 0 )
                 return 1;
-            else if (result < 0)
+            else if ( result < 0 )
                 return -1;
             else
                 return 0;
@@ -179,7 +192,7 @@ public class Neuron implements XmlPersistable {
 
 // time step
 
-    private List<Connection> incomingConns = new ArrayList<>();
+    private Collection incomingConns = new ArrayList();
 
     private ActivationFunction func = null;
 
@@ -189,10 +202,10 @@ public class Neuron implements XmlPersistable {
      * @param aFunc
      * @throws IllegalArgumentException
      */
-    public Neuron(ActivationFunction aFunc) throws IllegalArgumentException {
+    public Neuron( ActivationFunction aFunc ) throws IllegalArgumentException {
         super();
-        if (aFunc == null)
-            throw new IllegalArgumentException("activation function can not be null");
+        if ( aFunc == null )
+            throw new IllegalArgumentException( "activation function can not be null" );
         func = aFunc;
         reset();
     }
@@ -202,12 +215,8 @@ public class Neuron implements XmlPersistable {
      *
      * @param c
      */
-    public void addIncomingConnection(Connection c) {
-        incomingConns.add(c);
-    }
-
-    public List<Connection> getIncomingConnections() {
-        return this.incomingConns;
+    public void addIncomingConnection( Connection c ) {
+        incomingConns.add( c );
     }
 
     /**
@@ -224,14 +233,14 @@ public class Neuron implements XmlPersistable {
      * @return double activation value for current time step
      */
     public double getValue() {
-        if (dirty) {
+        if ( dirty ) {
             double sum = 0.0f;
             Iterator it = incomingConns.iterator();
-            while (it.hasNext()) {
+            while ( it.hasNext() ) {
                 Connection conn = (Connection) it.next();
                 sum += conn.read();
             }
-            value = Math.min(Math.max(func.apply(sum), -Double.MAX_VALUE), Double.MAX_VALUE);
+            value = Math.min( Math.max( func.apply( sum ), -Double.MAX_VALUE ), Double.MAX_VALUE );
             dirty = false;
         }
 
@@ -250,7 +259,7 @@ public class Neuron implements XmlPersistable {
      * @return String representation of object
      */
     public String toString() {
-        return Long.toString(id);
+        return Long.toString( id );
     }
 
     /**
@@ -259,8 +268,8 @@ public class Neuron implements XmlPersistable {
      * @return String XML representation of object
      */
     public String toXml() {
-        NeuronMetaData layout = new NeuronMetaData(this);
-        return toXml(layout);
+        NeuronMetaData layout = new NeuronMetaData( this );
+        return toXml( layout );
     }
 
     /**
@@ -269,19 +278,19 @@ public class Neuron implements XmlPersistable {
      * @param layout
      * @return String XML representation of <code>layout</code>
      */
-    public static String toXml(NeuronMetaData layout) {
+    public static String toXml( NeuronMetaData layout ) {
         StringBuffer result = new StringBuffer();
-        result.append("<").append(XML_TAG).append(" id=\"").append(layout.getId());
-        if (layout.getType() != null)
-            result.append("\" type=\"").append(layout.getType().toString());
-        if (layout != null) {
-            result.append("\" hint-layer=\"").append(layout.getHintLayer());
-            result.append("\" hint-position=\"").append(layout.getHintPosition());
+        result.append( "<" ).append( XML_TAG ).append( " id=\"" ).append( layout.getId() );
+        if ( layout.getType() != null )
+            result.append( "\" type=\"" ).append( layout.getType().toString() );
+        if ( layout != null ) {
+            result.append( "\" hint-layer=\"" ).append( layout.getHintLayer() );
+            result.append( "\" hint-position=\"" ).append( layout.getHintPosition() );
         }
-        result.append("\" value=\"").append(layout.getValue());
-        result.append("\" step-pending=\"").append(layout.isDirty());
-        result.append("\" activation=\"").append(layout.getActivationFunction().toString())
-                .append("\" />\n");
+        result.append( "\" value=\"" ).append( layout.getValue() );
+        result.append( "\" step-pending=\"" ).append( layout.isDirty() );
+        result.append( "\" activation=\"" ).append( layout.getActivationFunction().toString() )
+                .append( "\" />\n" );
 
         return result.toString();
     }
@@ -292,63 +301,63 @@ public class Neuron implements XmlPersistable {
      *
      * @param allNeurons
      * @param outputNeurons
-     * @param result        destination to which XML is appended
+     * @param result destination to which XML is appended
      */
-    public static void appendToXml(Collection allNeurons, List outputNeurons, StringBuffer result) {
+    public static void appendToXml( Collection allNeurons, List outputNeurons, StringBuffer result ) {
         SortedMap layerToCoords = new TreeMap();
         int maxLayer = 1;
 
         // iterate through neurons ...
-        Collection nonOuputNeurons = new ArrayList(allNeurons);
-        nonOuputNeurons.removeAll(outputNeurons);
+        Collection nonOuputNeurons = new ArrayList( allNeurons );
+        nonOuputNeurons.removeAll( outputNeurons );
         Map allMetaData = new HashMap();
 
         Iterator neuronIter = nonOuputNeurons.iterator();
-        while (neuronIter.hasNext()) {
+        while ( neuronIter.hasNext() ) {
             // ... and for each neuron ...
             Neuron n = (Neuron) neuronIter.next();
 
             // ... determine approximate coordinates ...
-            NeuronMetaData metaData = createMetaData(n, allMetaData);
-            if (metaData != null) {
-                maxLayer = Math.max(maxLayer, metaData.getHintLayer());
+            NeuronMetaData metaData = createMetaData( n, allMetaData );
+            if ( metaData != null ) {
+                maxLayer = Math.max( maxLayer, metaData.getHintLayer() );
 
                 // ... and save to be used for recalculating positions
-                Long layerNum = new Long(metaData.getHintLayer());
-                List layer = (List) layerToCoords.get(layerNum);
-                if (layer == null) {
+                Long layerNum = new Long( metaData.getHintLayer() );
+                List layer = (List) layerToCoords.get( layerNum );
+                if ( layer == null ) {
                     layer = new ArrayList();
-                    layerToCoords.put(layerNum, layer);
+                    layerToCoords.put( layerNum, layer );
                 }
-                layer.add(metaData);
+                layer.add( metaData );
             }
         }
 
         // output layer to xml
-        Long outLayerNum = new Long(maxLayer + 1);
+        Long outLayerNum = new Long( maxLayer + 1 );
         List outLayer = new ArrayList();
-        layerToCoords.put(outLayerNum, outLayer);
+        layerToCoords.put( outLayerNum, outLayer );
         neuronIter = outputNeurons.iterator();
-        while (neuronIter.hasNext()) {
+        while ( neuronIter.hasNext() ) {
             Neuron n = (Neuron) neuronIter.next();
-            NeuronMetaData metaData = new NeuronMetaData(n);
-            metaData.setHintLayer(outLayerNum.intValue());
-            metaData.setHintPosition(n.getId());
-            metaData.setType(NeuronType.OUTPUT);
-            outLayer.add(metaData);
+            NeuronMetaData metaData = new NeuronMetaData( n );
+            metaData.setHintLayer( outLayerNum.intValue() );
+            metaData.setHintPosition( n.getId() );
+            metaData.setType( NeuronType.OUTPUT );
+            outLayer.add( metaData );
         }
 
         // for each layer, recalculate positions to be integers and write to xml ...
         Iterator layerIter = layerToCoords.keySet().iterator();
-        while (layerIter.hasNext()) {
+        while ( layerIter.hasNext() ) {
             Long layerNum = (Long) layerIter.next();
-            List layer = (List) layerToCoords.get(layerNum);
-            Collections.sort(layer, NeuronMetaDataPositionComparator.getInstance());
+            List layer = (List) layerToCoords.get( layerNum );
+            Collections.sort( layer, NeuronMetaDataPositionComparator.getInstance() );
 
-            for (int i = 0; i < layer.size(); ++i) {
-                NeuronMetaData metaData = (NeuronMetaData) layer.get(i);
-                metaData.setHintPosition(i + 1); // layout is 1-based
-                result.append(toXml(metaData));
+            for ( int i = 0; i < layer.size(); ++i ) {
+                NeuronMetaData metaData = (NeuronMetaData) layer.get( i );
+                metaData.setHintPosition( i + 1 ); // layout is 1-based
+                result.append( toXml( metaData ) );
             }
         }
     }
@@ -361,20 +370,20 @@ public class Neuron implements XmlPersistable {
      * @param n
      * @return position of Neuron in input layer, -1 if neuron not in input layer
      */
-    private static int inputPos(Neuron n) {
+    private static int inputPos( Neuron n ) {
         int numInputs = 0;
         int totalPos = 0;
         Iterator connIter = n.getIncomingConns().iterator();
-        while (connIter.hasNext()) {
+        while ( connIter.hasNext() ) {
             Connection c = (Connection) connIter.next();
-            if (c instanceof Pattern.PatternConnection) {
+            if ( c instanceof Pattern.PatternConnection ) {
                 Pattern.PatternConnection pc = (Pattern.PatternConnection) c;
                 ++numInputs;
                 totalPos += pc.getIdx();
             }
         }
 
-        return (numInputs == 0) ? -1 : (totalPos / numInputs);
+        return ( numInputs == 0 ) ? -1 : ( totalPos / numInputs );
     }
 
     /**
@@ -382,113 +391,60 @@ public class Neuron implements XmlPersistable {
      *
      * @param neuron
      * @param allMetaData <code>Map</code> contains <code>Long</code> key innovation ID,
-     *                    <code>NeuronMetaData</code> value
+     * <code>NeuronMetaData</code> value
      * @return NeuronMetaData best-guess layout position of neuron, or null if neuron is on a
      * recursive path
      */
-    private static NeuronMetaData createMetaData(Neuron neuron, Map allMetaData) {
-        Long id = new Long(neuron.getId());
-        NeuronMetaData result = (NeuronMetaData) allMetaData.get(id);
-        if (result != null)
+    private static NeuronMetaData createMetaData( Neuron neuron, Map allMetaData ) {
+        Long id = new Long( neuron.getId() );
+        NeuronMetaData result = (NeuronMetaData) allMetaData.get( id );
+        if ( result != null )
             return result;
 
-        result = new NeuronMetaData(neuron);
+        result = new NeuronMetaData( neuron );
 
-        int anInputPos = inputPos(neuron);
-        if (anInputPos > -1) {
+        int anInputPos = inputPos( neuron );
+        if ( anInputPos > -1 ) {
             // terminating condition, input neuron
-            result.setHintLayer(1);
-            result.setHintPosition(anInputPos);
-            result.setType(NeuronType.INPUT);
-        } else if (neuron.incomingConns.isEmpty()) {
+            result.setHintLayer( 1 );
+            result.setHintPosition( anInputPos );
+            result.setType( NeuronType.INPUT );
+        }
+        else if ( neuron.incomingConns.isEmpty() ) {
             // terminating condition, neuron with no inputs
             result = null;
-        } else {
+        }
+        else {
             // recurse, calculate position of incoming neurons
             int maxIncomingLayer = 0;
             int numInputs = 0;
             float totalInputPos = 0;
             Iterator iter = neuron.incomingConns.iterator();
-            while (iter.hasNext()) {
+            while ( iter.hasNext() ) {
                 Connection conn = (Connection) iter.next();
-                if (conn instanceof NeuronConnection) {
+                if ( conn instanceof NeuronConnection ) {
                     NeuronConnection nConn = (NeuronConnection) conn;
                     Neuron inNeuron = nConn.getIncomingNode();
-                    HashSet<Long> previousCalls = new HashSet<>();
-                    previousCalls.add(inNeuron.getId());
-                    NeuronMetaData inMetaData = createMetaData(inNeuron, allMetaData, previousCalls);
-                    if (inMetaData != null) {
-                        maxIncomingLayer = Math.max(inMetaData.getHintLayer(), maxIncomingLayer);
+                    NeuronMetaData inMetaData = createMetaData( inNeuron, allMetaData );
+                    if ( inMetaData != null ) {
+                        maxIncomingLayer = Math.max( inMetaData.getHintLayer(), maxIncomingLayer );
                         ++numInputs;
                         totalInputPos += inMetaData.getHintPosition();
                     }
                 }
             }
-            if (numInputs == 0) {
+            if ( numInputs == 0 ) {
                 // terminating condition, no valid inputs
                 result = null;
-            } else {
-                result.setHintLayer(maxIncomingLayer + 1);
-                result.setHintPosition(totalInputPos / numInputs);
-                result.setType(NeuronType.HIDDEN);
+            }
+            else {
+                result.setHintLayer( maxIncomingLayer + 1 );
+                result.setHintPosition( totalInputPos / numInputs );
+                result.setType( NeuronType.HIDDEN );
             }
         }
 
-        allMetaData.put(id, result);
-        return result;
-    }
-
-    private static NeuronMetaData createMetaData(Neuron neuron, Map allMetaData, Set<Long> previousCalls) {
-        Long id = new Long(neuron.getId());
-        NeuronMetaData result = (NeuronMetaData) allMetaData.get(id);
-        if (result != null)
-            return result;
-
-        result = new NeuronMetaData(neuron);
-
-        int anInputPos = inputPos(neuron);
-        if (anInputPos > -1) {
-            // terminating condition, input neuron
-            result.setHintLayer(1);
-            result.setHintPosition(anInputPos);
-            result.setType(NeuronType.INPUT);
-        } else if (neuron.incomingConns.isEmpty()) {
-            // terminating condition, neuron with no inputs
-            result = null;
-        } else {
-            // recurse, calculate position of incoming neurons
-            int maxIncomingLayer = 0;
-            int numInputs = 0;
-            float totalInputPos = 0;
-            for (Connection conn : (Iterable<Connection>) neuron.incomingConns) {
-                if (conn instanceof NeuronConnection nConn) {
-                    Neuron inNeuron = nConn.getIncomingNode();
-
-                    if (previousCalls.contains(inNeuron.id)) {
-                        continue;
-                    } else {
-                        previousCalls.add(inNeuron.getId());
-                    }
-                    NeuronMetaData inMetaData = createMetaData(inNeuron, allMetaData, previousCalls);
-
-                    if (inMetaData != null) {
-                        maxIncomingLayer = Math.max(inMetaData.getHintLayer(), maxIncomingLayer);
-                        ++numInputs;
-                        totalInputPos += inMetaData.getHintPosition();
-                    }
-                }
-            }
-            if (numInputs == 0) {
-                // terminating condition, no valid inputs
-                result = null;
-            } else {
-                result.setHintLayer(maxIncomingLayer + 1);
-                result.setHintPosition(totalInputPos / numInputs);
-                result.setType(NeuronType.HIDDEN);
-            }
-        }
-
-        allMetaData.put(id, result);
+        allMetaData.put( id, result );
         return result;
     }
 
@@ -506,9 +462,9 @@ public class Neuron implements XmlPersistable {
      */
     public boolean isRecurrent() {
         Iterator iter = getIncomingConns().iterator();
-        while (iter.hasNext()) {
+        while ( iter.hasNext() ) {
             Connection c = (Connection) iter.next();
-            if (c instanceof CacheNeuronConnection)
+            if ( c instanceof CacheNeuronConnection )
                 return true;
         }
         return false;
@@ -517,7 +473,7 @@ public class Neuron implements XmlPersistable {
     /**
      * @param l new ID
      */
-    public void setId(long l) {
+    public void setId( long l ) {
         id = l;
     }
 
@@ -551,7 +507,7 @@ public class Neuron implements XmlPersistable {
     public long cost() {
         long result = 315; // cost of neuron w/out any connections
         Iterator it = incomingConns.iterator();
-        while (it.hasNext()) {
+        while ( it.hasNext() ) {
             Connection c = (Connection) it.next();
             result += c.cost();
             result += 115; // cost of iteration per neuron
@@ -571,6 +527,6 @@ public class Neuron implements XmlPersistable {
      * @see com.anji.util.XmlPersistable#getXmld()
      */
     public String getXmld() {
-        return Long.toString(id);
+        return Long.toString( id );
     }
 }

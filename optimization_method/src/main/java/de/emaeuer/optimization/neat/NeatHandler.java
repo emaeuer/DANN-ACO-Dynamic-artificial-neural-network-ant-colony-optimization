@@ -79,8 +79,10 @@ public class NeatHandler extends OptimizationMethod {
 
         List<Chromosome> entities = this.population.nextIteration();
 
+        double maxFitness = getOptimizationConfiguration().getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
+
         entities.stream()
-                .map(this.mapper::map)
+                .map(c -> this.mapper.map(c, maxFitness))
                 .forEach(this.solutions::add);
 
         return this.solutions;

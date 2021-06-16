@@ -10,6 +10,7 @@ import de.emaeuer.optimization.factory.OptimizationConfigFactory;
 import java.util.function.BiConsumer;
 
 public enum OptimizationConfiguration implements DefaultConfiguration<OptimizationConfiguration> {
+    SEED("Seed for generating the environment", new IntegerConfigurationValue(9369319)),
     NEURAL_NETWORK_CONFIGURATION("Neural network configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(NeuralNetworkConfiguration.class, "NEURAL_NETWORK"))),
     MAX_NUMBER_OF_EVALUATIONS("Maximal number of evaluations", new IntegerConfigurationValue(20000, 10, Integer.MAX_VALUE)),
     PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0)),

@@ -12,11 +12,13 @@ public class ChromosomeSolutionMapping implements Solution {
     private final Chromosome chromosome;
     private final AnjiActivator activator;
 
+    private final double maxFitness;
     private double fitness = 0;
 
-    public ChromosomeSolutionMapping(Chromosome chromosome, Activator activator) {
+    public ChromosomeSolutionMapping(Chromosome chromosome, Activator activator, double maxFitness) {
         this.chromosome = chromosome;
         this.activator = (AnjiActivator) activator;
+        this.maxFitness = maxFitness;
     }
 
     @Override
@@ -35,8 +37,10 @@ public class ChromosomeSolutionMapping implements Solution {
     @Override
     public void setFitness(double fitness) {
         this.fitness = fitness;
-        // set chromosome fitness value with a precision of 10^2
-        this.chromosome.setFitnessValue(Double.valueOf(fitness).intValue() * 100);
+
+        // anji requires int as fitness value --> for maximal precision all positive integers are used
+        int chromosomeFitness = Double.valueOf(fitness * (Integer.MAX_VALUE / maxFitness)).intValue();
+        this.chromosome.setFitnessValue(chromosomeFitness);
     }
 
     @Override

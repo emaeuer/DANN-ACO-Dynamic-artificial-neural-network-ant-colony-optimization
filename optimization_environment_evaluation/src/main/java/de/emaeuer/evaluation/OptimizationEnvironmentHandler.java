@@ -176,12 +176,19 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     public void refreshProperties() {
-        this.updateLock.lock();
-        this.evaluationCounter = this.optimization.getEvaluationCounter();
-        this.runCounter = this.optimization.getRunCounter();
-        this.fitness = this.optimization.getBestFitness();
-        this.finished = this.optimization.isOptimizationFinished();
-        this.updateLock.unlock();
+        if (this.optimization == null) {
+            this.evaluationCounter = 0;
+            this.runCounter = 0;
+            this.fitness = 0;
+            this.finished = false;
+        } else {
+            this.updateLock.lock();
+            this.evaluationCounter = this.optimization.getEvaluationCounter();
+            this.runCounter = this.optimization.getRunCounter();
+            this.fitness = this.optimization.getBestFitness();
+            this.finished = this.optimization.isOptimizationFinished();
+            this.updateLock.unlock();
+        }
     }
 
     public List<AbstractElement> getAgents() {

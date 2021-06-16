@@ -1,16 +1,18 @@
 package de.emaeuer.optimization.paco.population.impl;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
+import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
 
 public class FitnessBasedPopulation extends AbstractPopulation<PriorityQueue<PacoAnt>> {
 
-    public FitnessBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration) {
-        super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getFitness)));
+    public FitnessBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+        super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getFitness)), baseNetwork, rng);
     }
 
     @Override

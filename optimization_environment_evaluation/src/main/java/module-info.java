@@ -9,6 +9,7 @@ module OptimizationEnvironmentEvaluation {
     requires org.apache.logging.log4j;
     requires info.picocli;
     requires java.scripting;
+    requires neural.network;
 
     opens de.emaeuer.cli to info.picocli;
 }

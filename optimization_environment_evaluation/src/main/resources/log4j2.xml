@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
+    <Properties>
+        <Property name="runID">$${date:YYYY-MM-dd_HH-mm-ss-SSS}</Property>
+    </Properties>
     <Appenders>
-        <File name="FILE" fileName="log/logfile.log" append="true">
+        <File name="FILE" fileName="log\run-${runID}.log" append="true">
             <PatternLayout pattern="%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n"/>
         </File>
         <Console name="CONSOLE" target="SYSTEM_OUT">

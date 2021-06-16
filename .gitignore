@@ -79,3 +79,5 @@ fabric.properties
 /particle_environment_launcher/target/
 */target/*
 *.jar
+*.Rhistory
+/tuning/execDir/

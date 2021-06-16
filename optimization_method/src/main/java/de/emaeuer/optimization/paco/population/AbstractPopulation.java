@@ -1,12 +1,18 @@
 package de.emaeuer.optimization.paco.population;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.optimization.paco.pheromone.PacoPheromone;
+import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.ANTS_PER_ITERATION;
 
 public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
 
@@ -16,38 +22,58 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
 
     private final int maxSize;
     private final int updatesPerIteration;
+    private final PacoPheromone pheromone;
 
     private PacoAnt globalBest = null;
 
     private final T population;
 
-    protected AbstractPopulation(ConfigurationHandler<PacoConfiguration> configuration, T emptyPopulation) {
+    private final List<PacoAnt> currentAnts = new ArrayList<>();
+
+    private final RandomUtil rng;
+
+    protected AbstractPopulation(ConfigurationHandler<PacoConfiguration> configuration, T emptyPopulation, NeuralNetwork baseNetwork, RandomUtil rng) {
         this.configuration = configuration;
         this.maxSize = configuration.getValue(PacoConfiguration.POPULATION_SIZE, Integer.class);
         this.useElitism = configuration.getValue(PacoConfiguration.ELITISM, Boolean.class);
         this.updatesPerIteration = configuration.getValue(PacoConfiguration.UPDATES_PER_ITERATION, Integer.class);
         this.population = emptyPopulation;
+        this.rng = rng;
+
+        this.pheromone = new PacoPheromone(this.configuration, baseNetwork, rng);
     }
 
-    public List<PacoAnt>[] acceptAntsOfThisIteration(List<PacoAnt> ants) {
-        //noinspection unchecked only way to return class with generic is unsafe cast
-        List<PacoAnt>[] populationChange = (List<PacoAnt>[]) new List[2];
+    public List<PacoAnt> nextGeneration()  {
+        this.currentAnts.clear();
 
-        populationChange[0] = ants.stream()
+        // if pheromone matrix is empty create the necessary number of ants to fill the population completely
+        int antsPerIteration = this.configuration.getValue(ANTS_PER_ITERATION, Integer.class);
+        if (getSize() < getMaxSize()) {
+            antsPerIteration = Math.max(getMaxSize() - getSize(), antsPerIteration);
+        }
+
+
+        IntStream.range(this.currentAnts.size(), antsPerIteration)
+                .mapToObj(i -> this.pheromone.createAntFromPopulation())
+                .forEach(this.currentAnts::add);
+
+        return this.currentAnts;
+    }
+
+    public void updatePheromone() {
+        this.currentAnts.stream()
                 .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
                 .limit(calculateNumberOfAntsToAdd())
                 .map(this::addAnt)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
+                .forEach(this.pheromone::addAnt);
 
-        populationChange[1] = IntStream.range(0, populationChange[0].size())
+        IntStream.range(0, Math.max(0, getSize() - getMaxSize()))
                 .mapToObj(i -> this.removeAnt())
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
-
-        return populationChange;
+                .forEach(this.pheromone::removeAnt);
     }
 
     protected int calculateNumberOfAntsToAdd() {
@@ -71,7 +97,7 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
         return false;
     }
 
-    protected int getMaxSize() {
+    public int getMaxSize() {
         return this.maxSize;
     }
 
@@ -95,4 +121,15 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
         return getPopulation().size();
     }
 
+    public List<PacoAnt> getCurrentAnts() {
+        return currentAnts;
+    }
+
+    protected RandomUtil getRNG() {
+        return rng;
+    }
+
+    protected PacoPheromone getPheromone() {
+        return pheromone;
+    }
 }

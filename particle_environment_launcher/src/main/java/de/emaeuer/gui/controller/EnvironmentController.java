@@ -81,7 +81,7 @@ public class EnvironmentController {
 
             this.finishedProperty.addListener((v,o,n) -> finished(n));
             this.nonVisualPanel.visibleProperty().bind(this.visualMode.not().or(this.finishedProperty));
-            this.visualMode.addListener((v,o,n) -> this.handler.setUpdateDelta(0));
+            this.visualMode.addListener((v,o,n) -> changeVisualMode(n));
         }
     }
 
@@ -90,6 +90,14 @@ public class EnvironmentController {
             this.nonVisualTitle.setText("Finished optimization - Restart necessary");
         } else {
             this.nonVisualTitle.setText("Optimization in progress - Visual output disabled");
+        }
+    }
+
+    private void changeVisualMode(boolean isVisual) {
+        if (isVisual) {
+            this.handler.setUpdateDelta((int) (1000 / (60 * speed)));
+        } else {
+            this.handler.setUpdateDelta(0);
         }
     }
 
@@ -157,6 +165,7 @@ public class EnvironmentController {
 
         this.initialStart = true;
         this.handler.reset();
+        refreshProperties();
 
         getGraphicsContext().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }

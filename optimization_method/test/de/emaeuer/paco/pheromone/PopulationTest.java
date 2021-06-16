@@ -1,6 +1,11 @@
 package de.emaeuer.paco.pheromone;
 
+import de.emaeuer.ann.NeuralNetwork;
+import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
+import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
 import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.configuration.ConfigurationHelper;
+import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.impl.AgeBasedPopulation;
@@ -16,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PopulationTest {
 
     private PacoAnt createAnt(double fitness) {
-        PacoAnt ant = new PacoAnt(null);
+        PacoAnt ant = new PacoAnt(createBaseNetwork());
         ant.setFitness(fitness);
         return ant;
     }
@@ -28,9 +33,22 @@ public class PopulationTest {
         return config;
     }
 
+    private NeuralNetwork createBaseNetwork() {
+        ConfigurationHandler<NeuralNetworkConfiguration> config = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+        config.setValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, 1);
+        config.setValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, 1);
+
+        return NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(config)
+                .implicitBias()
+                .inputLayer()
+                .fullyConnectToNextLayer()
+                .outputLayer()
+                .finish();
+    }
+
     @Test
     public void testAgeBasedWithoutElitism() {
-        AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, false));
+        AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, false), createBaseNetwork(), null);
 
         List<PacoAnt> ants = new ArrayList<>();
 
@@ -57,7 +75,7 @@ public class PopulationTest {
 
     @Test
     public void testAgeBasedWithElitism() {
-        AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, true));
+        AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, true), createBaseNetwork(), null);
 
         List<PacoAnt> ants = new ArrayList<>();
 
@@ -90,7 +108,7 @@ public class PopulationTest {
 
     @Test
     public void testFitnessBased() {
-        FitnessBasedPopulation population = new FitnessBasedPopulation(createConfiguration(5, false));
+        FitnessBasedPopulation population = new FitnessBasedPopulation(createConfiguration(5, false), createBaseNetwork(), null);
 
         List<PacoAnt> ants = new ArrayList<>();
 

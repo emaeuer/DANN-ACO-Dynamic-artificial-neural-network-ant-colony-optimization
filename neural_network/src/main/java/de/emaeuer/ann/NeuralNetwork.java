@@ -47,4 +47,9 @@ public interface NeuralNetwork {
 
     double getMinWeightValue();
 
+    double getMaxActivation();
+
+    double getMinActivation();
+
+    boolean recurrentIsDisabled();
 }

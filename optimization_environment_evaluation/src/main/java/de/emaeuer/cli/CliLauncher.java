@@ -46,6 +46,19 @@ public class CliLauncher {
         initOptimizationConfiguration(parameters.getOptimizationConfig(), parameters);
     }
 
+    public CliLauncher(String[] args, int seed) {
+        LOG.debug("CLI-Call-Parameters: " + Arrays.toString(args));
+
+        CliParameter parameters = new CliParameter();
+        new CommandLine(parameters).parseArgs(args);
+
+        initEnvironmentConfiguration(parameters.getEnvironmentConfig());
+        initOptimizationConfiguration(parameters.getOptimizationConfig(), parameters);
+
+        this.environmentConfiguration.setValue(EnvironmentConfiguration.SEED, seed);
+        this.optimizationConfiguration.setValue(OptimizationConfiguration.SEED, seed);
+    }
+
     private void initEnvironmentConfiguration(File file) {
         if (file != null && file.exists()) {
             this.environmentConfiguration.importConfig(file);

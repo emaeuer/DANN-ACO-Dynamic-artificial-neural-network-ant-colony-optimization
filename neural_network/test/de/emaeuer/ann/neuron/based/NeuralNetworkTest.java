@@ -1,5 +1,6 @@
 package de.emaeuer.ann.neuron.based;
 
+import de.emaeuer.ann.ActivationFunction;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
@@ -7,11 +8,10 @@ import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetwork;
 import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -103,6 +103,71 @@ public class NeuralNetworkTest {
         }
 
         assertEquals(expectedConnections.size(), connectionCount);
+    }
+
+    @Test
+    public void testComplexActivation() {
+
+        ConfigurationHandler<NeuralNetworkConfiguration> config = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+        config.setValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, 2);
+        config.setValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, 1);
+        config.setValue(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION, ActivationFunction.IDENTITY);
+        config.setValue(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION, ActivationFunction.IDENTITY);
+        config.setValue(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION, ActivationFunction.IDENTITY);
+        config.setValue(NeuralNetworkConfiguration.WEIGHT_MAX, 10);
+        config.setValue(NeuralNetworkConfiguration.WEIGHT_MIN, -10);
+
+        NeuronBasedNeuralNetwork nn = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(config)
+                .implicitBias()
+                .inputLayer()
+                .hiddenLayer(3)
+                .outputLayer()
+                .finish();
+
+        nn.modify()
+                .addConnection(new NeuronID(0, 0), new NeuronID(1, 0), 1)
+                .addConnection(new NeuronID(0, 1), new NeuronID(1, 0), 1)
+                .addConnection(new NeuronID(0, 1), new NeuronID(1, 2), 1)
+                .addConnection(new NeuronID(0, 2), new NeuronID(1, 0), 1)
+                .addConnection(new NeuronID(0, 2), new NeuronID(1, 2), 1)
+                .addConnection(new NeuronID(1, 0), new NeuronID(2, 0), 1)
+                .addConnection(new NeuronID(1, 1), new NeuronID(2, 0), 1)
+                .addConnection(new NeuronID(1, 2), new NeuronID(1, 1), 1);
+
+        assertEquals(1, nn.process(new ArrayRealVector(new double[] {0, 0})).getEntry(0));
+        assertEquals(3, nn.process(new ArrayRealVector(new double[] {0, 1})).getEntry(0));
+        assertEquals(3, nn.process(new ArrayRealVector(new double[] {1, 0})).getEntry(0));
+        assertEquals(5, nn.process(new ArrayRealVector(new double[] {1, 1})).getEntry(0));
+    }
+
+    @Test
+    public void testSimpleActivation() {
+
+        ConfigurationHandler<NeuralNetworkConfiguration> config = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+        config.setValue(NeuralNetworkConfiguration.INPUT_LAYER_SIZE, 1);
+        config.setValue(NeuralNetworkConfiguration.OUTPUT_LAYER_SIZE, 1);
+        config.setValue(NeuralNetworkConfiguration.INPUT_ACTIVATION_FUNCTION, ActivationFunction.IDENTITY);
+        config.setValue(NeuralNetworkConfiguration.HIDDEN_ACTIVATION_FUNCTION, ActivationFunction.IDENTITY);
+        config.setValue(NeuralNetworkConfiguration.OUTPUT_ACTIVATION_FUNCTION, ActivationFunction.IDENTITY);
+        config.setValue(NeuralNetworkConfiguration.WEIGHT_MAX, 10);
+        config.setValue(NeuralNetworkConfiguration.WEIGHT_MIN, -10);
+
+        NeuronBasedNeuralNetwork nn = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(config)
+                .implicitBias()
+                .inputLayer()
+                .hiddenLayer(2)
+                .outputLayer()
+                .finish();
+
+        nn.modify()
+                .addConnection(new NeuronID(0, 1), new NeuronID(1, 1), 0.5)
+                .addConnection(new NeuronID(1, 1), new NeuronID(1, 0), -3)
+                .addConnection(new NeuronID(1, 0), new NeuronID(2, 0), 5);
+
+        assertEquals(0, nn.process(new ArrayRealVector(new double[] {0})).getEntry(0));
+        assertEquals(-7.5, nn.process(new ArrayRealVector(new double[] {1})).getEntry(0));
+        assertEquals(0, nn.process(new ArrayRealVector(new double[] {0})).getEntry(0));
+        assertEquals(-7.5, nn.process(new ArrayRealVector(new double[] {1})).getEntry(0));
     }
 
     /*

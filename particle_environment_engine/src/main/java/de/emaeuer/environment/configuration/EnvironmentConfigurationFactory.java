@@ -3,6 +3,8 @@ package de.emaeuer.environment.configuration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
 import de.emaeuer.environment.balance.configuration.CartPoleConfiguration;
+import de.emaeuer.environment.xor.XORConfiguration;
+import de.emaeuer.environment.xor.XorEnvironment;
 
 public class EnvironmentConfigurationFactory {
     
@@ -12,7 +14,7 @@ public class EnvironmentConfigurationFactory {
         return switch (name) {
             case FLAPPY_BIRD -> new ConfigurationHandler<>(FlappyBirdConfiguration.class, "FLAPPY_BIRD");
             case CART_POLE -> new ConfigurationHandler<>(CartPoleConfiguration.class, "CART_POLE");
-            case XOR -> null;
+            case XOR -> new ConfigurationHandler<>(XORConfiguration.class, "XOR");
         };
     }
     

@@ -3,6 +3,7 @@ package de.emaeuer.environment;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
+import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,8 +22,11 @@ public abstract class AbstractEnvironment {
     private double maxFitnessScore = 1000;
     private double maxStepNumber = 1000;
 
+    private RandomUtil rng;
+
     public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.borderStrategy = borderStrategy;
+        this.rng = new RandomUtil(configuration.getValue(EnvironmentConfiguration.SEED, Integer.class));
 
         initialize(configuration);
     }
@@ -45,7 +49,9 @@ public abstract class AbstractEnvironment {
 
     protected abstract void initializeParticles(List<AgentController> controllers);
 
-    public abstract void restart();
+    public void restart() {
+        this.rng.reset();
+    }
 
     private void checkBorderCase(AbstractElement particle) {
         if (this.borderStrategy != null) {
@@ -77,5 +83,9 @@ public abstract class AbstractEnvironment {
 
     public double getMaxStepNumber() {
         return maxStepNumber;
+    }
+
+    protected RandomUtil getRNG() {
+        return this.rng;
     }
 }
