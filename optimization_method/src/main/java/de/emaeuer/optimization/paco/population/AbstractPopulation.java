@@ -52,7 +52,6 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
             antsPerIteration = Math.max(getMaxSize() - getSize(), antsPerIteration);
         }
 
-
         IntStream.range(this.currentAnts.size(), antsPerIteration)
                 .mapToObj(i -> this.pheromone.createAntFromPopulation())
                 .forEach(this.currentAnts::add);

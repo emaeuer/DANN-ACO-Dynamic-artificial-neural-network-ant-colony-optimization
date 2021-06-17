@@ -36,6 +36,3 @@ populationStrategy      "--populationStrategy "     c   ("AGE", "FITNESS", "INNO
 #spitThreshold          "--spitThreshold "          c   ("leq(s/(p - 1), 0.15) * geq(n/p, 0.9)")
 elitism                 ""                          c   ("", "--elitism ")                              | populationStrategy != "FITNESS"
 neuronIsolation         ""                          c   ("", "--neuronIsolation ")
-
-
-#(-(2(x-0.5))^3 + 0.1)*((2(y-0.6))^3+0.1)

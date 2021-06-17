@@ -84,7 +84,7 @@ public class CliLauncher {
         Optional.ofNullable(parameters.getPopulationStrategy()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATE_STRATEGY, v));
         Optional.ofNullable(parameters.getChangeProbability()).ifPresent(v -> config.setValue(PacoConfiguration.DYNAMIC_PROBABILITY, v));
         Optional.ofNullable(parameters.getPheromoneValue()).ifPresent(v -> config.setValue(PacoConfiguration.PHEROMONE_VALUE, v));
-        Optional.ofNullable(parameters.getSpitThreshold()).ifPresent(v -> config.setValue(PacoConfiguration.SPLIT_THRESHOLD, v));
+        Optional.ofNullable(parameters.getSpitThreshold()).ifPresent(v -> config.setValue(PacoConfiguration.SPLIT_PROBABILITY, v));
         Optional.ofNullable(parameters.isElitism()).ifPresent(v -> config.setValue(PacoConfiguration.ELITISM, v));
         Optional.ofNullable(parameters.isNeuronIsolation()).ifPresent(v -> config.setValue(PacoConfiguration.ENABLE_NEURON_ISOLATION, v));
     }
