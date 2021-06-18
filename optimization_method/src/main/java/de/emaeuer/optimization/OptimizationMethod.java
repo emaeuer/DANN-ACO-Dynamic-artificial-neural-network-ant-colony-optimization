@@ -21,11 +21,6 @@ public abstract class OptimizationMethod {
 
     private final static Logger LOG = LogManager.getLogger(OptimizationMethod.class);
 
-    protected static final String TOTAL_MAX = "Best fitness";
-    protected static final String MAX = "Maximum fitness";
-    protected static final String MIN = "Minimum fitness";
-    protected static final String AVERAGE = "Average fitness";
-
     private int runCounter = 0;
     private int generationCounter = 0;
     private int evaluationCounter = 0;
@@ -44,7 +39,7 @@ public abstract class OptimizationMethod {
     private boolean optimizationFinished = false;
     private boolean runFinished = false;
 
-    private RandomUtil rng;
+    private final RandomUtil rng;
 
     protected OptimizationMethod(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         this.configuration = configuration;
@@ -110,22 +105,20 @@ public abstract class OptimizationMethod {
             handleProgressionStagnation();
         }
 
-        if (checkCurrentRunFinished() && checkOptimizationFinished()) {
-            // optimization finished completely
-            this.runFinished = true;
-            this.optimizationFinished = true;
+        if (!checkCurrentRunFinished()) {
+            return;
+        }
 
-            // final update of optimization state
-            updateRunState();
-            updateGeneralState();
-            updateRunStatistics();
+        this.runFinished = true;
+        this.optimizationFinished = checkOptimizationFinished();
+
+        // final update of optimization state
+        updateGeneralState();
+        updateRunState();
+        updateRunStatistics();
+
+        if (this.optimizationFinished) {
             exportSummary();
-        } else if (checkCurrentRunFinished()) {
-            // only the current run finished restart new optimization
-            this.runFinished = true;
-            updateGeneralState();
-            updateRunState();
-            updateRunStatistics();
         }
     }
 
@@ -154,8 +147,6 @@ public abstract class OptimizationMethod {
         if (this.currentlyBestSolution != null && this.currentlyBestSolution.getNeuralNetwork() != null) {
             double numberOfHiddenNodes = NeuralNetworkUtil.countHiddenNodes(this.currentlyBestSolution.getNeuralNetwork());
             double numberOfConnections = NeuralNetworkUtil.countConnections(this.currentlyBestSolution.getNeuralNetwork());
-
-
 
             this.generalState.execute(t -> {
                 t.addNewValue(OptimizationState.HIDDEN_NODES_DISTRIBUTION, numberOfHiddenNodes);
@@ -266,10 +257,6 @@ public abstract class OptimizationMethod {
 
     public int getEvaluationCounter() {
         return this.evaluationCounter;
-    }
-
-    public Solution getCurrentlyBestSolution() {
-        return currentlyBestSolution;
     }
 
     protected void setCurrentlyBestSolution(Solution currentBest) {
