@@ -17,7 +17,7 @@
     <Loggers>
         <Root level="all">
             <AppenderRef ref="FILE"/>
-<!--            <AppenderRef ref="PROPERTY"/>-->
+            <AppenderRef ref="PROPERTY"/>
             <AppenderRef ref="CONSOLE" level="warn"/>
         </Root>
     </Loggers>

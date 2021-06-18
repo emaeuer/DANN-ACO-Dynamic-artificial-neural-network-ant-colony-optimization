@@ -1,9 +1,5 @@
 package de.emaeuer.logging;
 
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -17,9 +13,13 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Plugin(
         name = "LoggingProperty",
@@ -28,43 +28,36 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 )
 public class LoggingProperty extends AbstractAppender {
 
-    private static final int MAX_LENGTH = 20000;
+    private static final Lock LOCK = new ReentrantLock();
 
-    private static final StringProperty LOG_TEXT = new SimpleStringProperty("");
-
-    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private final Lock readLock = rwLock.readLock();
+    private static final Queue<String> NEW_LOG_ENTRIES = new LinkedBlockingQueue<>();
 
     protected LoggingProperty(String name, Filter filter, Layout<? extends Serializable> layout, boolean ignoreExceptions, Property[] properties) {
         super(name, filter, layout, ignoreExceptions, properties);
     }
 
-    public static void bindToLog(StringProperty property) {
-        property.bind(LOG_TEXT);
-    }
-
-    public static void addListener(InvalidationListener listener) {
-        LOG_TEXT.addListener(listener);
+    public static Collection<String> retrieveNewLogEntries() {
+        LOCK.lock();
+        try {
+            List<String> newLogEntries = new ArrayList<>(NEW_LOG_ENTRIES);
+            NEW_LOG_ENTRIES.clear();
+            return newLogEntries;
+        } finally {
+            LOCK.unlock();
+        }
     }
 
     @Override
     public void append(LogEvent event) {
-        readLock.lock();
+        LOCK.lock();
         try {
-            String log = LOG_TEXT.getValue() + new String(getLayout().toByteArray(event));
-            if (log.length() > MAX_LENGTH) {
-                log = log.substring(log.length() - MAX_LENGTH);
-            }
-            // necessary because usage in lambda only allows final variable
-            String finalLog = log;
-
-            Platform.runLater(() -> LOG_TEXT.setValue(finalLog));
+            NEW_LOG_ENTRIES.add(new String(getLayout().toByteArray(event)));
         } catch (Exception ex) {
             if (!ignoreExceptions()) {
                 throw new AppenderLoggingException(ex);
             }
         } finally {
-            readLock.unlock();
+            LOCK.unlock();
         }
     }
 

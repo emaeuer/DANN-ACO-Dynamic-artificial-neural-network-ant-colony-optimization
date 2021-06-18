@@ -26,10 +26,10 @@ import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
 
 public class PacoPheromone {
 
-    private static enum DecisionType {
+    private enum DecisionType {
         ADD,
         REMOVE,
-        SPLIT;
+        SPLIT
     }
 
     private static record Decision(Connection connection, DecisionType type, double pheromoneValue) {}
@@ -337,9 +337,7 @@ public class PacoPheromone {
                 .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
                 .getVariables();
 
-        double p = this.configuration.getValue(SPLIT_PROBABILITY, Double.class, variables);
-        System.out.println(p);
-        return p > this.rng.nextDouble();
+        return this.configuration.getValue(SPLIT_PROBABILITY, Double.class, variables) > this.rng.nextDouble();
     }
 
     private void createMappingsIfNecessary(NeuralNetwork template, String oldTemplateKey, Connection dynamicElement, NeuronID splitResult) {

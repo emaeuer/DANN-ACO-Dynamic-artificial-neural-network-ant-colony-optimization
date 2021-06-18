@@ -2,9 +2,18 @@
 <?import javafx.scene.control.TextArea?>
 
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
 <VBox spacing="10" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="de.emaeuer.gui.controller.LogController" styleClass="side_panel">
     <Label text="Logged notifications" styleClass="panel_title" />
+    <VBox styleClass="input_box">
+        <Label text="Number of characters" />
+        <Spinner min="100000" max="1000000" editable="true" fx:id="logSize" />
+    </VBox>
+    <VBox styleClass="input_box">
+        <Label text="Refresh interval" />
+        <Spinner min="1" max="10" fx:id="refreshInterval" />
+    </VBox>
     <VBox styleClass="output_card">
         <TextArea fx:id="logText" editable="false" styleClass="log_text" prefRowCount="1000"/>
     </VBox>
