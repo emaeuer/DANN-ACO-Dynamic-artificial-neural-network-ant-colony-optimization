@@ -128,16 +128,21 @@ public class Neuron {
             int minRecurrentID = 1 + this.neuron.getIncomingConnections()
                     .stream()
                     .filter(n -> n.id.getLayerIndex() == this.neuron.id.getLayerIndex())
+                    .filter(n -> n.getRecurrentID() > this.neuron.getRecurrentID())
                     .mapToInt(Neuron::getRecurrentID)
                     .max()
-                    .orElse(-1);
+                    .orElse(this.neuron.recurrentID);
 
+            if (minRecurrentID == this.neuron.getRecurrentID()) {
+                return this;
+            }
 
-            Set<Neuron> neuronsToRefresh = this.neuron.getOutgoingConnections()
+            List<Neuron> neuronsToRefresh = this.neuron.getOutgoingConnections()
                     .stream()
                     .filter(n -> n.id.getLayerIndex() == this.neuron.id.getLayerIndex())
                     .filter(n -> n.getRecurrentID() > this.neuron.getRecurrentID())
-                    .collect(Collectors.toSet());
+                    .sorted(Comparator.comparingInt(Neuron::getRecurrentID))
+                    .collect(Collectors.toList());
 
             this.neuron.setRecurrentID(minRecurrentID);
 
@@ -216,6 +221,7 @@ public class Neuron {
         copy.type = this.type;
         copy.id = new NeuronID(this.id.getLayerIndex(), this.id.getNeuronIndex());
         copy.bias = this.bias;
+        copy.recurrentID = this.recurrentID;
 
         if (this.type == NeuronType.BIAS) {
             copy.lastActivation = this.lastActivation;

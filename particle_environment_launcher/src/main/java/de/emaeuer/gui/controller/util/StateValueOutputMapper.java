@@ -443,7 +443,7 @@ public class StateValueOutputMapper {
         Series<Number, Number> series = property.get(0);
         Set<Integer> keysToRefresh = scatteredData.getIndicesToRefresh();
 
-        if (seriesData.size() == 1) {
+        if (seriesData.size() < series.getData().size()) {
             // if only data for one iteration exists refresh the complete plot
             // happens after refresh --> FIXME may cause problems if after refresh more than one iteration is contained
             series.getData().clear();

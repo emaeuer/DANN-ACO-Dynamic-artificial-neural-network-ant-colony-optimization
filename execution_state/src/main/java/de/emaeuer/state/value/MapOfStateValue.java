@@ -3,6 +3,7 @@ package de.emaeuer.state.value;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class MapOfStateValue extends AbstractStateValue<Entry<String, AbstractStateValue<?, ?>>, Map<String, AbstractStateValue<?, ?>>> {
 
@@ -39,6 +40,9 @@ public class MapOfStateValue extends AbstractStateValue<Entry<String, AbstractSt
 
     @Override
     public String getExportValue() {
-        return null;
+        return this.value.entrySet()
+                .stream()
+                .map(e -> String.format("(%s=%s)", e.getKey(), e.getValue().getExportValue()))
+                .collect(Collectors.joining(","));
     }
 }

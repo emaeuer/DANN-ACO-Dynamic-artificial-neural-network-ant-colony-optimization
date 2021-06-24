@@ -116,16 +116,17 @@ public class EnvironmentController {
     private void refreshProperties() {
         this.handler.refreshProperties();
 
-        this.runProgress.progressProperty().set(Math.max(this.handler.getRunCounter() - 1.0, 0) / this.handler.getMaxRuns());
+
         this.evaluationProgress.progressProperty().set(((double) this.handler.getEvaluationCounter()) / this.handler.getMaxEvaluations());
         this.fitnessProgress.progressProperty().set(this.handler.getFitness() / this.handler.getMaxFitness());
         this.finishedProperty.set(this.handler.isFinished());
 
-        // FIXME the update notifier flag of the handler is sometimes not toggled at the end of the optimization -> force update at the end
         if (this.handler.isFinished()) {
             this.updatedProperty.set(this.updatedProperty.not().get());
+            this.runProgress.progressProperty().set(1);
         } else {
             this.updatedProperty.set(this.handler.isUpdateNotifier());
+            this.runProgress.progressProperty().set(Math.max(this.handler.getRunCounter() - 1.0, 0) / this.handler.getMaxRuns());
         }
     }
 

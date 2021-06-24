@@ -8,7 +8,7 @@ public enum ActivationFunction implements DoubleFunction<Double> {
     LINEAR_UNTIL_SATURATION(v -> Math.max(Math.min(v, 1), 0), 0, 1),
     IDENTITY(v -> v, Integer.MIN_VALUE, Integer.MAX_VALUE),
     RELU(v -> Math.max(0, v), 0, Integer.MAX_VALUE),
-    SIGMOID(v -> 1 / (1 + Math.exp(-v * 4.924273)), 0, 1),
+    SIGMOID(v -> 1 / (1 + Math.exp(-v * 4.9)), 0, 1),
     TANH(Math::tanh, -1 , 1);
 
     private final DoubleFunction<Double> activationFunction;

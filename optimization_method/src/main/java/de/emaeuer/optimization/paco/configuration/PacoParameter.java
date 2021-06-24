@@ -6,7 +6,8 @@ public enum PacoParameter implements ConfigurationVariable {
     SUM_OF_DIFFERENCES("Squared sum of differences from mean", "s"),
     POPULATION_SIZE("Size of the population", "p"),
     NUMBER_OF_VALUES("Number of values in the population for this specific value", "n"),
-    VALUE("Value of the current decision", "v");
+    CONNECTION_PHEROMONE("Pheromone value of current connection", "c"),
+    TOPOLOGY_PHEROMONE("Pheromone value of current topology", "t");
 
     private final String name;
     private final String abbreviation;

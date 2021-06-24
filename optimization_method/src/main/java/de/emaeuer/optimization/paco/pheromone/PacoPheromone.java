@@ -12,7 +12,11 @@ import de.emaeuer.configuration.ConfigurationVariablesBuilder;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoParameter;
+import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
+import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.AbstractStateValue;
+import de.emaeuer.state.value.ScatteredDataStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,8 +46,6 @@ public class PacoPheromone {
 
     private final NeuralNetwork baseNetwork;
 
-    private final Map<String, Integer> templatePheromone = new HashMap<>();
-
     private final List<PacoAnt> solutions = new ArrayList<>();
 
     // use this sorted flag because java has no sorted data structure which supports indexing
@@ -53,8 +55,10 @@ public class PacoPheromone {
     private double[] solutionWeights;
 
     private final AtomicInteger connectionMappingCounter = new AtomicInteger(0);
-    private final Table<String, String, Integer> connectionMapping = HashBasedTable.create();
+    private final Table<Integer, String, Integer> connectionMapping = HashBasedTable.create();
     private final Map<Integer, Multiset<Double>> weightPheromone = new HashMap<>();
+
+    private final Map<String, Integer> templatePheromone = new HashMap<>();
 
     private final RandomUtil rng;
 
@@ -73,17 +77,16 @@ public class PacoPheromone {
     }
 
     private void initializeMapping() {
-        String nnKey = NeuralNetworkUtil.getTopologySummary(this.baseNetwork);
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork);
 
         while (connections.hasNext()) {
             String connectionKey = createConnectionKey(connections.next());
-            this.connectionMapping.put(nnKey, connectionKey, this.connectionMappingCounter.getAndIncrement());
+            this.connectionMapping.put(this.baseNetwork.getNumberOfHiddenNeurons(), connectionKey, this.connectionMappingCounter.getAndIncrement());
         }
     }
 
     private void initializeSolutionWeights() {
-        this.solutionWeights = IntStream.range(0, this.maximalPopulationSize)
+        this.solutionWeights = IntStream.rangeClosed(1, this.maximalPopulationSize)
                 .mapToDouble(this::calculateWeightForRank)
                 .toArray();
     }
@@ -100,13 +103,13 @@ public class PacoPheromone {
 
     public void removeAnt(PacoAnt ant) {
         // remove all knowledge of this ant
-        String templateKey = removeTemplateOfAnt(ant);
-        removeWeightsOfAnt(ant, templateKey);
+        removeTemplateOfAnt(ant);
+        removeWeightsOfAnt(ant);
 
         this.solutions.remove(ant);
     }
 
-    private String removeTemplateOfAnt(PacoAnt ant) {
+    private void removeTemplateOfAnt(PacoAnt ant) {
         // remove template form list of instances of this template
         String templateKey = createTemplateKey(ant.getNeuralNetwork());
         Integer value = this.templatePheromone.get(templateKey);
@@ -116,49 +119,46 @@ public class PacoPheromone {
         } else {
             this.templatePheromone.compute(templateKey, (k, v) -> Objects.requireNonNull(v) - 1);
         }
-
-        return templateKey;
     }
 
-    private void removeWeightsOfAnt(PacoAnt ant, String templateKey) {
+    private void removeWeightsOfAnt(PacoAnt ant) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
             Connection next = connections.next();
             // checking if population contains value is not necessary because if the value would be missing the procedure for adding
             // ants doesn't work properly --> error is justified
-            Multiset<Double> values = getPopulationValues(next.start(), next.end(), templateKey);
+            Multiset<Double> values = getPopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
             values.remove(next.weight());
 
             if (values.isEmpty()) {
                 // if no values exists the collection can be deleted from the map
-                removePopulationValues(next.start(), next.end(), templateKey);
+                removePopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
             }
         }
     }
 
     public void addAnt(PacoAnt ant) {
         // add all weights of this ant
-        String templateKey = addTemplateOfAnt(ant);
-        addWeightsOfAnt(ant, templateKey);
+        addTemplateOfAnt(ant);
+        addWeightsOfAnt(ant);
 
         this.solutions.add(ant);
         this.solutionsAreSorted = false;
     }
 
-    private String addTemplateOfAnt(PacoAnt ant) {
+    private void addTemplateOfAnt(PacoAnt ant) {
         // add template to list of instances of this template
         String templateKey = createTemplateKey(ant.getNeuralNetwork());
         this.templatePheromone.compute(templateKey, (k, v) -> Objects.requireNonNullElse(v, 0) + 1);
-        return templateKey;
     }
 
-    private void addWeightsOfAnt(PacoAnt ant, String templateKey) {
+    private void addWeightsOfAnt(PacoAnt ant) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
-        connections.forEachRemaining(c -> addConnectionToPopulation(c, templateKey));
+        connections.forEachRemaining(c -> addConnectionToPopulation(c, ant.getNeuralNetwork()));
     }
 
-    private void addConnectionToPopulation(Connection connection, String templateKey) {
-        getOrCreatePopulationValues(connection.start(), connection.end(), templateKey)
+    private void addConnectionToPopulation(Connection connection, NeuralNetwork template) {
+        getOrCreatePopulationValues(connection.start(), connection.end(), template)
                 .add(connection.weight());
     }
 
@@ -169,11 +169,10 @@ public class PacoPheromone {
     public PacoAnt createAntFromPopulation() {
         // select random ant from this population and use its neural network as template
         NeuralNetwork template = selectNeuralNetworkTemplate();
-        String templateKey = createTemplateKey(template);
 
         // modify template depending on other values of this population
-        applyNeuralNetworkDynamics(template, templateKey);
-        adjustWeights(template, templateKey);
+        applyNeuralNetworkDynamics(template);
+        adjustWeights(template);
 
         return new PacoAnt(template);
     }
@@ -204,10 +203,12 @@ public class PacoPheromone {
         }
     }
 
-    protected void applyNeuralNetworkDynamics(NeuralNetwork template, String templateKey) {
+    protected void applyNeuralNetworkDynamics(NeuralNetwork template) {
         if (this.templatePheromone.isEmpty()) {
             return;
         }
+
+        String templateKey = createTemplateKey(template);
 
         if (templateIsDynamic(templateKey)) {
             Decision dynamicElement = makeDynamicDecision(template, templateKey);
@@ -217,41 +218,35 @@ public class PacoPheromone {
             }
 
             switch (dynamicElement.type()) {
-                case ADD -> addConnection(template, templateKey, dynamicElement.connection());
-                case SPLIT -> splitConnection(template, templateKey, dynamicElement.connection());
-                case REMOVE -> removeConnection(template, templateKey, dynamicElement.connection());
+                case ADD -> addConnection(template, dynamicElement.connection());
+                case SPLIT -> splitConnection(template, dynamicElement.connection());
+                case REMOVE -> removeConnection(template, dynamicElement.connection());
             }
         }
     }
 
     private boolean templateIsDynamic(String templateKey) {
-        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, this.templatePheromone.get(templateKey))
-                .getVariables();
-
-        return this.configuration.getValue(DYNAMIC_PROBABILITY, Double.class, variables) > this.rng.getNextDouble(0, 1);
+        return calculateTopologyPheromone(templateKey) > this.rng.getNextDouble(0, 1);
     }
 
-    private void removeConnection(NeuralNetwork template, String templateKey, Connection dynamicElement) {
+    private void removeConnection(NeuralNetwork template, Connection dynamicElement) {
         LOG.debug("Removing connection {} to {}", dynamicElement.start(), dynamicElement.end());
         template.modify().removeConnection(dynamicElement.start(), dynamicElement.end());
-        createMappingsIfNecessary(template, templateKey, dynamicElement, null);
     }
 
-    private void addConnection(NeuralNetwork template, String templateKey, Connection dynamicElement) {
+    private void addConnection(NeuralNetwork template, Connection dynamicElement) {
         LOG.debug("Adding connection {} to {}", dynamicElement.start(), dynamicElement.end());
         template.modify().addConnection(dynamicElement.start(), dynamicElement.end(), 0);
-        createMappingsIfNecessary(template, templateKey, dynamicElement, null);
+        createMappingsIfNecessary(template, dynamicElement, null);
 
         // depending on the order of topology and weight adjustment this value may be overwritten
-        adjustWeightValue(template, templateKey, dynamicElement);
+        adjustWeightValue(template, dynamicElement);
     }
 
-    private void splitConnection(NeuralNetwork template, String templateKey, Connection dynamicElement) {
+    private void splitConnection(NeuralNetwork template, Connection dynamicElement) {
         LOG.debug("Splitting connection {} to {}", dynamicElement.start(), dynamicElement.end());
         NeuronID splitResult = template.modify().splitConnection(dynamicElement.start(), dynamicElement.end()).getLastModifiedNeuron();
-        createMappingsIfNecessary(template, templateKey, dynamicElement, splitResult);
+        createMappingsIfNecessary(template, dynamicElement, splitResult);
     }
 
     private Decision makeDynamicDecision(NeuralNetwork template, String templateKey) {
@@ -287,16 +282,20 @@ public class PacoPheromone {
 
     private Decision createDecision(NeuronID source, NeuronID target, NeuralNetwork template, String templateKey) {
         Connection connection = new Connection(source, target, 0);
-        double pheromone = calculatePheromoneValue(connection, template, templateKey);
+        double pheromone = calculateConnectionPheromone(connection, template);
         boolean isSplit = isSplit(connection, template, templateKey);
         DecisionType type = null;
 
         if (!isValidDecision(connection, template, templateKey, isSplit)) {
             pheromone = 0;
+        } else if (template.neuronHasConnectionTo(source, target) && isSplit) {
+            // splitting a connection has a lower probability than adding
+//            pheromone /= 10;
+            type = DecisionType.SPLIT;
         } else if (template.neuronHasConnectionTo(source, target)) {
             // if the connection exists the pheromone for removing is 1 - pheromone value --> connections with a high pheromone value are less likely to be removed
             pheromone = 1 - pheromone;
-            type = isSplit ? DecisionType.SPLIT : DecisionType.REMOVE;
+            type = DecisionType.REMOVE;
         } else {
             // the connection doesn't exist and the pheromone value is the value for adding it
             type = DecisionType.ADD;
@@ -307,14 +306,17 @@ public class PacoPheromone {
 
     private boolean isSplit(Connection connection, NeuralNetwork template, String templateKey) {
         if (template.neuronHasConnectionTo(connection.start(), connection.end())) {
-            return isSplitInsteadOfRemove(connection, templateKey);
+            return isSplitInsteadOfRemove(connection, templateKey, template);
         }
 
         return false;
     }
 
-    private boolean isSplitInsteadOfRemove(Connection connection, String templateKey) {
-        Multiset<Double> populationKnowledge = getPopulationValues(connection.start(), connection.end(), templateKey);
+    private boolean isSplitInsteadOfRemove(Connection connection, String templateKey, NeuralNetwork template) {
+        double topologyPheromone = calculateTopologyPheromone(templateKey);
+        double connectionPheromone = calculateConnectionPheromone(connection, template);
+
+        Multiset<Double> populationKnowledge = getPopulationValues(connection.start(), connection.end(), template);
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
         double sumOfDifferences = 0;
@@ -335,14 +337,37 @@ public class PacoPheromone {
                 .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
                 .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
                 .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
+                .with(PacoParameter.CONNECTION_PHEROMONE, connectionPheromone)
+                .with(PacoParameter.TOPOLOGY_PHEROMONE, topologyPheromone)
                 .getVariables();
 
         return this.configuration.getValue(SPLIT_PROBABILITY, Double.class, variables) > this.rng.nextDouble();
     }
 
-    private void createMappingsIfNecessary(NeuralNetwork template, String oldTemplateKey, Connection dynamicElement, NeuronID splitResult) {
-        String newTemplateKey = createTemplateKey(template);
+    private void createMappingsIfNecessary(NeuralNetwork template, Connection dynamicElement, NeuronID splitResult) {
+        if (splitResult == null) {
+            refreshMappingForNewConnection(template, dynamicElement);
+        } else {
+            refreshMappingAfterSplit(template, dynamicElement, splitResult);
+        }
+    }
+
+    private void refreshMappingForNewConnection(NeuralNetwork template, Connection dynamicElement) {
+        int templateSize = template.getNumberOfHiddenNeurons();
+        String connectionKey = createConnectionKey(dynamicElement);
+
+        if (!this.connectionMapping.contains(templateSize, connectionKey)) {
+            // this connection occurred for the first time and must be mapped
+            int index = this.connectionMappingCounter.getAndIncrement();
+            this.connectionMapping.put(templateSize, connectionKey, index);
+        }
+    }
+
+    private void refreshMappingAfterSplit(NeuralNetwork template, Connection dynamicElement, NeuronID splitResult) {
         boolean reuseSplitKnowledge = this.configuration.getValue(REUSE_SPLIT_KNOWLEDGE, Boolean.class);
+
+        int newTemplateSize = template.getNumberOfHiddenNeurons();
+        int oldTemplateSize = newTemplateSize - 1;
 
         // check if mappings for new template already exist
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(template);
@@ -350,7 +375,7 @@ public class PacoPheromone {
             Connection connection = connections.next();
             String connectionKey = createConnectionKey(connection);
 
-            if (this.connectionMapping.contains(newTemplateKey, connectionKey)) {
+            if (this.connectionMapping.contains(newTemplateSize, connectionKey)) {
                 // do nothing because mapping already exists
                 continue;
             }
@@ -360,42 +385,27 @@ public class PacoPheromone {
             int index;
 
             if (reuseSplitKnowledge && connection.end() == splitResult) {
-                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateKey, dynamicElementConnectionKey),
-                        String.format("Mapping for (%s, %s) doesn't exist", oldTemplateKey, connectionKey));
-            } else if (!this.connectionMapping.contains(oldTemplateKey, connectionKey)) {
+                // reference the knowledge of the split connection
+                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateSize, dynamicElementConnectionKey),
+                        String.format("Mapping for (%d, %s) doesn't exist", oldTemplateSize, connectionKey));
+            } else if (!this.connectionMapping.contains(oldTemplateSize, connectionKey)) {
                 // the old template doesn't contain the connection key --> it's a completely new connection
                 index = this.connectionMappingCounter.getAndIncrement();
             } else {
                 // the old template contains the connection key --> use knowledge of existing connection for the new template
-                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateKey, connectionKey),
-                        String.format("Mapping for (%s, %s) doesn't exist", oldTemplateKey, connectionKey));
+                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateSize, connectionKey),
+                        String.format("Mapping for (%d, %s) doesn't exist", oldTemplateSize, connectionKey));
             }
 
-            this.connectionMapping.put(newTemplateKey, connectionKey, index);
+            this.connectionMapping.put(newTemplateSize, connectionKey, index);
         }
-    }
-
-    protected double calculatePheromoneValue(Connection connection, NeuralNetwork template, String templateKey) {
-        NeuronID start = connection.start();
-        NeuronID end = connection.end();
-
-        Multiset<Double> populationKnowledge = getPopulationValues(start, end, templateKey);
-
-        int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
-
-        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
-                .getVariables();
-
-        return this.configuration.getValue(PHEROMONE_VALUE, Double.class, variables);
     }
 
     private boolean isValidDecision(Connection connection, NeuralNetwork template, String templateKey, boolean isSplit) {
         if (template.neuronHasConnectionTo(connection.start(), connection.end()) && isSplit) {
             return splitIsValid(connection, template);
         } else if (template.neuronHasConnectionTo(connection.start(), connection.end())) {
-            // a connection can't be removed it is the only output and neuron isolation is forbidden
+            // a connection can't be removed if it is the only output and neuron isolation is forbidden
             return checkNeuronIsolation(connection, template, templateKey);
         } else if (!template.neuronHasConnectionTo(connection.start(), connection.end())) {
             // adding a connection may be invalid because it may be invalid
@@ -415,15 +425,25 @@ public class PacoPheromone {
         NeuronID start = connection.start();
         NeuronID end = connection.end();
 
-        if (isSplitInsteadOfRemove(new Connection(start, end, 0), templateKey)) {
+        if (start.equals(end)) {
+            // self recurrent connections can always be removed
             return true;
         }
 
-        if (template.getOutgoingConnectionsOfNeuron(start).size() == 1) {
+        List<NeuronID> outgoingConnectionsOfStart = template.getOutgoingConnectionsOfNeuron(start);
+        // a neuron with only one connection to itself is also isolated
+        outgoingConnectionsOfStart.remove(start);
+
+        if (outgoingConnectionsOfStart.size() == 1) {
+            // only output neurons don't need outputs
             return template.isOutputNeuron(start);
         }
 
-        return template.getIncomingConnectionsOfNeuron(end).size() > 1;
+        List<NeuronID> incomingConnectionsOfEnd = template.getIncomingConnectionsOfNeuron(end);
+        // a neuron with only one connection to itself is also isolated
+        outgoingConnectionsOfStart.remove(end);
+
+        return incomingConnectionsOfEnd.size() > 1;
     }
 
     private boolean checkConnectionRecurrence(Connection connection, NeuralNetwork template) {
@@ -443,15 +463,15 @@ public class PacoPheromone {
         return false;
     }
 
-    protected void adjustWeights(NeuralNetwork nn, String templateKey) {
-        NeuralNetworkUtil.iterateNeuralNetworkConnections(nn)
-                .forEachRemaining(c -> adjustWeightValue(nn, templateKey, c));
+    protected void adjustWeights(NeuralNetwork template) {
+        NeuralNetworkUtil.iterateNeuralNetworkConnections(template)
+                .forEachRemaining(c -> adjustWeightValue(template, c));
     }
 
-    private void adjustWeightValue(NeuralNetwork nn, String templateKey, Connection connection) {
-        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end(), templateKey));
+    private void adjustWeightValue(NeuralNetwork template, Connection connection) {
+        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end(), template));
 
-        nn.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
+        template.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
     }
 
     private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<Double> populationValues) {
@@ -494,6 +514,31 @@ public class PacoPheromone {
     //#################### Util Methods ##########################
     //############################################################
 
+    private double calculateTopologyPheromone(String templateKey) {
+        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
+                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(PacoParameter.NUMBER_OF_VALUES, this.templatePheromone.get(templateKey))
+                .getVariables();
+
+        return this.configuration.getValue(TOPOLOGY_PHEROMONE, Double.class, variables);
+    }
+
+    protected double calculateConnectionPheromone(Connection connection, NeuralNetwork template) {
+        NeuronID start = connection.start();
+        NeuronID end = connection.end();
+
+        Multiset<Double> populationKnowledge = getPopulationValues(start, end, template);
+
+        int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
+
+        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
+                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
+                .getVariables();
+
+        return this.configuration.getValue(CONNECTION_PHEROMONE, Double.class, variables);
+    }
+
     private String createConnectionKey(Connection connection) {
         return createConnectionKey(connection.start(), connection.end());
     }
@@ -507,28 +552,28 @@ public class PacoPheromone {
         return NeuralNetworkUtil.getTopologySummary(nn);
     }
 
-//    TODO implement again
-//    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
-//        state.lock();
-//        //noinspection unchecked safe cast for generic not possible
-//        Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) state.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
-//
-//        for (Map.Entry<Integer, Multiset<Double>> connection : this.weightPheromone.entrySet()) {
-//            currentState.putIfAbsent(connection.getKey().toString(), new ScatteredDataStateValue());
-//
-//            currentState.get(connection.getKey().toString()).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
-//                    Objects.requireNonNull(connection.getValue())
-//                            .stream()
-//                            .mapToDouble(d -> d)
-//                            .boxed()
-//                            .toArray(Double[]::new)));
-//        }
-//        state.unlock();
-//    }
+    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
+        state.execute(s -> {
+            //noinspection unchecked safe cast for generic not possible
+            Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) s.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
-    public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, String templateKey) {
+            for (Map.Entry<Integer, Multiset<Double>> connection : this.weightPheromone.entrySet()) {
+                currentState.putIfAbsent(connection.getKey().toString(), new ScatteredDataStateValue());
+                currentState.get(connection.getKey().toString()).newValue(new AbstractMap.SimpleEntry<>(evaluationNumber,
+                        Objects.requireNonNull(connection.getValue())
+                                .stream()
+                                .mapToDouble(d -> d)
+                                .boxed()
+                                .toArray(Double[]::new)));
+            }
+        });
+
+        state.export(PacoState.CONNECTION_WEIGHTS_SCATTERED);
+    }
+
+    public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, NeuralNetwork template) {
         String connectionKey = createConnectionKey(start, end);
-        Integer index = this.connectionMapping.get(templateKey, connectionKey);
+        Integer index = this.connectionMapping.get(template.getNumberOfHiddenNeurons(), connectionKey);
 
         if (index == null) {
             return null;
@@ -537,21 +582,21 @@ public class PacoPheromone {
         return this.weightPheromone.get(index);
     }
 
-    private void removePopulationValues(NeuronID start, NeuronID end, String templateKey) {
+    private void removePopulationValues(NeuronID start, NeuronID end, NeuralNetwork template) {
         String connectionKey = createConnectionKey(start, end);
         // also remove mapping because no value is associated with index
-        int index = Objects.requireNonNull(this.connectionMapping.get(templateKey, connectionKey),
-                String.format("Mapping for (%s, %s) doesn't exist", templateKey, connectionKey));
+        int index = Objects.requireNonNull(this.connectionMapping.get(template.getNumberOfHiddenNeurons(), connectionKey),
+                String.format("Mapping for (%s, %s) doesn't exist", createTemplateKey(template), connectionKey));
         this.weightPheromone.remove(index);
     }
 
-    private Multiset<Double> getOrCreatePopulationValues(NeuronID start, NeuronID end, String templateKey) {
+    private Multiset<Double> getOrCreatePopulationValues(NeuronID start, NeuronID end, NeuralNetwork template) {
         String connectionKey = createConnectionKey(start, end);
 
-        Multiset<Double> result = getPopulationValues(start, end, templateKey);
+        Multiset<Double> result = getPopulationValues(start, end, template);
         if (result == null) {
-            int index = Objects.requireNonNull(this.connectionMapping.get(templateKey, connectionKey),
-                    String.format("Mapping for (%s, %s) doesn't exist", templateKey, connectionKey));
+            int index = Objects.requireNonNull(this.connectionMapping.get(template.getNumberOfHiddenNeurons(), connectionKey),
+                    String.format("Mapping for (%s, %s) doesn't exist", createTemplateKey(template), connectionKey));
             result = HashMultiset.create();
             this.weightPheromone.put(index, result);
         }

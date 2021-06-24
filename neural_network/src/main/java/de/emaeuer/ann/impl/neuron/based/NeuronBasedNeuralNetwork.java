@@ -262,4 +262,8 @@ public class NeuronBasedNeuralNetwork implements NeuralNetwork {
         throw new IndexOutOfBoundsException(String.format("Can't access neurons of layer %d", id.getLayerIndex()));
     }
 
+    @Override
+    public int getNumberOfHiddenNeurons() {
+        return this.hiddenNeurons.size();
+    }
 }

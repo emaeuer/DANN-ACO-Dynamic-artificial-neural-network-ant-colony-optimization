@@ -8,6 +8,7 @@ import de.emaeuer.configuration.ConfigurationHandler;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class NeuralNetworkImpl implements NeuralNetwork {
 
@@ -181,6 +182,15 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public boolean recurrentIsDisabled() {
         return this.configuration.getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
+    }
+
+    @Override
+    public int getNumberOfHiddenNeurons() {
+        return this.layers.stream()
+                .filter(Predicate.not(NeuralNetworkLayerImpl::isInputLayer))
+                .filter(Predicate.not(NeuralNetworkLayerImpl::isOutputLayer))
+                .mapToInt(NeuralNetworkLayerImpl::getNumberOfNeurons)
+                .sum();
     }
 
     public void setUsesExplicitBias(boolean value) {

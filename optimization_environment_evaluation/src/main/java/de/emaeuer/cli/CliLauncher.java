@@ -82,8 +82,8 @@ public class CliLauncher {
         Optional.ofNullable(parameters.getAntsPerIteration()).ifPresent(v -> config.setValue(PacoConfiguration.ANTS_PER_ITERATION, v));
         Optional.ofNullable(parameters.getDeviationFunction()).ifPresent(v -> config.setValue(PacoConfiguration.DEVIATION_FUNCTION, v));
         Optional.ofNullable(parameters.getPopulationStrategy()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATE_STRATEGY, v));
-        Optional.ofNullable(parameters.getChangeProbability()).ifPresent(v -> config.setValue(PacoConfiguration.DYNAMIC_PROBABILITY, v));
-        Optional.ofNullable(parameters.getPheromoneValue()).ifPresent(v -> config.setValue(PacoConfiguration.PHEROMONE_VALUE, v));
+        Optional.ofNullable(parameters.getChangeProbability()).ifPresent(v -> config.setValue(PacoConfiguration.TOPOLOGY_PHEROMONE, v));
+        Optional.ofNullable(parameters.getPheromoneValue()).ifPresent(v -> config.setValue(PacoConfiguration.CONNECTION_PHEROMONE, v));
         Optional.ofNullable(parameters.getSpitThreshold()).ifPresent(v -> config.setValue(PacoConfiguration.SPLIT_PROBABILITY, v));
         Optional.ofNullable(parameters.isElitism()).ifPresent(v -> config.setValue(PacoConfiguration.ELITISM, v));
         Optional.ofNullable(parameters.isNeuronIsolation()).ifPresent(v -> config.setValue(PacoConfiguration.ENABLE_NEURON_ISOLATION, v));
@@ -104,8 +104,7 @@ public class CliLauncher {
 
     public double getCost() {
         double averageFitness = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FITNESS_DISTRIBUTION)).getMean();
-        double averageEvaluations = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean();
-        return averageEvaluations;
+        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean();
     }
 
     public long getTimeMillis() {

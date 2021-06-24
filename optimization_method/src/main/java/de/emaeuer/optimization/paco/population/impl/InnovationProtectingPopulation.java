@@ -62,8 +62,8 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
             return super.addAnt(ant);
         } else if (topologyIsDifferentEnough(topology)) {
             // of each topology maximal one ant is added per iteration
-                addedTopologies.add(topology);
-                return super.addAnt(ant);
+            addedTopologies.add(topology);
+            return super.addAnt(ant);
         }
 
         return Optional.empty();
@@ -79,11 +79,11 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
 
             double jaccardSimilarity = ((double) intersection.size()) / union.size();
 
-            if (jaccardSimilarity <= 0.7) {
-                return true;
+            if (jaccardSimilarity > 0.7) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
 }

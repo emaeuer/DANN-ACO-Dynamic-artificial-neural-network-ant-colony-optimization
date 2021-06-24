@@ -52,4 +52,6 @@ public interface NeuralNetwork {
     double getMinActivation();
 
     boolean recurrentIsDisabled();
+
+    int getNumberOfHiddenNeurons();
 }

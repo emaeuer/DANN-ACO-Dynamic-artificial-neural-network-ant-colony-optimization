@@ -6,7 +6,9 @@ import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.pheromone.PacoPheromone;
+import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
+import de.emaeuer.state.StateHandler;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -130,5 +132,9 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
 
     protected PacoPheromone getPheromone() {
         return pheromone;
+    }
+
+    public void exportPheromoneMatrixState(int evaluationCounter, StateHandler<PacoState> state) {
+        this.pheromone.exportPheromoneMatrixState(evaluationCounter, state);
     }
 }

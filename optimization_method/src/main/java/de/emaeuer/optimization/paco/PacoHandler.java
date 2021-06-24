@@ -8,37 +8,34 @@ import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.optimization.OptimizationMethod;
 import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
+import de.emaeuer.optimization.configuration.OptimizationRunState;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.pheromone.PacoPheromone;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 import de.emaeuer.optimization.paco.population.PopulationFactory;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.state.StateHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.stream.IntStream;
-
-import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
 
 public class PacoHandler extends OptimizationMethod {
-
-    private final static Logger LOG = LogManager.getLogger(PacoHandler.class);
 
     private AbstractPopulation<?> population;
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
-    private final StateHandler<PacoState> state = new StateHandler<>(PacoState.class);
+    private final StateHandler<PacoState> state;
 
     public PacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
         this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
+        //noinspection unchecked
+        StateHandler<OptimizationRunState> runState = generalState.getValue(OptimizationState.STATE_OF_CURRENT_RUN, StateHandler.class);
+        this.state = new StateHandler<>(PacoState.class, runState);
+        this.state.setName("PACO");
 
         // register own state in optimization state
-        generalState.addNewValue(OptimizationState.IMPLEMENTATION_STATE, this.state);
+        runState.addNewValue(OptimizationRunState.IMPLEMENTATION_RUN_STATE, this.state);
 
         initialize();
     }
@@ -78,8 +75,7 @@ public class PacoHandler extends OptimizationMethod {
                 .max(Comparator.comparingDouble(PacoAnt::getFitness))
                 .orElse(null);
 
-        // TODO implement again
-        // this.pheromone.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
+         this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix

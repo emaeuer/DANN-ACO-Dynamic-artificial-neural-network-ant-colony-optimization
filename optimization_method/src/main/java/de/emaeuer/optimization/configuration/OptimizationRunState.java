@@ -1,10 +1,7 @@
 package de.emaeuer.optimization.configuration;
 
 import de.emaeuer.state.StateParameter;
-import de.emaeuer.state.value.AbstractStateValue;
-import de.emaeuer.state.value.CollectionDistributionStateValue;
-import de.emaeuer.state.value.GraphStateValue;
-import de.emaeuer.state.value.NumberStateValue;
+import de.emaeuer.state.value.*;
 
 public enum OptimizationRunState implements StateParameter<OptimizationRunState> {
     RUN_NUMBER("Number of run", NumberStateValue.class, true),
@@ -14,7 +11,8 @@ public enum OptimizationRunState implements StateParameter<OptimizationRunState>
     USED_CONNECTIONS("Used connections", CollectionDistributionStateValue.class, true),
     FITNESS_VALUES("Fitness values", CollectionDistributionStateValue.class, true),
     CURRENT_BEST_SOLUTION("Currently best solution", GraphStateValue.class, false),
-    RUN_FINISHED("Run finished", NumberStateValue.class, true);
+    RUN_FINISHED("Run finished", NumberStateValue.class, true),
+    IMPLEMENTATION_RUN_STATE("State of the optimization method", EmbeddedState.class, false);
 
     private final String name;
     private final Class<? extends AbstractStateValue<?, ?>> type;
