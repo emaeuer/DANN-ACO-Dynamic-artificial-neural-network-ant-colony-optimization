@@ -17,7 +17,8 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     ENABLE_NEURON_ISOLATION("Enable neuron isolation", new BooleanConfigurationValue(false)),
     SPLIT_PROBABILITY("Probability for splitting a connection instead of removing", new ExpressionConfigurationValue("max(min((c*t)/(s+(p-n)/(n+1)), 1), 0)", PacoParameter.class)),
     SOLUTION_WEIGHT_FACTOR("Deviation factor for calculation of the solution weights", new DoubleConfigurationValue(0.1, 0.000001, 1)),
-    REUSE_SPLIT_KNOWLEDGE("Link the first connection of a split to the knowledge of the old connection", new BooleanConfigurationValue(false));
+    REUSE_SPLIT_KNOWLEDGE("Link the first connection of a split to the knowledge of the old connection", new BooleanConfigurationValue(false)),
+    CALCULATE_TOPOLOGY_PHEROMONE_FOR_GROUP("The count used for the topology pheromone calculation is the size of the group", new BooleanConfigurationValue(false));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;

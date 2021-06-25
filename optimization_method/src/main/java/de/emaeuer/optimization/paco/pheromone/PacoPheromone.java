@@ -36,6 +36,28 @@ public class PacoPheromone {
         SPLIT
     }
 
+    private static class TopologyGroup {
+        private final int id;
+        private int size;
+
+        public TopologyGroup(int id, int size) {
+            this.id = id;
+            this.size = size;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public void setSize(int size) {
+            this.size = size;
+        }
+    }
+
     private static record Decision(Connection connection, DecisionType type, double pheromoneValue) {}
 
     private static final Logger LOG = LogManager.getLogger(PacoPheromone.class);
@@ -54,11 +76,12 @@ public class PacoPheromone {
 
     private double[] solutionWeights;
 
+    private final AtomicInteger topologyGroupCounter = new AtomicInteger(0);
+    private final Map<String, TopologyGroup> topologyGroups = new HashMap<>();
+
     private final AtomicInteger connectionMappingCounter = new AtomicInteger(0);
     private final Table<Integer, String, Integer> connectionMapping = HashBasedTable.create();
     private final Map<Integer, Multiset<Double>> weightPheromone = new HashMap<>();
-
-    private final Map<String, Integer> templatePheromone = new HashMap<>();
 
     private final RandomUtil rng;
 
@@ -77,11 +100,15 @@ public class PacoPheromone {
     }
 
     private void initializeMapping() {
+        String topologyKey = NeuralNetworkUtil.getTopologySummary(this.baseNetwork);
+        TopologyGroup group = new TopologyGroup(this.topologyGroupCounter.getAndIncrement(), 0);
+        this.topologyGroups.put(topologyKey, group);
+
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(this.baseNetwork);
 
         while (connections.hasNext()) {
             String connectionKey = createConnectionKey(connections.next());
-            this.connectionMapping.put(this.baseNetwork.getNumberOfHiddenNeurons(), connectionKey, this.connectionMappingCounter.getAndIncrement());
+            this.connectionMapping.put(group.getId(), connectionKey, this.connectionMappingCounter.getAndIncrement());
         }
     }
 
@@ -103,62 +130,59 @@ public class PacoPheromone {
 
     public void removeAnt(PacoAnt ant) {
         // remove all knowledge of this ant
-        removeTemplateOfAnt(ant);
-        removeWeightsOfAnt(ant);
+        TopologyGroup group = removeTemplateOfAnt(ant);
+        removeWeightsOfAnt(ant, group);
 
         this.solutions.remove(ant);
     }
 
-    private void removeTemplateOfAnt(PacoAnt ant) {
+    private TopologyGroup removeTemplateOfAnt(PacoAnt ant) {
         // remove template form list of instances of this template
-        String templateKey = createTemplateKey(ant.getNeuralNetwork());
-        Integer value = this.templatePheromone.get(templateKey);
+        TopologyGroup group = getTopologyGroup(ant.getNeuralNetwork());
+        group.setSize(group.getSize() - 1);
 
-        if (value == null || value <= 1) {
-            this.templatePheromone.remove(templateKey);
-        } else {
-            this.templatePheromone.compute(templateKey, (k, v) -> Objects.requireNonNull(v) - 1);
-        }
+        return group;
     }
 
-    private void removeWeightsOfAnt(PacoAnt ant) {
+    private void removeWeightsOfAnt(PacoAnt ant, TopologyGroup group) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
             Connection next = connections.next();
             // checking if population contains value is not necessary because if the value would be missing the procedure for adding
             // ants doesn't work properly --> error is justified
-            Multiset<Double> values = getPopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
+            Multiset<Double> values = getPopulationValues(next.start(), next.end(), group);
             values.remove(next.weight());
 
             if (values.isEmpty()) {
                 // if no values exists the collection can be deleted from the map
-                removePopulationValues(next.start(), next.end(), ant.getNeuralNetwork());
+                removePopulationValues(next.start(), next.end(), group);
             }
         }
     }
 
     public void addAnt(PacoAnt ant) {
         // add all weights of this ant
-        addTemplateOfAnt(ant);
-        addWeightsOfAnt(ant);
+        TopologyGroup group = addTemplateOfAnt(ant);
+        addWeightsOfAnt(ant, group);
 
         this.solutions.add(ant);
         this.solutionsAreSorted = false;
     }
 
-    private void addTemplateOfAnt(PacoAnt ant) {
-        // add template to list of instances of this template
-        String templateKey = createTemplateKey(ant.getNeuralNetwork());
-        this.templatePheromone.compute(templateKey, (k, v) -> Objects.requireNonNullElse(v, 0) + 1);
+    private TopologyGroup addTemplateOfAnt(PacoAnt ant) {
+        TopologyGroup group = getTopologyGroup(ant.getNeuralNetwork());
+        group.setSize(group.getSize() + 1);
+
+        return group;
     }
 
-    private void addWeightsOfAnt(PacoAnt ant) {
+    private void addWeightsOfAnt(PacoAnt ant, TopologyGroup group) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
-        connections.forEachRemaining(c -> addConnectionToPopulation(c, ant.getNeuralNetwork()));
+        connections.forEachRemaining(c -> addConnectionToPopulation(c, group));
     }
 
-    private void addConnectionToPopulation(Connection connection, NeuralNetwork template) {
-        getOrCreatePopulationValues(connection.start(), connection.end(), template)
+    private void addConnectionToPopulation(Connection connection, TopologyGroup group) {
+        getOrCreatePopulationValues(connection.start(), connection.end(), group)
                 .add(connection.weight());
     }
 
@@ -169,10 +193,11 @@ public class PacoPheromone {
     public PacoAnt createAntFromPopulation() {
         // select random ant from this population and use its neural network as template
         NeuralNetwork template = selectNeuralNetworkTemplate();
+        TopologyGroup group = getTopologyGroup(template);
 
         // modify template depending on other values of this population
-        applyNeuralNetworkDynamics(template);
-        adjustWeights(template);
+        TopologyGroup groupAfterModification = applyNeuralNetworkDynamics(template, group);
+        adjustWeights(template, groupAfterModification);
 
         return new PacoAnt(template);
     }
@@ -203,53 +228,59 @@ public class PacoPheromone {
         }
     }
 
-    protected void applyNeuralNetworkDynamics(NeuralNetwork template) {
-        if (this.templatePheromone.isEmpty()) {
-            return;
+    protected TopologyGroup applyNeuralNetworkDynamics(NeuralNetwork template, TopologyGroup group) {
+        // if the weight pheromone is empty this is the first iteration and there shouldn't be dynamic
+        if (this.weightPheromone.isEmpty()) {
+            return group;
         }
 
-        String templateKey = createTemplateKey(template);
-
-        if (templateIsDynamic(templateKey)) {
-            Decision dynamicElement = makeDynamicDecision(template, templateKey);
+        if (templateIsDynamic(group)) {
+            Decision dynamicElement = makeDynamicDecision(template, group);
 
             if (dynamicElement == null) {
-                return;
+                return group;
             }
 
-            switch (dynamicElement.type()) {
-                case ADD -> addConnection(template, dynamicElement.connection());
-                case SPLIT -> splitConnection(template, dynamicElement.connection());
-                case REMOVE -> removeConnection(template, dynamicElement.connection());
-            }
+            group = switch (dynamicElement.type()) {
+                case ADD -> addConnection(template, dynamicElement.connection(), group);
+                case SPLIT -> splitConnection(template, dynamicElement.connection(), group);
+                case REMOVE -> removeConnection(template, dynamicElement.connection(), group);
+            };
         }
+
+        return group;
     }
 
-    private boolean templateIsDynamic(String templateKey) {
-        return calculateTopologyPheromone(templateKey) > this.rng.getNextDouble(0, 1);
+    private boolean templateIsDynamic(TopologyGroup group) {
+        return calculateTopologyPheromone(group) > this.rng.getNextDouble(0, 1);
     }
 
-    private void removeConnection(NeuralNetwork template, Connection dynamicElement) {
+    private TopologyGroup removeConnection(NeuralNetwork template, Connection dynamicElement, TopologyGroup group) {
         LOG.debug("Removing connection {} to {}", dynamicElement.start(), dynamicElement.end());
         template.modify().removeConnection(dynamicElement.start(), dynamicElement.end());
+
+        return createMappingsIfNecessary(template, dynamicElement, null, group);
     }
 
-    private void addConnection(NeuralNetwork template, Connection dynamicElement) {
+    private TopologyGroup addConnection(NeuralNetwork template, Connection dynamicElement, TopologyGroup group) {
         LOG.debug("Adding connection {} to {}", dynamicElement.start(), dynamicElement.end());
         template.modify().addConnection(dynamicElement.start(), dynamicElement.end(), 0);
-        createMappingsIfNecessary(template, dynamicElement, null);
+        group = createMappingsIfNecessary(template, dynamicElement, null, group);
 
         // depending on the order of topology and weight adjustment this value may be overwritten
-        adjustWeightValue(template, dynamicElement);
+        adjustWeightValue(template, dynamicElement, group);
+
+        return group;
     }
 
-    private void splitConnection(NeuralNetwork template, Connection dynamicElement) {
+    private TopologyGroup splitConnection(NeuralNetwork template, Connection dynamicElement, TopologyGroup group) {
         LOG.debug("Splitting connection {} to {}", dynamicElement.start(), dynamicElement.end());
         NeuronID splitResult = template.modify().splitConnection(dynamicElement.start(), dynamicElement.end()).getLastModifiedNeuron();
-        createMappingsIfNecessary(template, dynamicElement, splitResult);
+
+        return createMappingsIfNecessary(template, dynamicElement, splitResult, group);
     }
 
-    private Decision makeDynamicDecision(NeuralNetwork template, String templateKey) {
+    private Decision makeDynamicDecision(NeuralNetwork template, TopologyGroup group) {
         List<NeuronID> possibleSources = IntStream.range(0, template.getDepth())
                 .mapToObj(template::getNeuronsOfLayer)
                 .flatMap(Collection::stream)
@@ -265,7 +296,7 @@ public class PacoPheromone {
 
         for (NeuronID source : possibleSources) {
             possibleTargets.stream()
-                    .map(t -> createDecision(source, t, template, templateKey))
+                    .map(t -> createDecision(source, t, template, group))
                     .filter(d -> d.type() != null)
                     .filter(d -> d.pheromoneValue() > 0)
                     .peek(d -> pheromoneValues.add(d.pheromoneValue()))
@@ -280,13 +311,13 @@ public class PacoPheromone {
         return decisions.get(decisionIndex);
     }
 
-    private Decision createDecision(NeuronID source, NeuronID target, NeuralNetwork template, String templateKey) {
+    private Decision createDecision(NeuronID source, NeuronID target, NeuralNetwork template, TopologyGroup group) {
         Connection connection = new Connection(source, target, 0);
-        double pheromone = calculateConnectionPheromone(connection, template);
-        boolean isSplit = isSplit(connection, template, templateKey);
+        double pheromone = calculateConnectionPheromone(connection, group);
+        boolean isSplit = isSplit(connection, template, group);
         DecisionType type = null;
 
-        if (!isValidDecision(connection, template, templateKey, isSplit)) {
+        if (!isValidDecision(connection, template, isSplit)) {
             pheromone = 0;
         } else if (template.neuronHasConnectionTo(source, target) && isSplit) {
             // splitting a connection has a lower probability than adding
@@ -304,19 +335,19 @@ public class PacoPheromone {
         return new Decision(connection, type, pheromone);
     }
 
-    private boolean isSplit(Connection connection, NeuralNetwork template, String templateKey) {
+    private boolean isSplit(Connection connection, NeuralNetwork template, TopologyGroup group) {
         if (template.neuronHasConnectionTo(connection.start(), connection.end())) {
-            return isSplitInsteadOfRemove(connection, templateKey, template);
+            return isSplitInsteadOfRemove(connection, group);
         }
 
         return false;
     }
 
-    private boolean isSplitInsteadOfRemove(Connection connection, String templateKey, NeuralNetwork template) {
-        double topologyPheromone = calculateTopologyPheromone(templateKey);
-        double connectionPheromone = calculateConnectionPheromone(connection, template);
+    private boolean isSplitInsteadOfRemove(Connection connection, TopologyGroup group) {
+        double topologyPheromone = calculateTopologyPheromone(group);
+        double connectionPheromone = calculateConnectionPheromone(connection, group);
 
-        Multiset<Double> populationKnowledge = getPopulationValues(connection.start(), connection.end(), template);
+        Multiset<Double> populationKnowledge = getPopulationValues(connection.start(), connection.end(), group);
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
         double sumOfDifferences = 0;
@@ -344,69 +375,69 @@ public class PacoPheromone {
         return this.configuration.getValue(SPLIT_PROBABILITY, Double.class, variables) > this.rng.nextDouble();
     }
 
-    private void createMappingsIfNecessary(NeuralNetwork template, Connection dynamicElement, NeuronID splitResult) {
+    private TopologyGroup createMappingsIfNecessary(NeuralNetwork template, Connection dynamicElement, NeuronID splitResult, TopologyGroup group) {
         if (splitResult == null) {
-            refreshMappingForNewConnection(template, dynamicElement);
+            return refreshMappingForConnectionChange(template, group, dynamicElement);
         } else {
-            refreshMappingAfterSplit(template, dynamicElement, splitResult);
+            return refreshMappingAfterSplit(template, dynamicElement, splitResult, group);
         }
     }
 
-    private void refreshMappingForNewConnection(NeuralNetwork template, Connection dynamicElement) {
-        int templateSize = template.getNumberOfHiddenNeurons();
+    private TopologyGroup refreshMappingForConnectionChange(NeuralNetwork template, TopologyGroup group, Connection dynamicElement) {
         String connectionKey = createConnectionKey(dynamicElement);
 
-        if (!this.connectionMapping.contains(templateSize, connectionKey)) {
-            // this connection occurred for the first time and must be mapped
+
+        if (!this.topologyGroups.containsKey(connectionKey)) {
+            // this template occurred for the first time count is 0 but uses the old group id
+            boolean sizeForGroup = this.configuration.getValue(CALCULATE_TOPOLOGY_PHEROMONE_FOR_GROUP, Boolean.class);
+            group = sizeForGroup ? group : new TopologyGroup(group.getId(), 0);
+            this.topologyGroups.putIfAbsent(createTemplateKey(template), group);
+        }
+
+        if (!this.connectionMapping.contains(group.getId(), connectionKey) && template.neuronHasConnectionTo(dynamicElement.start(), dynamicElement.end())) {
+            // the dynamic element was added and occurred for the first time
             int index = this.connectionMappingCounter.getAndIncrement();
-            this.connectionMapping.put(templateSize, connectionKey, index);
+            this.connectionMapping.put(group.getId(), connectionKey, index);
         }
+
+        return group;
     }
 
-    private void refreshMappingAfterSplit(NeuralNetwork template, Connection dynamicElement, NeuronID splitResult) {
+    private TopologyGroup refreshMappingAfterSplit(NeuralNetwork template, Connection dynamicElement, NeuronID splitResult, TopologyGroup oldGroup) {
+        String templateKey = createTemplateKey(template);
+        TopologyGroup newGroup = getTopologyGroup(templateKey);
+
+        if (newGroup != null) {
+            // group already exists --> all mappings should exist too
+            return newGroup;
+        }
+
+        newGroup = new TopologyGroup(this.topologyGroupCounter.getAndIncrement(), 0);
+        this.topologyGroups.put(templateKey, newGroup);
+
+        // create copy because the row is only a view and modifications would be made to the old group
+        Map<String, Integer> newMapping = new HashMap<>(this.connectionMapping.row(oldGroup.getId()));
+
+        // remove the mapping of the replaced connection by the two new ones
+        int oldConnectionID = newMapping.remove(createConnectionKey(dynamicElement));
+
         boolean reuseSplitKnowledge = this.configuration.getValue(REUSE_SPLIT_KNOWLEDGE, Boolean.class);
+        oldConnectionID = reuseSplitKnowledge ? oldConnectionID : this.connectionMappingCounter.getAndIncrement();
+        newMapping.put(createConnectionKey(dynamicElement.start(), splitResult), oldConnectionID);
+        newMapping.put(createConnectionKey(splitResult, dynamicElement.end()), this.connectionMappingCounter.getAndIncrement());
 
-        int newTemplateSize = template.getNumberOfHiddenNeurons();
-        int oldTemplateSize = newTemplateSize - 1;
+        int groupID = newGroup.getId();
+        newMapping.forEach((k, v) -> this.connectionMapping.put(groupID, k, v));
 
-        // check if mappings for new template already exist
-        Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(template);
-        while (connections.hasNext()) {
-            Connection connection = connections.next();
-            String connectionKey = createConnectionKey(connection);
-
-            if (this.connectionMapping.contains(newTemplateSize, connectionKey)) {
-                // do nothing because mapping already exists
-                continue;
-            }
-
-            String dynamicElementConnectionKey = createConnectionKey(dynamicElement);
-
-            int index;
-
-            if (reuseSplitKnowledge && connection.end() == splitResult) {
-                // reference the knowledge of the split connection
-                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateSize, dynamicElementConnectionKey),
-                        String.format("Mapping for (%d, %s) doesn't exist", oldTemplateSize, connectionKey));
-            } else if (!this.connectionMapping.contains(oldTemplateSize, connectionKey)) {
-                // the old template doesn't contain the connection key --> it's a completely new connection
-                index = this.connectionMappingCounter.getAndIncrement();
-            } else {
-                // the old template contains the connection key --> use knowledge of existing connection for the new template
-                index = Objects.requireNonNull(this.connectionMapping.get(oldTemplateSize, connectionKey),
-                        String.format("Mapping for (%d, %s) doesn't exist", oldTemplateSize, connectionKey));
-            }
-
-            this.connectionMapping.put(newTemplateSize, connectionKey, index);
-        }
+        return newGroup;
     }
 
-    private boolean isValidDecision(Connection connection, NeuralNetwork template, String templateKey, boolean isSplit) {
+    private boolean isValidDecision(Connection connection, NeuralNetwork template, boolean isSplit) {
         if (template.neuronHasConnectionTo(connection.start(), connection.end()) && isSplit) {
             return splitIsValid(connection, template);
         } else if (template.neuronHasConnectionTo(connection.start(), connection.end())) {
             // a connection can't be removed if it is the only output and neuron isolation is forbidden
-            return checkNeuronIsolation(connection, template, templateKey);
+            return checkNeuronIsolation(connection, template);
         } else if (!template.neuronHasConnectionTo(connection.start(), connection.end())) {
             // adding a connection may be invalid because it may be invalid
             return checkConnectionRecurrence(connection, template);
@@ -421,7 +452,7 @@ public class PacoPheromone {
         return dynamicElement.start().getLayerIndex() != dynamicElement.end().getLayerIndex() || !nn.isOutputNeuron(dynamicElement.start());
     }
 
-    private boolean checkNeuronIsolation(Connection connection, NeuralNetwork template, String templateKey) {
+    private boolean checkNeuronIsolation(Connection connection, NeuralNetwork template) {
         NeuronID start = connection.start();
         NeuronID end = connection.end();
 
@@ -463,13 +494,13 @@ public class PacoPheromone {
         return false;
     }
 
-    protected void adjustWeights(NeuralNetwork template) {
+    protected void adjustWeights(NeuralNetwork template, TopologyGroup group) {
         NeuralNetworkUtil.iterateNeuralNetworkConnections(template)
-                .forEachRemaining(c -> adjustWeightValue(template, c));
+                .forEachRemaining(c -> adjustWeightValue(template, c, group));
     }
 
-    private void adjustWeightValue(NeuralNetwork template, Connection connection) {
-        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end(), template));
+    private void adjustWeightValue(NeuralNetwork template, Connection connection, TopologyGroup group) {
+        double weight = calculateNewValueDependingOnPopulationKnowledge(connection.weight(), getPopulationValues(connection.start(), connection.end(), group));
 
         template.modify().setWeightOfConnection(connection.start(), connection.end(), weight);
     }
@@ -514,20 +545,20 @@ public class PacoPheromone {
     //#################### Util Methods ##########################
     //############################################################
 
-    private double calculateTopologyPheromone(String templateKey) {
+    private double calculateTopologyPheromone(TopologyGroup group) {
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
                 .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, this.templatePheromone.get(templateKey))
+                .with(PacoParameter.NUMBER_OF_VALUES, group.getSize())
                 .getVariables();
 
         return this.configuration.getValue(TOPOLOGY_PHEROMONE, Double.class, variables);
     }
 
-    protected double calculateConnectionPheromone(Connection connection, NeuralNetwork template) {
+    protected double calculateConnectionPheromone(Connection connection, TopologyGroup group) {
         NeuronID start = connection.start();
         NeuronID end = connection.end();
 
-        Multiset<Double> populationKnowledge = getPopulationValues(start, end, template);
+        Multiset<Double> populationKnowledge = getPopulationValues(start, end, group);
 
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
@@ -571,9 +602,9 @@ public class PacoPheromone {
         state.export(PacoState.CONNECTION_WEIGHTS_SCATTERED);
     }
 
-    public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, NeuralNetwork template) {
+    public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, TopologyGroup group) {
         String connectionKey = createConnectionKey(start, end);
-        Integer index = this.connectionMapping.get(template.getNumberOfHiddenNeurons(), connectionKey);
+        Integer index = this.connectionMapping.get(group.getId(), connectionKey);
 
         if (index == null) {
             return null;
@@ -582,25 +613,34 @@ public class PacoPheromone {
         return this.weightPheromone.get(index);
     }
 
-    private void removePopulationValues(NeuronID start, NeuronID end, NeuralNetwork template) {
+    private void removePopulationValues(NeuronID start, NeuronID end, TopologyGroup group) {
         String connectionKey = createConnectionKey(start, end);
         // also remove mapping because no value is associated with index
-        int index = Objects.requireNonNull(this.connectionMapping.get(template.getNumberOfHiddenNeurons(), connectionKey),
-                String.format("Mapping for (%s, %s) doesn't exist", createTemplateKey(template), connectionKey));
+        int index = Objects.requireNonNull(this.connectionMapping.get(group.getId(), connectionKey),
+                String.format("Mapping for (%s, %s) doesn't exist", group.getId(), connectionKey));
         this.weightPheromone.remove(index);
     }
 
-    private Multiset<Double> getOrCreatePopulationValues(NeuronID start, NeuronID end, NeuralNetwork template) {
+    private Multiset<Double> getOrCreatePopulationValues(NeuronID start, NeuronID end, TopologyGroup group) {
         String connectionKey = createConnectionKey(start, end);
 
-        Multiset<Double> result = getPopulationValues(start, end, template);
+        Multiset<Double> result = getPopulationValues(start, end, group);
         if (result == null) {
-            int index = Objects.requireNonNull(this.connectionMapping.get(template.getNumberOfHiddenNeurons(), connectionKey),
-                    String.format("Mapping for (%s, %s) doesn't exist", createTemplateKey(template), connectionKey));
+            int index = Objects.requireNonNull(this.connectionMapping.get(group.getId(), connectionKey),
+                    String.format("Mapping for (%s, %s) doesn't exist", group.getId(), connectionKey));
             result = HashMultiset.create();
             this.weightPheromone.put(index, result);
         }
 
         return result;
+    }
+
+    private TopologyGroup getTopologyGroup(NeuralNetwork nn) {
+        String topologyKey = createTemplateKey(nn);
+        return this.topologyGroups.get(topologyKey);
+    }
+
+    private TopologyGroup getTopologyGroup(String topologyKey) {
+        return this.topologyGroups.get(topologyKey);
     }
 }
