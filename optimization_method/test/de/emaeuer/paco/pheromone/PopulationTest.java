@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PopulationTest {
 
     private PacoAnt createAnt(double fitness) {
-        PacoAnt ant = new PacoAnt(createBaseNetwork());
+        PacoAnt ant = new PacoAnt(createBaseNetwork(), 0);
         ant.setFitness(fitness);
         return ant;
     }
