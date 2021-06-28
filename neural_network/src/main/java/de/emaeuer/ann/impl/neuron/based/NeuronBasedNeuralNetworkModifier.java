@@ -74,7 +74,7 @@ public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
     private void refreshRecurrentIDsIfNecessary(Neuron end, Neuron intermediate) {
         boolean recurrentDisabled = this.nn.getConfiguration().getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
 
-        if (!recurrentDisabled) {
+        if (!recurrentDisabled || intermediate.getID().getLayerIndex() < end.getID().getLayerIndex()) {
             return;
         }
 

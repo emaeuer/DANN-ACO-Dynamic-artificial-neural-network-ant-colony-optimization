@@ -534,11 +534,7 @@ public class PacoPheromone {
                 .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
                 .getVariables();
 
-        double deviation = this.configuration.getValue(DEVIATION_FUNCTION, Double.class, variables);
-
-        System.out.println(populationValues.size() + " - " + sumOfDifferences + " - " + deviation);
-
-        return deviation;
+        return this.configuration.getValue(DEVIATION_FUNCTION, Double.class, variables);
     }
 
     //############################################################
