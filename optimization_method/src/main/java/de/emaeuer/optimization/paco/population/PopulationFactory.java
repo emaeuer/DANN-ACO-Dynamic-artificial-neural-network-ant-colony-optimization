@@ -19,6 +19,7 @@ public class PopulationFactory {
             case FITNESS -> new FitnessBasedPopulation(configuration, baseNetwork, rng);
             case AGE_PROBABILITY -> new AgeAndProbabilityBasedPopulation(configuration, baseNetwork, rng);
             case INNOVATION_PROTECTING -> new InnovationProtectingPopulation(configuration, baseNetwork, rng);
+            case GROUP_BASED -> new GroupBasedPopulation(configuration, baseNetwork, rng);
         };
     }
 

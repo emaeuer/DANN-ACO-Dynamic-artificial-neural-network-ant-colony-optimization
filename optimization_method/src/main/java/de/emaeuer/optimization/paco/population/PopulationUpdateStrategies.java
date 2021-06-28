@@ -7,7 +7,8 @@ public enum PopulationUpdateStrategies {
     FITNESS,
     PROBABILITY,
     AGE_PROBABILITY,
-    INNOVATION_PROTECTING;
+    INNOVATION_PROTECTING,
+    GROUP_BASED;
 
     public static String[] getNames() {
         return Arrays.stream(PopulationUpdateStrategies.values())
