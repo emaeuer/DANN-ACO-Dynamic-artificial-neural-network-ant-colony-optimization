@@ -20,8 +20,15 @@ public class ConfigurationIOHandler {
 
     private ConfigurationIOHandler() {}
 
-    public static void exportConfiguration(ConfigurationHandler<?> configuration, File file) {
-        writeJSON(configToJson(configuration), file);
+    public static void exportConfiguration(File file, ConfigurationHandler<?>... configuration) {
+        if (configuration == null || configuration.length == 0) {
+            LOG.debug("Can't export non existing configuration");
+        } else {
+            JSONObject json = new JSONObject();
+            Arrays.stream(configuration)
+                    .forEach(c -> json.put(c.getName(), configToJson(c)));
+            writeJSON(json, file);
+        }
     }
 
     private static JSONObject configToJson(ConfigurationHandler<?> configuration) {
@@ -48,17 +55,31 @@ public class ConfigurationIOHandler {
         }
     }
 
-    public static void importConfiguration(ConfigurationHandler<?> configuration, File file) {
-        JSONObject json = loadJSON(file);
-
+    public static void importConfiguration(File file, ConfigurationHandler<?>... configuration) {
         try {
-            applyJSONToConfig(json, configuration);
+            if (configuration == null || configuration.length == 0) {
+                LOG.debug("Can't import values to non existing configuration");
+            } else {
+                Arrays.stream(configuration)
+                        .forEach(c -> applyJSONToConfig(loadJSON(file), c, c.getName()));
+            }
         } catch (JSONException e) {
             LOG.warn("Unexpected error while parsing the json file " + file.getAbsolutePath(), e);
         }
     }
 
-    private static void applyJSONToConfig(JSONObject json, ConfigurationHandler<?> configuration) {
+    private static void applyJSONToConfig(JSONObject json, ConfigurationHandler<?> configuration, String name) {
+        if (json == null) {
+            return;
+        }
+
+        if (!json.has(name)) {
+            LOG.debug("Couldn't load data for configuration with name {}", name);
+            return;
+        }
+
+        json = json.getJSONObject(name);
+
         if (json == null) {
             return;
         } else if (!configuration.getKeyClass().getName().equals(retrieveStringValueFromJSON(CONFIG_TYPE, json))) {
@@ -71,7 +92,7 @@ public class ConfigurationIOHandler {
         List<String> embeddedConfigKeys = new ArrayList<>();
 
         for (Map.Entry<? extends Enum<?>, AbstractConfigurationValue<?>> configValue : configuration.getConfigurationValues().entrySet()) {
-            if (configValue.getValue() instanceof EmbeddedConfiguration<?> embeddedConfiguration) {
+            if (configValue.getValue() instanceof EmbeddedConfiguration<?>) {
                 embeddedConfigKeys.add(configValue.getKey().name());
             } else {
                 String value = retrieveStringValueFromJSON(configValue.getKey().name(), json);
@@ -82,16 +103,7 @@ public class ConfigurationIOHandler {
         }
 
         for (String configKey : embeddedConfigKeys) {
-            JSONObject embeddedJSON = retrieveObjectValueFromJSON(configKey, json);
-            applyJSONToConfig(embeddedJSON, configuration.getValue(configKey, ConfigurationHandler.class));
-        }
-    }
-
-    private static JSONObject retrieveObjectValueFromJSON(String name, JSONObject json) {
-        try {
-            return json.getJSONObject(name);
-        } catch (JSONException e) {
-            return null;
+            applyJSONToConfig(json, configuration.getValue(configKey, ConfigurationHandler.class), configKey);
         }
     }
 

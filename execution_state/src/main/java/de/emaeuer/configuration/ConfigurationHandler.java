@@ -104,11 +104,11 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
     }
 
     public void exportConfig(File file) {
-        ConfigurationIOHandler.exportConfiguration(this, file);
+        ConfigurationIOHandler.exportConfiguration(file, this);
     }
 
     public void importConfig(File file) {
-        ConfigurationIOHandler.importConfiguration(this, file);
+        ConfigurationIOHandler.importConfiguration(file,this);
     }
 
     public EnumMap<T, AbstractConfigurationValue<?>> getConfigurationValues() {

@@ -8,11 +8,9 @@ import javafx.collections.FXCollections;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,8 +19,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public class ConfigurationValueInputMapper {
-
-    private static final FileChooser FILE_CHOOSER = new FileChooser();
 
     private ConfigurationValueInputMapper() {}
 
@@ -38,8 +34,6 @@ public class ConfigurationValueInputMapper {
         boxWithDirectInputs.getStyleClass().add("output_card");
         boxWithDirectInputs.getChildren().add(createCardTitle(name));
         nodes.add(boxWithDirectInputs);
-
-        boxWithDirectInputs.getChildren().add(createLoadAndSaveCard(configuration, parent, action));
 
         // create inputs for everything that is not an embedded configuration
         configuration.getConfigurationValues()
@@ -186,27 +180,5 @@ public class ConfigurationValueInputMapper {
         title.getStyleClass().add("card_title");
 
         return title;
-    }
-
-    private static Node createLoadAndSaveCard(ConfigurationHandler<?> configuration, Node parent, Runnable action) {
-        String name = "Load or save configuration";
-        Button open = new Button("Load");
-        Button save = new Button("Save");
-
-        open.setOnAction(e -> {
-            File file = FILE_CHOOSER.showOpenDialog(parent.getScene().getWindow());
-            configuration.importConfig(file);
-            action.run();
-        });
-
-        save.setOnAction(e -> {
-            File file = FILE_CHOOSER.showSaveDialog(parent.getScene().getWindow());
-            configuration.exportConfig(file);
-            action.run();
-        });
-
-        HBox buttonBox = new HBox(open, save);
-        buttonBox.setSpacing(10);
-        return createStandardInput(name, buttonBox);
     }
 }

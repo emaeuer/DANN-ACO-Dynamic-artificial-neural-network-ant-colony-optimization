@@ -20,8 +20,7 @@ public enum NeatConfiguration implements DefaultConfiguration<NeatConfiguration>
     REMOVE_CONNECTION_MAX_WEIGHT("The magnitude of the weights to be removed by the remove connection operator", new DoubleConfigurationValue(1, 0, 1)),
     PRUNE_MUTATION_RATE("Probability of removing isolated neurons from the chromosome", new DoubleConfigurationValue(1, 0, 1)),
     WEIGHT_MUTATION_RATE("The probability of existing connection weights being mutated", new DoubleConfigurationValue(0.72, 0, 1)),
-    WEIGHT_MUTATION_DEVIATION("The standard deviation for weight mutation values", new DoubleConfigurationValue(1.5, 0, 20)),
-    RECURRENT_ALLOWED("Allow recurrent connections", new StringConfigurationValue("best_guess", "best_guess", "disallowed", "lazy"));
+    WEIGHT_MUTATION_DEVIATION("The standard deviation for weight mutation values", new DoubleConfigurationValue(1.5, 0, 20));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;

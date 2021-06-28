@@ -157,4 +157,14 @@ public class GuiController {
         this.environmentAreaController.toggleVisualMode();
         ((Node) e.getSource()).pseudoClassStateChanged(PseudoClass.getPseudoClass("active"), !this.environmentAreaController.isVisualMode());
     }
+
+    @FXML
+    public void save() {
+        this.configurationPanelController.saveConfig();
+    }
+
+    @FXML
+    public void load() {
+        this.configurationPanelController.loadConfig();
+    }
 }

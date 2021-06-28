@@ -6,13 +6,19 @@ import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.gui.controller.util.ConfigurationValueInputMapper;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.persistence.BackgroundFileWriter;
+import de.emaeuer.persistence.ConfigurationIOHandler;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+
+import java.io.File;
 
 public class ConfigurationController {
+
+    private static final FileChooser FILE_CHOOSER = new FileChooser();
 
     @FXML
     private VBox panel;
@@ -67,5 +73,24 @@ public class ConfigurationController {
 
     public ObjectProperty<BackgroundFileWriter> writerProperty() {
         return writer;
+    }
+
+    public void saveConfig() {
+        if (this.optimizationConfiguration.isNotNull().and(this.environmentConfiguration.isNotNull()).get()) {
+            File file = FILE_CHOOSER.showSaveDialog(panel.getScene().getWindow());
+            if (file != null) {
+                ConfigurationIOHandler.exportConfiguration(file, this.optimizationConfiguration.get(), this.environmentConfiguration.get());
+            }
+        }
+    }
+
+    public void loadConfig() {
+        if (this.optimizationConfiguration.isNotNull().and(this.environmentConfiguration.isNotNull()).get()) {
+            File file = FILE_CHOOSER.showOpenDialog(panel.getScene().getWindow());
+            if (file != null && file.exists()) {
+                ConfigurationIOHandler.importConfiguration(file, this.optimizationConfiguration.get(), this.environmentConfiguration.get());
+                refreshPanel();
+            }
+        }
     }
 }

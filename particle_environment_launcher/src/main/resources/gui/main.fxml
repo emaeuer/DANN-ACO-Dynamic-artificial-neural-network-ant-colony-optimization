@@ -24,6 +24,11 @@
 
             <Separator maxWidth="40" styleClass="separator"/>
 
+            <Button styleClass="bar_button, save_button" onAction="#save"/>
+            <Button styleClass="bar_button, load_button" onAction="#load"/>
+
+            <Separator maxWidth="40" styleClass="separator"/>
+
             <Button styleClass="bar_button, plot_button" onAction="#showPlotPanel" fx:id="plotButton"/>
             <Button styleClass="bar_button, log_button" onAction="#showLogPanel" fx:id="logButton"/>
             <Button styleClass="bar_button, setting_button" onAction="#showSettingPanel" fx:id="settingButton"/>

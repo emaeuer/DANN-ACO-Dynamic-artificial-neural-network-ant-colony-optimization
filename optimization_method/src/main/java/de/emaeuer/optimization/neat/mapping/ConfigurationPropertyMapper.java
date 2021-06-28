@@ -45,7 +45,7 @@ public class ConfigurationPropertyMapper {
             put(enumToKey(NeatConfiguration.PRUNE_MUTATION_RATE), "prune.mutation.rate");
             put(enumToKey(NeatConfiguration.WEIGHT_MUTATION_RATE), "weight.mutation.rate");
             put(enumToKey(NeatConfiguration.WEIGHT_MUTATION_DEVIATION), "weight.mutation.std.dev");
-            put(enumToKey(NeatConfiguration.RECURRENT_ALLOWED), "recurrent");
+            put(enumToKey(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS), "recurrent");
         }
     };
 
@@ -123,6 +123,8 @@ public class ConfigurationPropertyMapper {
                 if (key == NeuralNetworkConfiguration.INPUT_LAYER_SIZE) {
                     // bias is input neuron for neat
                     value = Integer.toString(Integer.parseInt(value) + 1);
+                } else if (key == NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS) {
+                    value = "true".equals(value) ? "disallowed" : "best_guess";
                 }
 
                 value = VALUE_MAPPING.getOrDefault(value, value);

@@ -10,10 +10,6 @@ public enum NeuralNetworkConfiguration implements DefaultConfiguration<NeuralNet
 
     WEIGHT_MAX("Upper bound for connection weights", new DoubleConfigurationValue(5, 1, 500)),
     WEIGHT_MIN("Lower bound for connection weights", new DoubleConfigurationValue(-5, -500, -1)),
-
-    // TODO implement
-//    BIAS_AS_ON_NEURON("Realize bias as on neuron", new BooleanConfigurationValue(false)),
-
     OUTPUT_ACTIVATION_FUNCTION("Output layer activation function", new StringConfigurationValue(ActivationFunction.TANH.name(), ActivationFunction.getNames())),
     INPUT_ACTIVATION_FUNCTION("Input layer activation function", new StringConfigurationValue(ActivationFunction.TANH.name(), ActivationFunction.getNames())),
     HIDDEN_ACTIVATION_FUNCTION("Hidden layer activation function", new StringConfigurationValue(ActivationFunction.TANH.name(), ActivationFunction.getNames())),
