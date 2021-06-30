@@ -22,7 +22,7 @@ public class CliLauncher {
 
     private static final Logger LOG = LogManager.getLogger(CliLauncher.class);
 
-    private OptimizationEnvironmentHandler optimization = new OptimizationEnvironmentHandler();
+    private final OptimizationEnvironmentHandler optimization = new OptimizationEnvironmentHandler();
 
     private final StateHandler<OptimizationState> optimizationState = new StateHandler<>(OptimizationState.class);
     private final ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration = new ConfigurationHandler<>(OptimizationConfiguration.class);
@@ -39,7 +39,7 @@ public class CliLauncher {
     public CliLauncher(String[] args) {
         LOG.debug("CLI-Call-Parameters: " + Arrays.toString(args));
 
-        CliParameter parameters = new CliParameter();
+        AlternativeCliParameter parameters = new AlternativeCliParameter();
         new CommandLine(parameters).parseArgs(args);
 
         initEnvironmentConfiguration(parameters.getEnvironmentConfig());
@@ -49,7 +49,7 @@ public class CliLauncher {
     public CliLauncher(String[] args, int seed) {
         LOG.debug("CLI-Call-Parameters: " + Arrays.toString(args));
 
-        CliParameter parameters = new CliParameter();
+        AlternativeCliParameter parameters = new AlternativeCliParameter();
         new CommandLine(parameters).parseArgs(args);
 
         initEnvironmentConfiguration(parameters.getEnvironmentConfig());
@@ -65,7 +65,7 @@ public class CliLauncher {
         }
     }
 
-    private void initOptimizationConfiguration(File file, CliParameter parameters) {
+    private void initOptimizationConfiguration(File file, AlternativeCliParameter parameters) {
         if (file != null && file.exists()) {
             this.optimizationConfiguration.importConfig(file);
         }
@@ -76,17 +76,19 @@ public class CliLauncher {
         }
     }
 
-    private void applyParametersToConfig(ConfigurationHandler<PacoConfiguration> config, CliParameter parameters) {
+    private void applyParametersToConfig(ConfigurationHandler<PacoConfiguration> config, AlternativeCliParameter parameters) {
         Optional.ofNullable(parameters.getPopulationSize()).ifPresent(v -> config.setValue(PacoConfiguration.POPULATION_SIZE, v));
-        Optional.ofNullable(parameters.getNumberOfUpdates()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATES_PER_ITERATION, v));
+        Optional.ofNullable(parameters.getUpdatesPerIteration()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATES_PER_ITERATION, v));
         Optional.ofNullable(parameters.getAntsPerIteration()).ifPresent(v -> config.setValue(PacoConfiguration.ANTS_PER_ITERATION, v));
-        Optional.ofNullable(parameters.getDeviationFunction()).ifPresent(v -> config.setValue(PacoConfiguration.DEVIATION_FUNCTION, v));
-        Optional.ofNullable(parameters.getPopulationStrategy()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATE_STRATEGY, v));
-        Optional.ofNullable(parameters.getChangeProbability()).ifPresent(v -> config.setValue(PacoConfiguration.TOPOLOGY_PHEROMONE, v));
-        Optional.ofNullable(parameters.getPheromoneValue()).ifPresent(v -> config.setValue(PacoConfiguration.CONNECTION_PHEROMONE, v));
-        Optional.ofNullable(parameters.getSpitThreshold()).ifPresent(v -> config.setValue(PacoConfiguration.SPLIT_PROBABILITY, v));
+        Optional.ofNullable(parameters.getStandardDeviationFunction()).ifPresent(v -> config.setValue(PacoConfiguration.DEVIATION_FUNCTION, v));
+        Optional.ofNullable(parameters.getUpdateStrategy()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATE_STRATEGY, v));
+        Optional.ofNullable(parameters.getTopologyPheromoneFunction()).ifPresent(v -> config.setValue(PacoConfiguration.TOPOLOGY_PHEROMONE, v));
+        Optional.ofNullable(parameters.getConnectionPheromoneFunction()).ifPresent(v -> config.setValue(PacoConfiguration.CONNECTION_PHEROMONE, v));
+        Optional.ofNullable(parameters.getSplitProbabilityFunction()).ifPresent(v -> config.setValue(PacoConfiguration.SPLIT_PROBABILITY, v));
         Optional.ofNullable(parameters.isElitism()).ifPresent(v -> config.setValue(PacoConfiguration.ELITISM, v));
         Optional.ofNullable(parameters.isNeuronIsolation()).ifPresent(v -> config.setValue(PacoConfiguration.ENABLE_NEURON_ISOLATION, v));
+        Optional.ofNullable(parameters.getSolutionWeightFactor()).ifPresent(v -> config.setValue(PacoConfiguration.SOLUTION_WEIGHT_FACTOR, v));
+        Optional.ofNullable(parameters.isReuseSplitKnowledge()).ifPresent(v -> config.setValue(PacoConfiguration.REUSE_SPLIT_KNOWLEDGE, v));
     }
 
     public void run() {
@@ -103,7 +105,6 @@ public class CliLauncher {
     }
 
     public double getCost() {
-        double averageFitness = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FITNESS_DISTRIBUTION)).getMean();
         return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean();
     }
 

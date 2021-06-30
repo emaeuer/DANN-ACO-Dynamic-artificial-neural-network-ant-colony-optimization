@@ -366,6 +366,8 @@ public class PacoPheromone {
                     .mapToDouble(d -> d)
                     .map(d -> Math.abs(mean - d))
                     .sum();
+        } else {
+            populationKnowledge = HashMultiset.create();
         }
 
         Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
@@ -374,6 +376,7 @@ public class PacoPheromone {
                 .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
                 .with(PacoParameter.CONNECTION_PHEROMONE, connectionPheromone)
                 .with(PacoParameter.TOPOLOGY_PHEROMONE, topologyPheromone)
+                .with(PacoParameter.STANDARD_DEVIATION, calculateDeviation(populationKnowledge, connection.weight()))
                 .getVariables();
 
         return this.configuration.getValue(SPLIT_PROBABILITY, Double.class, variables) > this.rng.nextDouble();
@@ -522,24 +525,27 @@ public class PacoPheromone {
         return value;
     }
 
+    //############################################################
+    //#################### Util Methods ##########################
+    //############################################################
+
     private double calculateDeviation(Collection<Double> populationValues, double mean) {
         double sumOfDifferences = populationValues.stream()
                 .mapToDouble(d -> d)
                 .map(d -> Math.abs(mean - d))
                 .sum();
 
-        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
+        ConfigurationVariablesBuilder<PacoParameter> builder = ConfigurationVariablesBuilder.<PacoParameter>build()
                 .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
                 .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
-                .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
-                .getVariables();
+                .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences);
 
-        return this.configuration.getValue(DEVIATION_FUNCTION, Double.class, variables);
+        double penalty = this.configuration.getValue(NUMBER_OF_VALUES_PENALTY, Double.class, builder.getVariables());
+
+        builder.with(PacoParameter.NUMBER_OF_VALUES_PENALTY, penalty);
+
+        return this.configuration.getValue(DEVIATION_FUNCTION, Double.class, builder.getVariables());
     }
-
-    //############################################################
-    //#################### Util Methods ##########################
-    //############################################################
 
     private double calculateTopologyPheromone(TopologyData topology) {
         int numberOfUsages = Objects.requireNonNullElse(this.topologyPheromone.get(topology.getTopologyGroupID(), topology.getTopologyKey()), 0);

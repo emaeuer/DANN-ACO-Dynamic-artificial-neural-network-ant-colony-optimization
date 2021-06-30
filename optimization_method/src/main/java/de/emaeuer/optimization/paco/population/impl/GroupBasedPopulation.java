@@ -35,7 +35,6 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
         bestOfEachGroup.values()
                 .stream()
                 .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
-                .peek(a -> System.out.print(a.getFitness() + " "))
                 .limit(calculateNumberOfAntsToAdd())
                 .map(this::addAnt)
                 .filter(Optional::isPresent)
