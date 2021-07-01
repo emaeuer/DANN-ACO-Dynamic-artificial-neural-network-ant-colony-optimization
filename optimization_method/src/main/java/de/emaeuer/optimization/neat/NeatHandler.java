@@ -101,4 +101,9 @@ public class NeatHandler extends OptimizationMethod {
 
         super.update();
     }
+
+    @Override
+    protected void updateImplementationState() {
+
+    }
 }

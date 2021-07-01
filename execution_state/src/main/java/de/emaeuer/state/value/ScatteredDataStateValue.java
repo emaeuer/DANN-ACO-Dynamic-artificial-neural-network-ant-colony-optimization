@@ -2,14 +2,11 @@ package de.emaeuer.state.value;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Integer, Double[]>, Map<Integer, Double[]>> {
 
     private final Map<Integer, Double[]> iterationScatteredData = new ConcurrentHashMap<>();
     private final Set<Integer> indicesToRefresh = ConcurrentHashMap.newKeySet();
-
-    private Double[] valuesToExport;
 
     @Override
     public Class<? extends Map.Entry<Integer, Double[]>> getExpectedInputType() {
@@ -30,7 +27,7 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
         if (value != null) {
             this.iterationScatteredData.put(value.getKey(), value.getValue());
             this.indicesToRefresh.add(value.getKey());
-            this.valuesToExport = value.getValue();
+            return String.format("%d=%s", value.getKey(), Arrays.toString(value.getValue()));
         }
         return null;
     }
@@ -42,9 +39,7 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
 
     @Override
     public String getExportValue() {
-        return Arrays.stream(this.valuesToExport)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+        return null;
     }
 
     public Set<Integer> getIndicesToRefresh() {

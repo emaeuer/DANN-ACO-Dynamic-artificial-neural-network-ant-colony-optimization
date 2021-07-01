@@ -21,6 +21,8 @@ public class StateValueFactory {
             return new ScatteredDataStateValue();
         } else if (CollectionDistributionStateValue.class.equals(className)) {
             return new CollectionDistributionStateValue();
+        } else if (CumulatedDataSeriesStateValue.class.equals(className)) {
+            return new CumulatedDataSeriesStateValue();
         }
 
         throw new IllegalArgumentException("Factory doesn't support values of type " + className.getSimpleName());
