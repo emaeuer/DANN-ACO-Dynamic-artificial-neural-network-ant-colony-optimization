@@ -75,7 +75,10 @@ public class PacoHandler extends OptimizationMethod {
                 .max(Comparator.comparingDouble(PacoAnt::getFitness))
                 .orElse(null);
 
-         this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
+        if (((getGenerationCounter() - 1) % (this.population.getMaxSize() / this.population.getUpdatesPerIteration())) == 0) {
+            this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
+        }
+        this.population.exportCurrentGroups(getEvaluationCounter(), this.state);
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix
@@ -85,6 +88,14 @@ public class PacoHandler extends OptimizationMethod {
         }
 
         super.update();
+    }
+
+    @Override
+    protected void updateImplementationState() {
+        this.state.execute(s -> {
+            s.resetValue(PacoState.CONNECTION_WEIGHTS_SCATTERED);
+            s.resetValue(PacoState.USED_GROUPS);
+        });
     }
 
     @Override

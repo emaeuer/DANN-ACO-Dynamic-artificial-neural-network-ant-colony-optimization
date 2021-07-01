@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tooltip?>
 <BorderPane fx:controller="de.emaeuer.gui.controller.GuiController" xmlns:fx="http://javafx.com/fxml"
             stylesheets="@style.css">
     <left>
@@ -13,25 +14,52 @@
             <padding>
                 <Insets top="20" left="2" right="2" bottom="20"/>
             </padding>
-            <Button styleClass="bar_button, play_button" onAction="#start" fx:id="playButton"/>
-            <Button styleClass="bar_button, stop_button" onAction="#pause" fx:id="pauseButton"/>
-            <Button styleClass="bar_button, restart_button" onAction="#reset"/>
-            <Button styleClass="bar_button, faster_button" onAction="#increaseEnvironmentSpeed"/>
+            <Button styleClass="bar_button, play_button" onAction="#start" fx:id="playButton">
+                <tooltip><Tooltip text="Start optimization" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, pause_button" onAction="#pause" fx:id="pauseButton">
+                <tooltip><Tooltip text="Stop optimization" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, restart_button" onAction="#reset">
+                <tooltip><Tooltip text="Reset optimization" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, stop_button" onAction="#stopAfterEachRun">
+                <tooltip><Tooltip text="Stop after each run" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, faster_button" onAction="#increaseEnvironmentSpeed">
+                <tooltip><Tooltip text="Speed up view" /></tooltip>
+            </Button>
             <Label styleClass="speed_text" fx:id="speedDisplay"/>
-            <Button styleClass="bar_button, slower_button" onAction="#decreaseEnvironmentSpeed"/>
-            <Button styleClass="bar_button, multi_button" onAction="#changeMultiEntityMode"/>
-            <Button styleClass="bar_button, image_button" onAction="#switchDisplayMode"/>
+            <Button styleClass="bar_button, slower_button" onAction="#decreaseEnvironmentSpeed">
+                <tooltip><Tooltip text="Slow down view" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, multi_button" onAction="#changeMultiEntityMode">
+                <tooltip><Tooltip text="Number of shown agents" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, image_button" onAction="#switchDisplayMode">
+                <tooltip><Tooltip text="Disable view" /></tooltip>
+            </Button>
 
             <Separator maxWidth="40" styleClass="separator"/>
 
-            <Button styleClass="bar_button, save_button" onAction="#save"/>
-            <Button styleClass="bar_button, load_button" onAction="#load"/>
+            <Button styleClass="bar_button, save_button" onAction="#save">
+                <tooltip><Tooltip text="Save configuration" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, load_button" onAction="#load">
+                <tooltip><Tooltip text="Load configuration" /></tooltip>
+            </Button>
 
             <Separator maxWidth="40" styleClass="separator"/>
 
-            <Button styleClass="bar_button, plot_button" onAction="#showPlotPanel" fx:id="plotButton"/>
-            <Button styleClass="bar_button, log_button" onAction="#showLogPanel" fx:id="logButton"/>
-            <Button styleClass="bar_button, setting_button" onAction="#showSettingPanel" fx:id="settingButton"/>
+            <Button styleClass="bar_button, plot_button" onAction="#showPlotPanel" fx:id="plotButton">
+                <tooltip><Tooltip text="Show optimization state" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, log_button" onAction="#showLogPanel" fx:id="logButton">
+                <tooltip><Tooltip text="Show log" /></tooltip>
+            </Button>
+            <Button styleClass="bar_button, setting_button" onAction="#showSettingPanel" fx:id="settingButton">
+                <tooltip><Tooltip text="Show settings" /></tooltip>
+            </Button>
         </VBox>
     </left>
     <center>

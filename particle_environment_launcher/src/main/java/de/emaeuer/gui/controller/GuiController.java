@@ -58,6 +58,7 @@ public class GuiController {
         this.environmentAreaController.optimizationStateProperty().bind(this.statePanelController.stateProperty());
         this.environmentAreaController.updatedProperty().addListener((v, o, n) -> handleProgression());
         this.environmentAreaController.finishedProperty().addListener((v, o, n) -> handleEnvironmentEnd(n));
+        this.environmentAreaController.runningProperty().addListener((v,o,n) -> togglePlaying(n));
         this.playButton.disableProperty().bind(this.environmentAreaController.finishedProperty());
 
         this.configurationPanelController.writerProperty().bind(this.statePanelController.writerProperty());
@@ -88,14 +89,11 @@ public class GuiController {
         }
 
         this.environmentAreaController.startEnvironment();
-        togglePlaying(true);
     }
 
     @FXML
     public void pause() {
         this.environmentAreaController.pauseEnvironment();
-
-        togglePlaying(false);
     }
 
     @FXML
@@ -104,8 +102,11 @@ public class GuiController {
         this.statePanelController.reset();
         this.environmentAreaController.restartEnvironment();
         this.isFirstStart = true;
+    }
 
-        togglePlaying(false);
+    public void stopAfterEachRun(ActionEvent e) {
+        this.environmentAreaController.toggleStopAfterEachIteration();
+        ((Node) e.getSource()).pseudoClassStateChanged(PseudoClass.getPseudoClass("active"), this.environmentAreaController.getStopAfterEachRun());
     }
 
     @FXML
@@ -121,19 +122,19 @@ public class GuiController {
     @FXML
     public void showPlotPanel() {
         this.statePanel.toFront();
-        markButtonForSelectedButton(this.plotButton);
+        markButtonAsSelected(this.plotButton);
     }
 
     @FXML
     public void showLogPanel() {
         this.logPanel.toFront();
-        markButtonForSelectedButton(this.logButton);
+        markButtonAsSelected(this.logButton);
     }
 
     @FXML
     public void showSettingPanel() {
         this.configurationPanel.toFront();
-        markButtonForSelectedButton(this.settingButton);
+        markButtonAsSelected(this.settingButton);
     }
 
     private void togglePlaying(boolean isPlaying) {
@@ -141,7 +142,7 @@ public class GuiController {
         this.pauseButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("paused"), !isPlaying);
     }
 
-    private void markButtonForSelectedButton(Button selected) {
+    private void markButtonAsSelected(Button selected) {
         this.plotButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("shown"), this.plotButton == selected);
         this.logButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("shown"), this.logButton == selected);
         this.settingButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("shown"), this.settingButton == selected);
@@ -167,4 +168,5 @@ public class GuiController {
     public void load() {
         this.configurationPanelController.loadConfig();
     }
+
 }

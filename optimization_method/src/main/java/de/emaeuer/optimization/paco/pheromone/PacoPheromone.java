@@ -17,6 +17,7 @@ import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.value.AbstractStateValue;
+import de.emaeuer.state.value.data.DataPoint;
 import de.emaeuer.state.value.ScatteredDataStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -598,8 +599,22 @@ public class PacoPheromone {
                                 .toArray(Double[]::new)));
             }
         });
+    }
 
-        state.export(PacoState.CONNECTION_WEIGHTS_SCATTERED);
+    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoState> state) {
+        Map<String, DataPoint> value = new HashMap<>();
+
+        for (Integer groupID : this.topologyPheromone.rowKeySet()) {
+            double groupUsage = this.topologyPheromone.row(groupID)
+                    .values()
+                    .stream()
+                    .mapToDouble(Integer::doubleValue)
+                    .sum();
+
+            value.put(Integer.toString(groupID), new DataPoint(evaluationNumber, groupUsage));
+        }
+
+        state.execute(s -> s.addNewValue(PacoState.USED_GROUPS, value));
     }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, int groupID) {

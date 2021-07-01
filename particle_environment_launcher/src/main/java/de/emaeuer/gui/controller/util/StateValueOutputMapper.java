@@ -7,14 +7,12 @@ import com.brunomnsilva.smartgraph.graphview.*;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.StateParameter;
 import de.emaeuer.state.value.*;
+import de.emaeuer.state.value.data.DataPoint;
 import de.emaeuer.state.value.GraphStateValue.Connection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.ScatterChart;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.*;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -29,7 +27,6 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.IntStream;
 
 public class StateValueOutputMapper {
 
@@ -85,28 +82,33 @@ public class StateValueOutputMapper {
         String mapIdentifier = createMapIdentifier(stateType, suffix);
 
         if (!this.visualRepresentations.containsKey(mapIdentifier)) {
-            createPlot(stateType, suffix);
+            createLinePlot(dataSeries, stateType, suffix);
         }
 
         //noinspection unchecked no safe way to cast generic --> if generation on top works correctly is always valid cast
-        LineChart<Number, Number> chart = (LineChart<Number, Number>) this.visualRepresentations.get(mapIdentifier);
-
-        Map<String, List<Double[]>> dataWithoutSeries = updateDataSeries(dataSeries, chart.getData());
-        createDataSeries(dataWithoutSeries, chart.getData());
+        XYChart<Number, Number> chart = (XYChart<Number, Number>) this.visualRepresentations.get(mapIdentifier);
+        updateDataSeries(dataSeries, chart.getData());
     }
 
-    private void createPlot(StateParameter<?> stateType, String suffix) {
+    private void createLinePlot(DataSeriesStateValue dataSeries, StateParameter<?> stateType, String suffix) {
         NumberAxis xAxis = new NumberAxis();
         xAxis.setLabel("Evaluation number");
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Fitness");
-        LineChart<Number, Number> chart = new LineChart<>(xAxis, yAxis);
-        chart.setCreateSymbols(false);
+        XYChart<Number, Number> chart;
+
+        if (dataSeries instanceof CumulatedDataSeriesStateValue) {
+            chart = new StackedAreaChart<>(xAxis, yAxis);
+            ((StackedAreaChart<Number, Number>) chart).setCreateSymbols(false);
+        } else {
+            chart = new LineChart<>(xAxis, yAxis);
+            ((LineChart<Number, Number>) chart).setCreateSymbols(false);
+        }
+
         chart.setAnimated(false);
-
         chart.getStyleClass().add("output_plot");
-        this.visualRepresentations.put(createMapIdentifier(stateType, suffix), chart);
 
+        this.visualRepresentations.put(createMapIdentifier(stateType, suffix), chart);
 
         VBox box = createCard(stateType, chart);
         box.getStyleClass().add("output_plot_background");
@@ -114,69 +116,51 @@ public class StateValueOutputMapper {
         this.newContent.add(box);
     }
 
-    private Map<String, List<Double[]>> updateDataSeries(DataSeriesStateValue dataSeries, ObservableList<Series<Number, Number>> property) {
-        // create copy of map to enable modification without change to original
-        Map<String, List<Double[]>> seriesData = new HashMap<>(dataSeries.getValue());
+    private void updateDataSeries(DataSeriesStateValue dataSeries, ObservableList<Series<Number, Number>> property) {
+        Map<String, List<DataPoint>> newData = new HashMap<>();
 
-        if (seriesData.isEmpty()) {
+        // executed by state for automatic handling of locking
+        this.state.execute(s -> newData.putAll(dataSeries.getChangedData()));
+
+        if (newData.isEmpty()) {
             property.clear();
-            return Collections.emptyMap();
+            return;
         }
+
+        List<Series<Number, Number>> seriesToRemove = new ArrayList<>();
 
         for (Series<Number, Number> series : property) {
-            // copy list to prevent parallel access
-            List<Double[]> data = new ArrayList<>(seriesData.remove(series.getName()));
-            int seriesSize = series.getData().size();
+            List<DataPoint> data = newData.remove(series.getName());
 
-            // create copy of all indices which have to be refreshed
-            // copy because other series of this chart need to refresh the same indices
-            Set<Integer> indicesToRefresh = new HashSet<>(dataSeries.getIndicesToRefresh());
-
-            if (seriesSize > data.size() && indicesToRefresh.size() == data.size()) {
+            if (data == null && dataSeries.getSeriesSize(series.getName()) > 0) {
+                continue;
+            } else if (data == null || dataSeries.getSeriesSize(series.getName()) == 0) {
+                seriesToRemove.add(series);
+                continue;
+            } else if (dataSeries.getSeriesSize(series.getName()) < series.getData().size()) {
                 series.getData().clear();
-                seriesSize = 0;
             }
 
-            // add all points which are completely new use this extra loop because the indices to refresh are saved in a
-            // set without order which may mess with the order of the indices
-            if (seriesSize <= data.size()) {
-                data.subList(seriesSize, data.size())
-                        .stream()
-                        .map(p -> new XYChart.Data<Number, Number>(p[0], p[1]))
-                        .forEach(d -> series.getData().add(d));
-
-                IntStream.range(seriesSize, data.size())
-                        .forEach(indicesToRefresh::remove);
-            }
-
-            for (int index : indicesToRefresh) {
-                if (index >= series.getData().size()) {
-                    continue;
+            for (DataPoint point : data) {
+                if (point.getIndex() >= series.getData().size()) {
+                    series.getData().add(new XYChart.Data<>(point.getX(), point.getY()));
+                } else {
+                    series.getData().get(point.getIndex()).setYValue(point.getY());
                 }
-                series.getData().get(index)
-                        .setYValue(data.get(index)[1]);
             }
         }
 
-        // all indices were refreshed
-        dataSeries.getIndicesToRefresh().clear();
+        property.removeAll(seriesToRemove);
 
-        // map only contains series that were not created yet
-        return seriesData;
-    }
-
-
-    private void createDataSeries(Map<String, List<Double[]>> seriesData, ObservableList<Series<Number,Number>> property) {
-        // create series for each entry
-        for (Entry<String, List<Double[]>> singleSeriesData : seriesData.entrySet()) {
+        for (Entry<String, List<DataPoint>> newSeries : newData.entrySet()) {
             ObservableList<XYChart.Data<Number, Number>> data = FXCollections.observableArrayList();
 
-            singleSeriesData.getValue()
+            newSeries.getValue()
                     .stream()
-                    .map(p -> new XYChart.Data<Number, Number>(p[0], p[1]))
+                    .map(p -> new XYChart.Data<Number, Number>(p.getX(), p.getY()))
                     .forEach(data::add);
 
-            Series<Number, Number> series = new Series<>(singleSeriesData.getKey(), data);
+            Series<Number, Number> series = new Series<>(newSeries.getKey(), data);
             property.add(series);
         }
     }

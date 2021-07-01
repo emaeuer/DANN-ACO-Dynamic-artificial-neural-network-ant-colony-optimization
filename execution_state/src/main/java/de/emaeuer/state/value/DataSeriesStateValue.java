@@ -1,69 +1,82 @@
 package de.emaeuer.state.value;
 
+import de.emaeuer.state.value.data.DataPoint;
+
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-public class DataSeriesStateValue extends AbstractStateValue<Map.Entry<String, Double[]>, Map<String, List<Double[]>>> {
+public class DataSeriesStateValue extends AbstractStateValue<Map<String, DataPoint>, Map<String, Map<Double, DataPoint>>> {
 
-    private final Map<String, List<Double[]>> seriesData = new ConcurrentHashMap<>();
-
-    private final Map<Double, Integer> existingXValues = new ConcurrentHashMap<>();
-    private final Set<Integer> indicesToRefresh = ConcurrentHashMap.newKeySet();
+    private final Map<String, Map<Double, DataPoint>> seriesData = new HashMap<>();
+    private Map<String, List<DataPoint>> newData = new HashMap<>();
 
     @Override
-    public Class<? extends Map.Entry<String, Double[]>> getExpectedInputType() {
-        Class<?> type = Map.Entry.class;
-        //noinspection unchecked only way to return class with generic is unsafe cast
-        return (Class<? extends Map.Entry<String, Double[]>>) type;
-    }
-
-    @Override
-    public Class<? extends Map<String, List<Double[]>>> getOutputType() {
+    public Class<? extends Map<String, DataPoint>> getExpectedInputType() {
         Class<?> type = Map.class;
         //noinspection unchecked only way to return class with generic is unsafe cast
-        return (Class<? extends Map<String, List<Double[]>>>) type;
+        return (Class<? extends Map<String, DataPoint>>) type;
     }
 
     @Override
-    protected String handleNewValue(Map.Entry<String, Double[]> value) {
-        Double[] point = value.getValue();
-        int indexToRefresh;
+    public Class<? extends Map<String, Map<Double, DataPoint>>> getOutputType() {
+        Class<?> type = Map.class;
+        //noinspection unchecked only way to return class with generic is unsafe cast
+        return (Class<? extends Map<String, Map<Double, DataPoint>>>) type;
+    }
 
-        if (!existingXValues.containsKey(point[0])) {
-            indexToRefresh = addNewData(value);
+    @Override
+    protected String handleNewValue(Map<String, DataPoint> value) {
+        value.entrySet().forEach(this::addNewDataPoint);
+
+        return value.entrySet()
+                .stream()
+                .map(e -> String.format("%s=(%f:%f)", e.getKey(), e.getValue().getX(), e.getValue().getY()))
+                .collect(Collectors.joining(","));
+    }
+
+    protected void addNewDataPoint(Map.Entry<String, DataPoint> value) {
+        DataPoint point = value.getValue();
+        Map<Double, DataPoint> series = this.seriesData.computeIfAbsent(value.getKey(), k -> new HashMap<>());
+
+        if (!series.containsKey(point.getX())) {
+            point.setIndex(series.size());
         } else {
-            indexToRefresh = this.existingXValues.get(point[0]);
-            if (!this.seriesData.containsKey(value.getKey()) || indexToRefresh == this.seriesData.get(value.getKey()).size()) {
-                addNewData(value);
-            } else {
-                this.seriesData.get(value.getKey()).set(indexToRefresh, point);
-            }
+            DataPoint oldPoint = series.get(point.getX());
+            point.setIndex(oldPoint.getIndex());
         }
 
-        this.indicesToRefresh.add(indexToRefresh);
-        return null;
-    }
-
-    private int addNewData(Map.Entry<String, Double[]> value) {
-        int indexToRefresh;
-        this.seriesData.putIfAbsent(value.getKey(), Collections.synchronizedList(new ArrayList<>()));
-        this.seriesData.get(value.getKey()).add(value.getValue());
-        indexToRefresh = this.seriesData.get(value.getKey()).size() - 1;
-        existingXValues.put(value.getValue()[0], indexToRefresh);
-        return indexToRefresh;
+        series.put(point.getX(), point);
+        this.newData.putIfAbsent(value.getKey(), new ArrayList<>());
+        this.newData.get(value.getKey()).add(point);
     }
 
     @Override
-    public Map<String, List<Double[]>> getValueImpl() {
+    public Map<String, Map<Double, DataPoint>> getValueImpl() {
         return this.seriesData;
     }
 
     @Override
     public String getExportValue() {
-        return this.seriesData.toString();
+        return newData.entrySet()
+                .stream()
+                .map(e -> {
+                    String valueString = e.getValue()
+                            .stream()
+                            .map(p -> String.format("(%f,%f)", p.getX(), p.getY()))
+                            .collect(Collectors.joining(","));
+                    return String.format("%s={%s}", e.getKey(), valueString);
+                })
+                .collect(Collectors.joining(","));
     }
 
-    public Set<Integer> getIndicesToRefresh() {
-        return indicesToRefresh;
+    public Map<String, List<DataPoint>> getChangedData() {
+        Map<String, List<DataPoint>> result = this.newData;
+        this.newData = new HashMap<>();
+
+        return result;
+    }
+
+    public int getSeriesSize(String seriesName) {
+        return this.seriesData.getOrDefault(seriesName, Collections.emptyMap()).size();
     }
 }

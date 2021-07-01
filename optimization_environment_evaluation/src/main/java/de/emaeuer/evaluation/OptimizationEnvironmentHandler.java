@@ -35,6 +35,8 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     private boolean finished = false;
     private boolean updateNotifier = false;
+    private boolean automaticallyStartNextRun = true;
+    private boolean currentlyAutomaticallyPaused = false;
 
     private StateHandler<OptimizationState> optimizationState;
     private ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration;
@@ -99,7 +101,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
             this.updateNotifier = !this.updateNotifier;
         }
 
-        if (!this.finished) {
+        if (!this.finished && !isPaused()) {
             step();
         }
     }
@@ -110,10 +112,16 @@ public class OptimizationEnvironmentHandler implements Runnable {
             this.optimization.update();
         }
 
-        if (optimization.isOptimizationFinished()) {
+        if (optimization.isRunFinished() && !this.automaticallyStartNextRun && !this.currentlyAutomaticallyPaused) {
+            this.pauseThread.set(true);
+            this.currentlyAutomaticallyPaused = true;
+        } else if (optimization.isOptimizationFinished()) {
+            this.optimization.updateAfterRunEnd();
             handleEnd();
         } else if (optimization.isRunFinished()) {
+            this.optimization.updateAfterRunEnd();
             handleNextRun();
+            this.currentlyAutomaticallyPaused = false;
         } else {
             handleNextIteration();
         }
@@ -245,5 +253,13 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     public boolean isUpdateNotifier() {
         return updateNotifier;
+    }
+
+    public void setAutomaticallyStartNextRun(boolean automaticallyStartNextRun) {
+        this.automaticallyStartNextRun = automaticallyStartNextRun;
+    }
+
+    public boolean isPaused() {
+        return this.pauseThread.get();
     }
 }
