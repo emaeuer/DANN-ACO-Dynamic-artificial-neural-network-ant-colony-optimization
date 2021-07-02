@@ -26,9 +26,10 @@ public class IRaceRunner {
 
         String[] algParameters = Arrays.copyOfRange(args, 4, args.length);
 
+        LOG.debug("Starting optimization");
         CliLauncher algorithmRunner = new CliLauncher(algParameters, seed);
         algorithmRunner.run();
-        // multiply by -1 because irace always minimizes
+        LOG.debug("Optimization finished after {} milliseconds and cost of {}", algorithmRunner.getTimeMillis(), algorithmRunner.getCost());
         System.out.println((algorithmRunner.getCost()) + " " + algorithmRunner.getTimeMillis());
     }
 }

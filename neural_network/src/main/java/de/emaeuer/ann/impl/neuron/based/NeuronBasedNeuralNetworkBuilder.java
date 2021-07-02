@@ -26,6 +26,7 @@ public class NeuronBasedNeuralNetworkBuilder {
     }
 
     public static NeuronBasedNeuralNetworkBuilder buildWithConfiguration(ConfigurationHandler<NeuralNetworkConfiguration> configuration) {
+        configuration.logConfiguration();
         return new NeuronBasedNeuralNetworkBuilder(configuration);
     }
 
@@ -34,7 +35,6 @@ public class NeuronBasedNeuralNetworkBuilder {
     }
 
     public static NeuronBasedNeuralNetwork buildFromNeuronCollection(List<Neuron> neurons) {
-        // TODO configuration
         NeuronBasedNeuralNetworkBuilder builder = build();
         for (Neuron neuron : neurons) {
             switch (neuron.getType()) {

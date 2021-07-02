@@ -8,6 +8,7 @@ import de.emaeuer.optimization.OptimizationMethodNames;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.persistence.ConfigurationIOHandler;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.value.DistributionStateValue;
 import org.apache.logging.log4j.LogManager;
@@ -42,8 +43,7 @@ public class CliLauncher {
         AlternativeCliParameter parameters = new AlternativeCliParameter();
         new CommandLine(parameters).parseArgs(args);
 
-        initEnvironmentConfiguration(parameters.getEnvironmentConfig());
-        initOptimizationConfiguration(parameters.getOptimizationConfig(), parameters);
+        initConfigurations(parameters.getConfigFile(), parameters);
     }
 
     public CliLauncher(String[] args, int seed) {
@@ -52,22 +52,19 @@ public class CliLauncher {
         AlternativeCliParameter parameters = new AlternativeCliParameter();
         new CommandLine(parameters).parseArgs(args);
 
-        initEnvironmentConfiguration(parameters.getEnvironmentConfig());
-        initOptimizationConfiguration(parameters.getOptimizationConfig(), parameters);
+        initConfigurations(parameters.getConfigFile(), parameters);
 
-        this.environmentConfiguration.setValue(EnvironmentConfiguration.SEED, seed);
+        // seed of the environment should not be changed to have the same difficulty
+//        this.environmentConfiguration.setValue(EnvironmentConfiguration.SEED, seed);
         this.optimizationConfiguration.setValue(OptimizationConfiguration.SEED, seed);
     }
 
-    private void initEnvironmentConfiguration(File file) {
-        if (file != null && file.exists()) {
-            this.environmentConfiguration.importConfig(file);
-        }
-    }
+    private void initConfigurations(File file, AlternativeCliParameter parameters) {
+        this.environmentConfiguration.setName("ENVIRONMENT_CONFIGURATION");
+        this.optimizationConfiguration.setName("OPTIMIZATION_CONFIGURATION");
 
-    private void initOptimizationConfiguration(File file, AlternativeCliParameter parameters) {
         if (file != null && file.exists()) {
-            this.optimizationConfiguration.importConfig(file);
+            ConfigurationIOHandler.importConfiguration(file, this.environmentConfiguration, this.optimizationConfiguration);
         }
 
         if (OptimizationMethodNames.PACO.name().equals(optimizationConfiguration.getValue(OptimizationConfiguration.METHOD_NAME, String.class))) {
@@ -101,11 +98,12 @@ public class CliLauncher {
 
         long startTime = System.nanoTime();
         this.optimization.run();
-        this.timeMillis = (System.nanoTime() - startTime) / 1000;
+        this.timeMillis = (System.nanoTime() - startTime) / 1000000;
     }
 
     public double getCost() {
-        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean();
+        double runsNotFinished = 1 - ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
+        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() + runsNotFinished * this.optimization.getMaxEvaluations();
     }
 
     public long getTimeMillis() {

@@ -10,11 +10,8 @@ public class AlternativeCliParameter {
     private static final String PHEROMONE_TEMPLATE = "<alpha>(n/k)^<beta>+<gamma>";
     private static final String SPLIT_PROBABILITY_TEMPLATE = "max(min((c^<zeta>*t^<eta>)/(<theta>d), 1), 0)";
 
-    @CommandLine.Option(names = "--optimizationConfig")
-    private File optimizationConfig;
-
-    @CommandLine.Option(names = "--environmentConfig")
-    private File environmentConfig;
+    @CommandLine.Option(names = "--configFile")
+    private File configFile;
 
     @CommandLine.Option(names = "-k")
     private Integer populationSize;
@@ -152,12 +149,7 @@ public class AlternativeCliParameter {
         return solutionWeightFactor;
     }
 
-    public File getOptimizationConfig() {
-        return optimizationConfig;
+    public File getConfigFile() {
+        return configFile;
     }
-
-    public File getEnvironmentConfig() {
-        return environmentConfig;
-    }
-
 }

@@ -28,6 +28,8 @@ public abstract class AbstractEnvironment {
         this.borderStrategy = borderStrategy;
         this.rng = new RandomUtil(configuration.getValue(EnvironmentConfiguration.SEED, Integer.class));
 
+        configuration.logConfiguration();
+
         initialize(configuration);
     }
 

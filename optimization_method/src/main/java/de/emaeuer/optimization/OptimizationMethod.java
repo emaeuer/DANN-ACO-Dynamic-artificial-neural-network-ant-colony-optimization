@@ -50,30 +50,13 @@ public abstract class OptimizationMethod {
 
         this.averageHandler = new RunDataHandler(this.generalState, this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
 
-        logConfiguration(configuration);
+        this.configuration.logConfiguration();
 
         incrementRunCounter();
 
         this.progressionHandler = new ProgressionHandler(
                 configuration.getValue(OptimizationConfiguration.PROGRESSION_ITERATIONS, Integer.class),
                 configuration.getValue(OptimizationConfiguration.PROGRESSION_THRESHOLD, Double.class));
-    }
-
-    private void logConfiguration(ConfigurationHandler<OptimizationConfiguration> handler) {
-        LOG.info("Created optimization method with the following configuration:");
-
-        int maxKeyLength = handler.getConfigurations()
-                .keySet()
-                .stream()
-                .map(k -> k.toString().length())
-                .max(Integer::compareTo)
-                .orElse(0);
-
-        handler.getConfigurations()
-                .entrySet()
-                .stream()
-                .map(e -> String.format("%-" + maxKeyLength + "s = %s", e.getKey(), e.getValue()))
-                .forEach(LOG::info);
     }
 
     public List<? extends Solution> nextIteration() {
