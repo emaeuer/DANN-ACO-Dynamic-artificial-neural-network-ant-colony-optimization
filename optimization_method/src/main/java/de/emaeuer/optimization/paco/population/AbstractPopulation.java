@@ -102,7 +102,7 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
         return this.maxSize;
     }
 
-    protected int getUpdatesPerIteration() {
+    public int getUpdatesPerIteration() {
         return updatesPerIteration;
     }
 
@@ -136,5 +136,9 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
 
     public void exportPheromoneMatrixState(int evaluationCounter, StateHandler<PacoState> state) {
         this.pheromone.exportPheromoneMatrixState(evaluationCounter, state);
+    }
+
+    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoState> state) {
+        this.pheromone.exportCurrentGroups(evaluationNumber, state);
     }
 }

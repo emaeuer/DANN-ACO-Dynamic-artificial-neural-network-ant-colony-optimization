@@ -1,5 +1,7 @@
 package de.emaeuer.state.value;
 
+import de.emaeuer.state.value.data.DataPoint;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,10 +51,14 @@ public class CollectionDistributionStateValue extends AbstractStateValue<List<Do
         this.dataCount += value.size();
         this.overallMax = Double.max(this.overallMax, statistics.getMax());
 
-        this.representation.newValue(new AbstractMap.SimpleEntry<>("Min", new Double[] {this.dataCount, statistics.getMin()}));
-        this.representation.newValue(new AbstractMap.SimpleEntry<>("Max", new Double[] {this.dataCount, statistics.getMax()}));
-        this.representation.newValue(new AbstractMap.SimpleEntry<>("Average", new Double[] {this.dataCount, statistics.getAverage()}));
-        this.representation.newValue(new AbstractMap.SimpleEntry<>("Overall max", new Double[] {this.dataCount, this.overallMax}));
+        Map<String, DataPoint> dataSeriesPoints = new HashMap<>();
+
+        dataSeriesPoints.put("Min", new DataPoint(this.dataCount, statistics.getMin()));
+        dataSeriesPoints.put("Max", new DataPoint(this.dataCount, statistics.getMax()));
+        dataSeriesPoints.put("Average", new DataPoint(this.dataCount, statistics.getAverage()));
+        dataSeriesPoints.put("Overall max", new DataPoint(this.dataCount, this.overallMax));
+
+        this.representation.newValue(dataSeriesPoints);
     }
 
     @Override

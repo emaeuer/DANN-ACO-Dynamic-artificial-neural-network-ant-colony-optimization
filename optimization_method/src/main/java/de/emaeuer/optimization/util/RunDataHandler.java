@@ -2,6 +2,7 @@ package de.emaeuer.optimization.util;
 
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.data.DataPoint;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -35,7 +36,7 @@ public class RunDataHandler {
 
     private int evaluationIndex = 0;
     private int numberOfFinishedRuns = 0;
-    private double fitnessUpperBound;
+    private final double fitnessUpperBound;
 
     private final StateHandler<OptimizationState> generalState;
 
@@ -69,20 +70,24 @@ public class RunDataHandler {
 
         average.addValue(statistic.getMax());
 
-        this.generalState.execute(t -> t.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, new AbstractMap.SimpleEntry<>("Average max fitness", new Double[] {(double) evaluationCount, average.getAverage()})));
+        Map<String, DataPoint> value = new HashMap<>();
+        value.put("Average max fitness", new DataPoint(evaluationCount, average.getAverage()));
+
+        this.generalState.execute(t -> t.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, value));
         this.evaluationIndex++;
     }
 
     private void finishSeries() {
-        this.generalState.execute(t -> {
-            // if run finished before others add value of max fitness to all following values
-            for (int i = this.evaluationIndex; i < this.evaluationValues.size(); i++) {
-                int evaluationCount = this.evaluationValues.get(i);
-                SimpleDoubleStatistic average = this.fitnessSeries.get(evaluationCount);
-                average.addValue(this.fitnessUpperBound);
-                t.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, new AbstractMap.SimpleEntry<>("Average max fitness", new Double[] {(double) evaluationCount, average.getAverage()}));
-            }
-        });
+        Map<String, DataPoint> value = new HashMap<>();
+
+        // if run finished before others add value of max fitness to all following values
+        for (int i = this.evaluationIndex; i < this.evaluationValues.size(); i++) {
+            int evaluationCount = this.evaluationValues.get(i);
+            SimpleDoubleStatistic average = this.fitnessSeries.get(evaluationCount);
+            average.addValue(this.fitnessUpperBound);
+            value.put("Average max fitness", new DataPoint(evaluationCount, average.getAverage()));
+            this.generalState.execute(t -> t.addNewValue(OptimizationState.AVERAGE_RUN_FITNESS_SERIES, value));
+        }
 
         this.evaluationIndex = 0;
         this.numberOfFinishedRuns++;

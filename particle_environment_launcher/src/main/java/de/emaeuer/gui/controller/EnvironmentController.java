@@ -43,7 +43,6 @@ public class EnvironmentController {
     private AnimationTimer frameTimer;
 
     private double speed = 1;
-    private boolean running = false;
     private boolean initialStart = true;
 
     private final ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfiguration = new SimpleObjectProperty<>();
@@ -52,8 +51,11 @@ public class EnvironmentController {
 
     private final BooleanProperty updatedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty singleEntityMode = new SimpleBooleanProperty(false);
+    private final BooleanProperty stopAfterEachRun = new SimpleBooleanProperty(false);
     private final BooleanProperty finishedProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty runningProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty visualMode = new SimpleBooleanProperty(true);
+
     private final StringProperty speedProperty = new SimpleStringProperty(String.format(SPEED_TEXT, this.speed));
 
     @FXML
@@ -71,6 +73,7 @@ public class EnvironmentController {
             this.handler.setEnvironmentConfiguration(this.environmentConfiguration.get());
             this.handler.setOptimizationConfiguration(this.optimizationConfiguration.get());
             this.handler.setOptimizationState(this.optimizationState.get());
+            this.handler.setAutomaticallyStartNextRun(this.stopAfterEachRun.not().get());
 
             this.environmentConfiguration.addListener((v, o, n) -> this.handler.setEnvironmentConfiguration(n));
             this.optimizationConfiguration.addListener((v, o, n) -> this.handler.setOptimizationConfiguration(n));
@@ -82,6 +85,7 @@ public class EnvironmentController {
             this.finishedProperty.addListener((v,o,n) -> finished(n));
             this.nonVisualPanel.visibleProperty().bind(this.visualMode.not().or(this.finishedProperty));
             this.visualMode.addListener((v,o,n) -> changeVisualMode(n));
+            this.stopAfterEachRun.addListener((v,o,n) -> this.handler.setAutomaticallyStartNextRun(!n));
         }
     }
 
@@ -114,8 +118,9 @@ public class EnvironmentController {
     }
 
     private void refreshProperties() {
-        this.handler.refreshProperties();
+        this.runningProperty.set(!this.handler.isPaused());
 
+        this.handler.refreshProperties();
 
         this.evaluationProgress.progressProperty().set(((double) this.handler.getEvaluationCounter()) / this.handler.getMaxEvaluations());
         this.fitnessProgress.progressProperty().set(this.handler.getFitness() / this.handler.getMaxFitness());
@@ -147,27 +152,27 @@ public class EnvironmentController {
     }
 
     public void startEnvironment() {
-        if (running) {
+        if (this.runningProperty.get()) {
             return;
         } else if (initialStart) {
             this.handler.initialize();
             this.initialStart = false;
         }
 
-        this.running = true;
+        this.runningProperty.set(true);
         this.handler.startThreat();
 
         this.frameTimer.start();
     }
 
     public void pauseEnvironment() {
+        this.runningProperty.set(false);
         this.handler.pauseThread();
-        this.running = false;
         this.frameTimer.stop();
     }
 
     public void restartEnvironment() {
-        if (this.running) {
+        if (this.runningProperty.get()) {
             pauseEnvironment();
         }
 
@@ -241,4 +246,15 @@ public class EnvironmentController {
         return this.finishedProperty;
     }
 
+    public void toggleStopAfterEachIteration() {
+        this.stopAfterEachRun.set(this.stopAfterEachRun.not().get());
+    }
+
+    public boolean getStopAfterEachRun() {
+        return this.stopAfterEachRun.get();
+    }
+
+    public BooleanProperty runningProperty() {
+        return runningProperty;
+    }
 }

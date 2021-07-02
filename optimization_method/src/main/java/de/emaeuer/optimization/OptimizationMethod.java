@@ -65,9 +65,10 @@ public abstract class OptimizationMethod {
             return Collections.emptyList();
         }
 
-        incrementGenerationCounter();
+        this.generationCounter++;
 
         List<? extends Solution> solutions = generateSolutions();
+        LOG.info("Generated {} solutions for iteration {}", solutions.size(), this.generationCounter);
 
         this.evaluationCounter += solutions.size();
         this.runState.execute(t -> t.addNewValue(OptimizationRunState.EVALUATION_NUMBER, this.evaluationCounter));
@@ -81,7 +82,10 @@ public abstract class OptimizationMethod {
             return;
         }
 
+        LOG.info("Executing update for iteration {}", this.generationCounter);
         updateState();
+
+        LOG.info("Best found solution of iteration {} has a fitness of {}", this.generationCounter, this.bestFitness);
 
         this.progressionHandler.addFitnessScore(this.bestFitness);
         if (this.progressionHandler.doesStagnate()) {
@@ -92,18 +96,24 @@ public abstract class OptimizationMethod {
             return;
         }
 
+        LOG.info("Finished run {} with a maximal fitness of {}", this.runCounter, this.bestFitness);
         this.runFinished = true;
         this.optimizationFinished = checkOptimizationFinished();
+    }
 
-        // final update of optimization state
+    public void updateAfterRunEnd() {
         updateGeneralState();
         updateRunState();
         updateRunStatistics();
+        updateImplementationState();
 
         if (this.optimizationFinished) {
+            LOG.info("Finished optimization with a maximal fitness of {}", this.overallBestSolution.getFitness());
             exportSummary();
         }
     }
+
+    protected abstract void updateImplementationState();
 
     public void resetAndRestart() {
         incrementRunCounter();
@@ -177,11 +187,6 @@ public abstract class OptimizationMethod {
             t.export(OptimizationState.FINISHED_RUN_DISTRIBUTION);
             t.export(OptimizationState.GLOBAL_BEST_SOLUTION);
         });
-    }
-
-    private void incrementGenerationCounter() {
-        this.generationCounter++;
-        LOG.info("Generating solutions for iteration {}", this.generationCounter);
     }
 
     protected void incrementRunCounter() {
@@ -308,6 +313,10 @@ public abstract class OptimizationMethod {
 
     protected RandomUtil getRNG() {
         return this.rng;
+    }
+
+    protected int getGenerationCounter() {
+        return this.generationCounter;
     }
 
 }

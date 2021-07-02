@@ -2,10 +2,12 @@ package de.emaeuer.optimization.paco.state;
 
 import de.emaeuer.state.StateParameter;
 import de.emaeuer.state.value.AbstractStateValue;
+import de.emaeuer.state.value.CumulatedDataSeriesStateValue;
 import de.emaeuer.state.value.MapOfStateValue;
 
 public enum PacoState implements StateParameter<PacoState> {
-    CONNECTION_WEIGHTS_SCATTERED("Weight distribution in population", MapOfStateValue.class);
+    CONNECTION_WEIGHTS_SCATTERED("Weight distribution in population", MapOfStateValue.class),
+    USED_GROUPS("Groups of population", CumulatedDataSeriesStateValue.class);
 
     private final String name;
     private final Class<? extends AbstractStateValue<?, ?>> type;
@@ -32,6 +34,6 @@ public enum PacoState implements StateParameter<PacoState> {
 
     @Override
     public boolean export() {
-        return false;
+        return true;
     }
 }
