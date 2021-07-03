@@ -6,8 +6,10 @@ import java.io.File;
 
 public class AlternativeCliParameter {
 
+    // TODO eventually new constant for standard deviation as min
     private static final String STANDARD_DEVIATION_TEMPLATE = "(<delta>s+<epsilon>z)/(k - 1)";
     private static final String PHEROMONE_TEMPLATE = "<alpha>(n/k)^<beta>+<gamma>";
+    // TODO eventually a way to normalize split probability to one
     private static final String SPLIT_PROBABILITY_TEMPLATE = "max(min((c^<zeta>*t^<eta>)/(<theta>d), 1), 0)";
 
     @CommandLine.Option(names = "--optimizationConfig")
