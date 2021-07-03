@@ -6,9 +6,9 @@ import java.io.File;
 
 public class AlternativeCliParameter {
 
-    private static final String STANDARD_DEVIATION_TEMPLATE = "(<delta>s+<epsilon>z)/(k - 1)";
+    private static final String STANDARD_DEVIATION_TEMPLATE = "(<delta>s)/(k - 1)+<epsilon>z";
     private static final String PHEROMONE_TEMPLATE = "<alpha>(n/k)^<beta>+<gamma>";
-    private static final String SPLIT_PROBABILITY_TEMPLATE = "max(min((c^<zeta>*t^<eta>)/(<theta>d), 1), 0)";
+    private static final String SPLIT_PROBABILITY_TEMPLATE = "max((c^<zeta>*t^<eta>)/(<theta>d+1), 0)";
 
     @CommandLine.Option(names = "--configFile")
     private File configFile;
