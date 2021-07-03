@@ -34,8 +34,10 @@ public class PacoHandler extends OptimizationMethod {
         this.state = new StateHandler<>(PacoState.class, runState);
         this.state.setName("PACO");
 
+        this.configuration.logConfiguration();
+
         // register own state in optimization state
-        runState.addNewValue(OptimizationRunState.IMPLEMENTATION_RUN_STATE, this.state);
+        runState.execute(s -> s.addNewValue(OptimizationRunState.IMPLEMENTATION_RUN_STATE, this.state));
 
         initialize();
     }

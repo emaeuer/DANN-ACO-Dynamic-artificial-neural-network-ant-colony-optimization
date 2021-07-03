@@ -260,13 +260,13 @@ public class PacoPheromone {
     }
 
     private void removeConnection(TopologyData topology, Connection dynamicElement) {
-        LOG.debug("Removing connection {} to {}", dynamicElement.start(), dynamicElement.end());
+        LOG.debug("Removing connection {} to {} in group {}", dynamicElement.start(), dynamicElement.end(), topology.getTopologyGroupID());
         topology.getInstance().modify().removeConnection(dynamicElement.start(), dynamicElement.end());
         topology.refreshTopologyKey();
     }
 
     private void addConnection(TopologyData topology, Connection dynamicElement) {
-        LOG.debug("Adding connection {} to {}", dynamicElement.start(), dynamicElement.end());
+        LOG.debug("Adding connection {} to {} in group {}", dynamicElement.start(), dynamicElement.end(), topology.getTopologyGroupID());
         topology.getInstance().modify().addConnection(dynamicElement.start(), dynamicElement.end(), 0);
         topology.refreshTopologyKey();
 
@@ -275,7 +275,7 @@ public class PacoPheromone {
     }
 
     private void splitConnection(TopologyData topology, Connection dynamicElement) {
-        LOG.debug("Splitting connection {} to {}", dynamicElement.start(), dynamicElement.end());
+        LOG.debug("Splitting connection {} to {} in group {}", dynamicElement.start(), dynamicElement.end(), topology.getTopologyGroupID());
         NeuronID splitResult = topology.getInstance().modify().splitConnection(dynamicElement.start(), dynamicElement.end()).getLastModifiedNeuron();
         topology.refreshTopologyKey();
 
@@ -325,6 +325,7 @@ public class PacoPheromone {
         if (!isValidDecision(connection, template, isSplit)) {
             pheromone = 0;
         } else if (template.neuronHasConnectionTo(connection.start(), connection.end()) && isSplit) {
+            pheromone = 1 - pheromone;
             type = DecisionType.SPLIT;
         } else if (template.neuronHasConnectionTo(connection.start(), connection.end())) {
             // if the connection exists the pheromone for removing is 1 - pheromone value --> connections with a high pheromone value are less likely to be removed
@@ -643,6 +644,7 @@ public class PacoPheromone {
         if (result == null) {
             long index = Objects.requireNonNull(this.connectionMapping.get(groupID, connectionKey),
                     String.format("Mapping for (%s, %s) doesn't exist", groupID, connectionKey));
+
             result = HashMultiset.create();
             this.weightPheromone.put(index, result);
         }

@@ -5,11 +5,11 @@
 ## 1: Name of the parameter. An unquoted alphanumeric string,
 ##    example: ants
 
-## 2: Switch to pass the parameter. A quoted (possibly empty) string, 
+## 2: Switch to pass the parameter. A quoted (possibly empty) string,
 ##    if the value and the switch must be separated, add a space at
 ##    the end of the string. Example : "--version1 --ants "
 
-## 3: Type. An unquoted single letter, among 
+## 3: Type. An unquoted single letter, among
 ##     i: Integer, c: categorical, o: ordinal, r: real.
 
 ## 4: For c and o: All possible values, that is, a variable number of
@@ -17,22 +17,32 @@
 ##    parenthesis. Empty strings and strings containing commas or
 ##    spaces must be quoted.
 ##    For i,r: a pair of unquoted numbers representing minimum and
-##    maximum values. 
+##    maximum values.
 
 ## 5: A conditional parameter can be defined according to the values of
 ##    one or several other parameters.  This is done by adding a
 ##    character '|' followed by an R expression involving the names of
-##    other parameters. This expression must return TRUE if the 
+##    other parameters. This expression must return TRUE if the
 ##    condition is satisfied, FALSE otherwise.
 
-# 1:                    2:                          3:  4:                                              5:
-populationSize          "--populationSize "         i   (5, 50)
-numberOfUpdates         "--numberOfUpdates "        i   (1, 10)
-antsPerIteration        "--antsPerIteration "       i   (5, 50)
-deviationFunction      "--deviationFunction "       c   ("max(s/(p-1),0.05)")
-populationStrategy      "--populationStrategy "     c   ("AGE", "FITNESS", "INNOVATION_PROTECTING")
-#changeProbability      "--changeProbability "      c   ("0.75(n/p)^2+0.1")
-#pheromoneValue         "--pheromoneValue "         c   ("(n+1) / (p+2)")
-#spitThreshold          "--spitThreshold "          c   ("leq(s/(p - 1), 0.15) * geq(n/p, 0.9)")
-elitism                 ""                          c   ("", "--elitism ")                              | populationStrategy != "FITNESS"
+# 1:                    2:                          3:  4:                                                                                              5:
+populationSize          "-k "                       i   (5, 50)
+updatesPerIteration     "-o "                       i   (1, 4)
+antsPerIteration        "-m "                       i   (5, 100)
+##updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS", "PROBABILITY", "AGE_PROBABILITY", "INNOVATION_PROTECTING", "GROUP_BASED")
+updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS")
+elitism                 ""                          c   ("", "--elitism ")                                                                              | updateStrategy != "FITNESS"
 neuronIsolation         ""                          c   ("", "--neuronIsolation ")
+reuseSplitKnowledge     ""                          c   ("", "--reuseSplitKnowledge ")
+solutionWeightFactor    "-q "                       r   (0.0001, 1)
+alphaT                  "-aT "                      r   (0, 1)
+betaT                   "-bT "                      r   (0, 10)
+gammaT                  "-cT "                      r   (0, 1)
+alphaC                  "-ac "                      r   (0, 1)
+betaC                   "-bc "                      r   (0, 10)
+gammaC                  "-cc "                      r   (0, 1)
+eta                     "-eta "                     r   (0, 2)
+zeta                    "-z "                       r   (0, 2)
+delta                   "-d "                       r   (0, 10)
+epsilon                 "-e "                       r   (0, 10)
+theta                   "-t "                       r   (0, 10)

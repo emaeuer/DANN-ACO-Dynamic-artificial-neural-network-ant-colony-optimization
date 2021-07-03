@@ -6,7 +6,10 @@ import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
 
@@ -74,12 +77,32 @@ public class NeuronBasedNeuralNetworkModifier implements NeuralNetworkModifier {
     private void refreshRecurrentIDsIfNecessary(Neuron end, Neuron intermediate) {
         boolean recurrentDisabled = this.nn.getConfiguration().getValue(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS, Boolean.class);
 
-        if (!recurrentDisabled || intermediate.getID().getLayerIndex() < end.getID().getLayerIndex()) {
+        if (!recurrentDisabled) {
             return;
         }
 
-        intermediate.setRecurrentID(end.getRecurrentID());
-        end.modify().increaseRecurrentID();
+        if (intermediate.getID().getLayerIndex() < end.getID().getLayerIndex()) {
+            int maxRecurrentID = this.nn.getHiddenNeurons()
+                    .stream()
+                    .mapToInt(Neuron::getRecurrentID)
+                    .max()
+                    .orElse(intermediate.getRecurrentID() - 1);
+            intermediate.setRecurrentID(maxRecurrentID + 1);
+        } else {
+            intermediate.setRecurrentID(end.getRecurrentID());
+            increaseRecurrentID(end);
+        }
+    }
+
+    private void increaseRecurrentID(Neuron neuron) {
+        this.nn.getNeuronsOfLayer(neuron.getID().getLayerIndex())
+            .stream()
+            .map(this.nn::getNeuron)
+            .filter(n -> n.getRecurrentID() > neuron.getRecurrentID())
+            .forEach(n -> n.setRecurrentID(n.getRecurrentID() + 1));
+
+        neuron.setRecurrentID(neuron.getRecurrentID() + 1);
+
     }
 
     @Override

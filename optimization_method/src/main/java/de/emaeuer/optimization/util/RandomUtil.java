@@ -65,6 +65,9 @@ public class RandomUtil {
     }
 
     public double getNormalDistributedValue(double mean, double deviation) {
+        if (deviation == 0) {
+            return mean;
+        }
         return new NormalDistribution(this.rng, mean, deviation).sample();
     }
 

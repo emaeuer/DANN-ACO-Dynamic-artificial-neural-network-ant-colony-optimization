@@ -123,33 +123,6 @@ public class Neuron {
 
             return this;
         }
-
-        public NeuronModifier increaseRecurrentID() {
-            int minRecurrentID = 1 + this.neuron.getIncomingConnections()
-                    .stream()
-                    .filter(n -> n.id.getLayerIndex() == this.neuron.id.getLayerIndex())
-                    .filter(n -> n.getRecurrentID() > this.neuron.getRecurrentID())
-                    .mapToInt(Neuron::getRecurrentID)
-                    .max()
-                    .orElse(this.neuron.recurrentID);
-
-            if (minRecurrentID == this.neuron.getRecurrentID()) {
-                return this;
-            }
-
-            List<Neuron> neuronsToRefresh = this.neuron.getOutgoingConnections()
-                    .stream()
-                    .filter(n -> n.id.getLayerIndex() == this.neuron.id.getLayerIndex())
-                    .filter(n -> n.getRecurrentID() > this.neuron.getRecurrentID())
-                    .sorted(Comparator.comparingInt(Neuron::getRecurrentID))
-                    .collect(Collectors.toList());
-
-            this.neuron.setRecurrentID(minRecurrentID);
-
-            neuronsToRefresh.forEach(n -> n.modify().increaseRecurrentID());
-
-            return this;
-        }
     }
 
     private NeuronID id;

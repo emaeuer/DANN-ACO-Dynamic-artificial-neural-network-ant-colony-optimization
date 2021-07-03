@@ -6,4 +6,5 @@
 # instance.
 
 # Empty lines and comments are ignored.
-flappy-bird --optimizationConfig C:\Users\emaeu\IdeaProjects\ParticleEnvironment\configurations\flappy_bird_optimization.json --environmentConfig C:\Users\emaeu\IdeaProjects\ParticleEnvironment\configurations\flappy_bird_environment.json
+#flappy-bird --configFile ..\..\configurations\flappy_bird_configuration.json
+xor --configFile ..\..\configurations\xor_configuration.json

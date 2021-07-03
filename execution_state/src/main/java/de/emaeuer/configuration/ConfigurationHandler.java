@@ -2,6 +2,8 @@ package de.emaeuer.configuration;
 
 import de.emaeuer.persistence.ConfigurationIOHandler;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -9,6 +11,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
+
+    private static final Logger LOG = LogManager.getLogger(ConfigurationHandler.class);
 
     private final Class<T> keyEnum;
 
@@ -103,12 +107,21 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getStringRepresentation()));
     }
 
-    public void exportConfig(File file) {
-        ConfigurationIOHandler.exportConfiguration(file, this);
-    }
+    public void logConfiguration() {
+        LOG.info("{} configuration has the following settings:", getName());
 
-    public void importConfig(File file) {
-        ConfigurationIOHandler.importConfiguration(file,this);
+        int maxKeyLength = getConfigurations()
+                .keySet()
+                .stream()
+                .map(k -> k.toString().length())
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        getConfigurations()
+                .entrySet()
+                .stream()
+                .map(e -> String.format("%-" + maxKeyLength + "s = %s", e.getKey(), e.getValue()))
+                .forEach(LOG::info);
     }
 
     public EnumMap<T, AbstractConfigurationValue<?>> getConfigurationValues() {

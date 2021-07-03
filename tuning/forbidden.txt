@@ -10,12 +10,18 @@
 ##
 ## Examples of valid logical operators are: ==  !=  >=  <=  >  <  &  |  !  %in%
 
-populationSize < numberOfUpdates
-antsPerIteration < numberOfUpdates
+# logical invalid configurations
+populationSize < updatesPerIteration
+antsPerIteration < updatesPerIteration
 
 # more than 3 updates with FITNESS strategy is not useful because the most ants don't update
 # anyways because they are worse than the ones already in the population
-populationStrategy == "FITNESS" & numberOfUpdates > 3
+updateStrategy == "FITNESS" & updatesPerIteration > 3
 
 #forbidden because it is equal to AGE with numberOfUpdates = 1
-populationStrategy == "INNOVATION_PROTECTING" & numberOfUpdates == 1
+updateStrategy == "INNOVATION_PROTECTING" & updatesPerIteration == 1
+updateStrategy == "GROUP_BASED" & updatesPerIteration == 1
+
+# forbidden because of the definition of the constants
+(alphaT + gammaT) > 1
+(alphaC + gammaC) > 1
