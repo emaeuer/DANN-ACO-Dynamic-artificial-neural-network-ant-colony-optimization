@@ -599,6 +599,8 @@ public class PacoPheromone {
                                 .boxed()
                                 .toArray(Double[]::new)));
             }
+
+            s.export(PacoState.CONNECTION_WEIGHTS_SCATTERED);
         });
     }
 

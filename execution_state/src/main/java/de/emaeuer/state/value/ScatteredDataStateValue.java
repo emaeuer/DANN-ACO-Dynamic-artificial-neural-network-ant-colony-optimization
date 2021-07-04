@@ -8,6 +8,8 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
     private final Map<Integer, Double[]> iterationScatteredData = new ConcurrentHashMap<>();
     private final Set<Integer> indicesToRefresh = ConcurrentHashMap.newKeySet();
 
+    private final StringBuilder exportValue = new StringBuilder();
+
     @Override
     public Class<? extends Map.Entry<Integer, Double[]>> getExpectedInputType() {
         Class<?> type = Map.Entry.class;
@@ -27,8 +29,11 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
         if (value != null) {
             this.iterationScatteredData.put(value.getKey(), value.getValue());
             this.indicesToRefresh.add(value.getKey());
-            return String.format("%d=%s", value.getKey(), Arrays.toString(value.getValue()));
+            String representation = String.format("%s", Arrays.toString(value.getValue()));
+            this.exportValue.append(representation);
+            return representation;
         }
+        this.exportValue.append("null");
         return null;
     }
 
@@ -39,7 +44,9 @@ public class ScatteredDataStateValue extends AbstractStateValue<Map.Entry<Intege
 
     @Override
     public String getExportValue() {
-        return null;
+        String value = this.exportValue.toString();
+        this.exportValue.delete(0, this.exportValue.length());
+        return value;
     }
 
     public Set<Integer> getIndicesToRefresh() {

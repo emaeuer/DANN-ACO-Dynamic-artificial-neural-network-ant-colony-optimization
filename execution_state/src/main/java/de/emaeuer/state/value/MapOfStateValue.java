@@ -30,7 +30,7 @@ public class MapOfStateValue extends AbstractStateValue<Entry<String, AbstractSt
         }
 
         this.value.put(value.getKey(), value.getValue());
-        return null;
+        return String.format("%s:%s", value.getKey(), value.getValue().getExportValue());
     }
 
     @Override
@@ -42,7 +42,7 @@ public class MapOfStateValue extends AbstractStateValue<Entry<String, AbstractSt
     public String getExportValue() {
         return this.value.entrySet()
                 .stream()
-                .map(e -> String.format("(%s=%s)", e.getKey(), e.getValue().getExportValue()))
+                .map(e -> String.format("[%s:%s]", e.getKey(), e.getValue().getExportValue()))
                 .collect(Collectors.joining(","));
     }
 }

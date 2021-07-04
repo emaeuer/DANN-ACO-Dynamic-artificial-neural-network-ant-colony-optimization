@@ -7,17 +7,28 @@ import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 import de.emaeuer.optimization.util.RandomUtil;
 
-import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>> {
 
-    private PacoAnt removedAnt = null;
+    private final List<PacoAnt> removedAnts = new ArrayList<>();
 
     public ProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, new ArrayList<>(), baseNetwork, rng);
+    }
+
+    public void updatePheromone() {
+        getCurrentAnts().stream()
+                .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
+                .limit(calculateNumberOfAntsToAdd())
+                .map(this::addAnt)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .forEach(getPheromone()::addAnt);
+
+        this.removedAnts.forEach(getPheromone()::removeAnt);
+        this.removedAnts.clear();
     }
 
     @Override
@@ -27,18 +38,26 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
         // because the new ant could already get removed calculate the next ant to get removed here
         // --> necessary to return nothing if the ant wasn't really added
+        PacoAnt removedAnt = null;
         if (getPopulation().size() > getMaxSize()) {
-            determineAntToRemove();
+            removedAnt = determineAntToRemove();
         }
 
-        if (ant == this.removedAnt) {
+        if (ant == removedAnt) {
             return Optional.empty();
         } else {
+            addAntToRemove(removedAnt);
             return Optional.ofNullable(ant);
         }
     }
 
-    protected void determineAntToRemove() {
+    protected void addAntToRemove(PacoAnt ant) {
+        if (ant != null) {
+            this.removedAnts.add(ant);
+        }
+    }
+
+    protected PacoAnt determineAntToRemove() {
         double[] removeProbabilities = calculateRemoveProbabilities();
         int indexToRemove = getRNG().selectRandomElementFromVector(removeProbabilities);
         PacoAnt antToRemove = getPopulation().get(indexToRemove);
@@ -49,7 +68,7 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
             antToRemove = getPopulation().get(indexToRemove);
         }
 
-        this.removedAnt = getPopulation().remove(indexToRemove);
+        return getPopulation().remove(indexToRemove);
     }
 
     private double[] calculateRemoveProbabilities() {
@@ -68,8 +87,7 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     @Override
     public Optional<PacoAnt> removeAnt() {
-        Optional<PacoAnt> result = Optional.ofNullable(this.removedAnt);
-        this.removedAnt = null;
-        return result;
+        // was already handled by the add method
+        return Optional.empty();
     }
 }

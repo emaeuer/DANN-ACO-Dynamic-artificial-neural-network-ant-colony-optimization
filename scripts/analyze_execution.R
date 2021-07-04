@@ -2,6 +2,7 @@ library(ggplot2)
 library(hrbrthemes)
 library(viridis)
 library(dplyr)
+library(tidyr)
 
 setClass("Configuration", slots=list(runNumber="numeric", maxFitness="numeric", name="character"))
 
@@ -48,6 +49,16 @@ extractIterationData <- function(filepath) {
       csvValue <- str_split(line, " = ", 2)[[1]][2]
       values <- as.numeric(str_split(csvValue, ",")[[1]])
       currentRow$connections <- list(values)
+    } else if (grepl("^GENERAL_STATE\\.RUN_\\d*?\\.PACO\\.CONNECTION_WEIGHTS_SCATTERED", line)) {
+      value <- str_split(line, " = ", 2)[[1]][2]
+      singleLists <- str_split(value, "\\]\\,\\[")
+      singleLists <- str_replace_all(unlist(singleLists), "\\[|\\]*", "")
+      resultList <- list()
+      for (l in singleLists) {
+        l <- unlist(str_split(l, ":", 2))
+        resultList[l[1]] <- list(as.numeric(unlist(str_split(l[2], ", "))))
+      }
+      currentRow$weightDistribution <- list(resultList)
     }
   }
 
@@ -55,8 +66,12 @@ extractIterationData <- function(filepath) {
   return(list("data" = df, "configuration" = configuration))
 }
 
-drawRunSummary <- function(data, runNumber) {
+drawRunSummary <- function(fileName, runNumber) {
   # can easily be modified to show hidden nodes or connection number
+
+  result <- extractIterationData(fileName)
+  data <- result[["data"]]
+  configuration <- result[["configuration"]]
 
   filteredData <- data %>%
     filter(runID == runNumber) %>%
@@ -74,35 +89,122 @@ drawRunSummary <- function(data, runNumber) {
           axis.text = element_text(size = 18, family = "LM Roman 10"))
 }
 
-pacoResult <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt")
-pacoIterationData <- pacoResult[["data"]]
-pacoConfiguration <- pacoResult[["configuration"]]
+compareResultsFromDifferentFiles <- function(...) {
+  df <- data.frame()
 
-pacoFilteredData <- pacoIterationData %>%
-  rowwise() %>%
-  mutate(fitness = max(unlist(fitnessValues)), type = pacoConfiguration@name) %>%
-  select(runID, evaluation, fitness, type) %>%
-  group_by(evaluation) %>%
-  summarise(fitness = (sum(fitness) + (pacoConfiguration@runNumber - n()) * pacoConfiguration@maxFitness) / pacoConfiguration@runNumber, type = type)
+  for (fileName in list(...)) {
+    result <- extractIterationData(fileName)
+    data <- result[["data"]]
+    configuration <- result[["configuration"]]
 
-neatResult <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-02_10-24-15-193.txt")
-neatIterationData <- neatResult[["data"]]
-neatConfiguration <- neatResult[["configuration"]]
+    filteredData <- data %>%
+      rowwise() %>%
+      mutate(fitness = max(unlist(fitnessValues)), type = configuration@name) %>%
+      select(runID, evaluation, fitness, type) %>%
+      group_by(evaluation) %>%
+      summarise(fitness = (sum(fitness) + (configuration@runNumber - n()) * configuration@maxFitness) / configuration@runNumber, type = type)
 
-neatFilteredData <- neatIterationData %>%
-  rowwise() %>%
-  mutate(fitness = max(unlist(fitnessValues)), type = neatConfiguration@name) %>%
-  select(runID, evaluation, fitness, type) %>%
-  group_by(evaluation) %>%
-  summarise(fitness = (sum(fitness) + (neatConfiguration@runNumber - n()) * neatConfiguration@maxFitness) / neatConfiguration@runNumber, type = type)
+    df <- rbind(df, filteredData)
+  }
 
-ggplot(rbind(pacoFilteredData, neatFilteredData), aes(x = evaluation, y = fitness, color=type, group=type)) +
-  geom_line(size = 1) +
-  theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
-        axis.title.y=element_text(size = 18, family = "LM Roman 10"),
-        panel.border = element_rect(colour = "black", fill=NA, size=1),
-        plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
-        axis.text = element_text(size = 18, family = "LM Roman 10"))
+  ggplot(df, aes(x = evaluation, y = fitness, color=type, group=type)) +
+    geom_line(size = 1) +
+    theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
+          axis.title.y=element_text(size = 18, family = "LM Roman 10"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1),
+          plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
+          axis.text = element_text(size = 18, family = "LM Roman 10"))
+}
+
+compareResultsFromDifferentFiles <- function(...) {
+  df <- data.frame()
+
+  for (fileName in list(...)) {
+    result <- extractIterationData(fileName)
+    data <- result[["data"]]
+    configuration <- result[["configuration"]]
+
+    filteredData <- data %>%
+      rowwise() %>%
+      mutate(fitness = max(unlist(fitnessValues)), type = configuration@name) %>%
+      select(runID, evaluation, fitness, type) %>%
+      group_by(evaluation) %>%
+      summarise(fitness = (sum(fitness) + (configuration@runNumber - n()) * configuration@maxFitness) / configuration@runNumber, type = type)
+
+    df <- rbind(df, filteredData)
+  }
+
+  ggplot(df, aes(x = evaluation, y = fitness, color=type, group=type)) +
+    geom_line(size = 1) +
+    theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
+          axis.title.y=element_text(size = 18, family = "LM Roman 10"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1),
+          plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
+          axis.text = element_text(size = 18, family = "LM Roman 10"))
+}
+
+boxPlotEvaluations <- function(...) {
+  df <- data.frame()
+
+  for (fileName in list(...)) {
+    result <- extractIterationData(fileName)
+    data <- result[["data"]]
+    configuration <- result[["configuration"]]
+
+    filteredData <- data %>%
+      rowwise() %>%
+      group_by(runID) %>%
+      summarise(fitness = max(evaluation), hiddenNodes = max(unlist(hiddenNodes)), connections = max(unlist(connections)), type = configuration@name)
+
+    df <- rbind(df, filteredData)
+  }
+
+  ggplot(df, aes(x = type, y = connections)) +
+    geom_boxplot() +
+    theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
+          axis.title.y=element_text(size = 18, family = "LM Roman 10"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1),
+          plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
+          axis.text = element_text(size = 18, family = "LM Roman 10"))
+}
+
+trendOfWeights <- function(...) {
+  result <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-03_20-55-46-238.txt")
+
+  data <- result[["data"]]
+  weights <- data$weightDistribution[2]
+  weights[[1]][["1"]]
+
+  filteredData <- data %>%
+    rowwise() %>%
+    select(evaluation, weightDistribution) %>%
+    mutate(connectionID = list(names(weightDistribution))) %>%
+    unnest(connectionID) %>%
+    rowwise() %>%
+    mutate(weights = list(weightDistribution[[connectionID]])) %>%
+    mutate(mean = mean(weights), std = if_else(length(weights) == 1, 0, sd(weights))) %>%
+    select(evaluation, connectionID, mean, std) %>%
+    filter(connectionID %in% c (0, 1))
+
+  ggplot(filteredData, aes(x = evaluation, y = mean, ymin = mean - std, ymax = mean + std, group = connectionID, color = connectionID, fill = connectionID)) +
+    geom_line() +
+    geom_ribbon(alpha=0.2) +
+    theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
+          axis.title.y=element_text(size = 18, family = "LM Roman 10"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1),
+          plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
+          axis.text = element_text(size = 18, family = "LM Roman 10"))
+}
+
+# drawRunSummary("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt", 5)
+
+# compareResultsFromDifferentFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt",
+#                                  "C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-02_10-24-15-193.txt")
+
+# boxPlotEvaluations("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt",
+#                                  "C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-02_10-24-15-193.txt")
+
+trendOfWeights("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt")
 
 
 

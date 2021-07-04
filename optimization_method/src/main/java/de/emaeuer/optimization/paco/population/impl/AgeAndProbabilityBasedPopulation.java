@@ -20,7 +20,7 @@ public class AgeAndProbabilityBasedPopulation extends ProbabilityBasedPopulation
 
         // the difference to ProbabilityBasedPopulation is that the new ant is always added
         if (getPopulation().size() >= getMaxSize()) {
-            determineAntToRemove();
+            addAntToRemove(determineAntToRemove());
         }
 
         getPopulation().add(ant);
