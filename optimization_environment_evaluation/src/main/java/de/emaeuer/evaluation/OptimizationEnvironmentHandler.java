@@ -37,6 +37,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private boolean updateNotifier = false;
     private boolean automaticallyStartNextRun = true;
     private boolean currentlyAutomaticallyPaused = false;
+    private boolean stoppedBecauseOfException = false;
 
     private StateHandler<OptimizationState> optimizationState;
     private ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration;
@@ -91,6 +92,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
         this.runCounter = 0;
         this.fitness = 0;
         this.finished = false;
+        this.stoppedBecauseOfException = false;
 
         this.terminateThread.set(false);
     }
@@ -180,6 +182,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
             }
         } catch (Exception e) {
             LOG.warn("Unexpected exception in update thread", e);
+            this.stoppedBecauseOfException = true;
         }
     }
 
@@ -261,5 +264,9 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     public boolean isPaused() {
         return this.pauseThread.get();
+    }
+
+    public boolean stoppedBecauseOfException() {
+        return stoppedBecauseOfException;
     }
 }

@@ -79,7 +79,7 @@ public class Genotype implements Serializable {
      * @throws InvalidConfigurationException if the given Configuration object is in an invalid
      *                                       state.
      */
-    public Genotype(Configuration a_activeConfiguration, List a_initialChromosomes)
+    public Genotype(Configuration a_activeConfiguration, List<Chromosome> a_initialChromosomes)
             throws InvalidConfigurationException {
         // Sanity checks: Make sure neither the Configuration, the array
         // of Chromosomes, nor any of the Genes inside the array are null.
@@ -102,7 +102,7 @@ public class Genotype implements Serializable {
         a_activeConfiguration.lockSettings();
         m_activeConfiguration = a_activeConfiguration;
 
-        adjustChromosomeList(a_initialChromosomes, a_activeConfiguration.getPopulationSize());
+        adjustChromosomeList(a_initialChromosomes.stream().map(Chromosome::cloneMaterial).toList(), a_activeConfiguration.getPopulationSize());
 
         addChromosomes(a_initialChromosomes);
     }
@@ -114,14 +114,14 @@ public class Genotype implements Serializable {
      * @param chroms     <code>List</code> contains <code>Chromosome</code> objects
      * @param targetSize
      */
-    private void adjustChromosomeList(List chroms, int targetSize) {
-        List<Chromosome> originals = new ArrayList<>(chroms);
+    private void adjustChromosomeList(List<ChromosomeMaterial> chroms, int targetSize) {
+        List<ChromosomeMaterial> originals = new ArrayList<>(chroms);
         while (chroms.size() < targetSize) {
             int idx = chroms.size() % originals.size();
-            Chromosome orig = (Chromosome) originals.get(idx);
-            Chromosome clone = new Chromosome(orig.cloneMaterial(), m_activeConfiguration
+            ChromosomeMaterial orig = originals.get(idx);
+            Chromosome clone = new Chromosome(orig, m_activeConfiguration
                     .nextChromosomeId());
-            chroms.add(clone);
+            chroms.add(clone.cloneMaterial());
         }
         while (chroms.size() > targetSize) {
             // remove from end of list
@@ -133,10 +133,8 @@ public class Genotype implements Serializable {
      * @param chromosomes <code>Collection</code> contains Chromosome objects
      * @see Genotype#addChromosome(Chromosome)
      */
-    protected void addChromosomes(Collection chromosomes) {
-        Iterator<Chromosome> iter = chromosomes.iterator();
-        while (iter.hasNext()) {
-            Chromosome c = (Chromosome) iter.next();
+    protected void addChromosomes(Collection<Chromosome> chromosomes) {
+        for (Chromosome c : chromosomes) {
             addChromosome(c);
         }
     }
@@ -145,10 +143,8 @@ public class Genotype implements Serializable {
      * @param chromosomeMaterial <code>Collection</code> contains ChromosomeMaterial objects
      * @see Genotype#addChromosomeFromMaterial(ChromosomeMaterial)
      */
-    protected void addChromosomesFromMaterial(Collection chromosomeMaterial) {
-        Iterator<ChromosomeMaterial> iter = chromosomeMaterial.iterator();
-        while (iter.hasNext()) {
-            ChromosomeMaterial cMat = iter.next();
+    protected void addChromosomesFromMaterial(Collection<ChromosomeMaterial> chromosomeMaterial) {
+        for (ChromosomeMaterial cMat : chromosomeMaterial) {
             addChromosomeFromMaterial(cMat);
         }
     }
@@ -173,9 +169,9 @@ public class Genotype implements Serializable {
         // specie collection
         boolean added = false;
         Specie specie = null;
-        Iterator iter = m_species.iterator();
+        Iterator<Specie> iter = m_species.iterator();
         while (iter.hasNext() && !added) {
-            specie = (Specie) iter.next();
+            specie = iter.next();
             if (specie.match(chrom)) {
                 specie.add(chrom);
                 added = true;
@@ -283,9 +279,9 @@ public class Genotype implements Serializable {
             // Repopulate the population of species and chromosomes with those selected
             // by the natural selector, and cull species down to contain only remaining
             // chromosomes.
-            Iterator speciesIter = m_species.iterator();
+            Iterator<Specie> speciesIter = m_species.iterator();
             while (speciesIter.hasNext()) {
-                Specie s = (Specie) speciesIter.next();
+                Specie s = speciesIter.next();
                 s.cull(m_chromosomes);
                 if (s.isEmpty())
                     speciesIter.remove();
@@ -299,18 +295,16 @@ public class Genotype implements Serializable {
 
             // Execute Reproduction Operators.
             // -------------------------------------
-            Iterator iterator = m_activeConfiguration.getReproductionOperators().iterator();
-            List offspring = new ArrayList();
+            Iterator<ReproductionOperator> iterator = m_activeConfiguration.getReproductionOperators().iterator();
+            List<ChromosomeMaterial> offspring = new ArrayList<>();
             while (iterator.hasNext()) {
-                ReproductionOperator operator = (ReproductionOperator) iterator.next();
+                ReproductionOperator operator = iterator.next();
                 operator.reproduce(m_activeConfiguration, m_species, offspring);
             }
 
             // Execute Mutation Operators.
             // -------------------------------------
-            Iterator mutOpIter = m_activeConfiguration.getMutationOperators().iterator();
-            while (mutOpIter.hasNext()) {
-                MutationOperator operator = (MutationOperator) mutOpIter.next();
+            for (MutationOperator operator : (Iterable<MutationOperator>) m_activeConfiguration.getMutationOperators()) {
                 operator.mutate(m_activeConfiguration, offspring);
             }
 
@@ -342,11 +336,9 @@ public class Genotype implements Serializable {
      * @return <code>String</code> representation of this <code>Genotype</code> instance.
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
-        Iterator iter = m_chromosomes.iterator();
-        while (iter.hasNext()) {
-            Chromosome chrom = (Chromosome) iter.next();
+        for (Chromosome chrom : m_chromosomes) {
             buffer.append(chrom.toString());
             buffer.append(" [");
             buffer.append(chrom.getFitnessValue());
@@ -387,7 +379,7 @@ public class Genotype implements Serializable {
         // us.
         // ------------------------------------------------------------------
         int populationSize = a_activeConfiguration.getPopulationSize();
-        List chroms = new ArrayList(populationSize);
+        List<Chromosome> chroms = new ArrayList<>(populationSize);
 
         for (int i = 0; i < populationSize; i++) {
             ChromosomeMaterial material = ChromosomeMaterial
@@ -435,11 +427,11 @@ public class Genotype implements Serializable {
             Collections.sort(m_chromosomes);
             Collections.sort(otherGenotype.m_chromosomes);
 
-            Iterator iter = m_chromosomes.iterator();
-            Iterator otherIter = otherGenotype.m_chromosomes.iterator();
+            Iterator<Chromosome> iter = m_chromosomes.iterator();
+            Iterator<Chromosome> otherIter = otherGenotype.m_chromosomes.iterator();
             while (iter.hasNext() && otherIter.hasNext()) {
-                Chromosome chrom = (Chromosome) iter.next();
-                Chromosome otherChrom = (Chromosome) otherIter.next();
+                Chromosome chrom = iter.next();
+                Chromosome otherChrom = otherIter.next();
                 if (!(chrom.equals(otherChrom))) {
                     return false;
                 }

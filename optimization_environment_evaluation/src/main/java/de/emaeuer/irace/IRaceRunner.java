@@ -18,7 +18,7 @@ public class IRaceRunner {
         System.setProperty("logFilename", args[0]);
         Logger log = LogManager.getLogger(IRaceRunner.class);
 
-//        searchInFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\tuning\\execDir\\log");
+        searchInFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\tuning\\execDir\\log");
         log.debug("IRACE-Call-Parameters: " + Arrays.toString(args));
         if (args.length < 5) {
             log.warn("\nUsage: ./target-runner.jar <configuration_id> <instance_id> <seed> <instance_path_name> <list of parameters>\n");

@@ -21,6 +21,7 @@ public class ConfigurationPropertyMapper {
 
         {
             put(enumToKey(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS), "num.generations");
+            put(enumToKey(OptimizationConfiguration.SEED), "random.seed");
             put(enumToKey(NeatConfiguration.POPULATION_SIZE), "popul.size");
             put(enumToKey(NeatConfiguration.TOPOLOGY_MUTATION_CLASSIC), "topology.mutation.classic");
             put(enumToKey(NeatConfiguration.SURVIVAL_RATE), "survival.rate");
@@ -46,6 +47,8 @@ public class ConfigurationPropertyMapper {
             put(enumToKey(NeatConfiguration.WEIGHT_MUTATION_RATE), "weight.mutation.rate");
             put(enumToKey(NeatConfiguration.WEIGHT_MUTATION_DEVIATION), "weight.mutation.std.dev");
             put(enumToKey(NeuralNetworkConfiguration.DISABLE_RECURRENT_CONNECTIONS), "recurrent");
+            put(enumToKey(NeatConfiguration.ID_FILE), "id.file");
+            put(enumToKey(NeatConfiguration.NEAT_ID_FILE), "neat.id.file");
         }
     };
 
@@ -54,15 +57,14 @@ public class ConfigurationPropertyMapper {
         private static final long serialVersionUID = 1194318741990855812L;
 
         {
+            put("run.reset", true);
             put("initial.topology.fully.connected", true);
-            put("initial.topology.num.hidden.neurons", 0);
+            put("initial.topology.num.hidden.neurons", false);
             put("persistence.class", "com.anji.persistence.FilePersistence");
             put("persistence.base.dir", "temp/");
             put("persist.all", false);
             put("persist.champions", true);
             put("persist.last", true);
-            put("id.file", "temp/id.xml");
-            put("neat.id.file", "temp/neatid.xml");
             put("presentation.dir", "temp/");
         }
     };

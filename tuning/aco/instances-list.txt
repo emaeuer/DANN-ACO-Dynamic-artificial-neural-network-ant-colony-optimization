@@ -7,4 +7,4 @@
 
 # Empty lines and comments are ignored.
 #flappy-bird --configFile ..\..\configurations\flappy_bird_configuration.json
-xor --configFile ..\..\configurations\xor_configuration.json
+xor --configFile ..\..\configurations\aco_xor_configuration.json dannaco

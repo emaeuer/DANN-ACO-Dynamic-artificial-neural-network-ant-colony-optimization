@@ -33,6 +33,8 @@ public class NeatHandler extends OptimizationMethod {
 
     private final List<ChromosomeSolutionMapping> solutions = new ArrayList<>();
 
+
+
     public NeatHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
@@ -45,6 +47,7 @@ public class NeatHandler extends OptimizationMethod {
         // initialize population randomly
         try {
             Properties props = new Properties(ConfigurationPropertyMapper.mapConfigurationToProperties(configuration));
+            props.setProperty("random.seed", Integer.toString(getRNG().getNextInt()));
             NeatConfiguration neatConfig = new NeatConfiguration(props);
 
             this.population = Genotype.randomInitialGenotype(neatConfig);
