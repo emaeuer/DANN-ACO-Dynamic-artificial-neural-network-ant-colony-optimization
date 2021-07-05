@@ -15,6 +15,8 @@ public class ChromosomeSolutionMapping implements Solution {
     private final double maxFitness;
     private double fitness = 0;
 
+    private NeuralNetwork mappedNN = null;
+
     public ChromosomeSolutionMapping(Chromosome chromosome, Activator activator, double maxFitness) {
         this.chromosome = chromosome;
         this.activator = (AnjiActivator) activator;
@@ -45,6 +47,10 @@ public class ChromosomeSolutionMapping implements Solution {
 
     @Override
     public NeuralNetwork getNeuralNetwork() {
-        return AnjiNetToNeuralNetwork.mapToNeuralNetwork(this.activator);
+        if (mappedNN == null) {
+            // lazy initialization
+            this.mappedNN = AnjiNetToNeuralNetwork.mapToNeuralNetwork(this.activator);
+        }
+        return this.mappedNN;
     }
 }
