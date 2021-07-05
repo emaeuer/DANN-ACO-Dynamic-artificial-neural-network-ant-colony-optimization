@@ -1,6 +1,7 @@
 package de.emaeuer.evaluation;
 
 import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
@@ -40,8 +41,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private boolean stoppedBecauseOfException = false;
 
     private StateHandler<OptimizationState> optimizationState;
-    private ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration;
-    private ConfigurationHandler<EnvironmentConfiguration> environmentConfiguration;
+    private ConfigurationHandler<EvaluationConfiguration> configuration;
 
     private AbstractEnvironment environment;
     private OptimizationMethod optimization;
@@ -55,33 +55,33 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private Thread updateThread;
 
     public void initialize() {
-        if (this.environmentConfiguration != null) {
+        if (this.configuration != null) {
             createEnvironment();
         } else {
-            LOG.warn("The environment configuration was not set");
-            throw new IllegalStateException("The environment configuration was not set");
+            LOG.warn("The configuration was not set");
+            throw new IllegalStateException("The configuration was not set");
         }
 
-        if (this.optimizationState != null && this.optimizationConfiguration != null) {
+        if (this.optimizationState != null) {
             createOptimizationMethod();
         } else {
-            LOG.warn("The optimization state or the optimization configuration was not set");
-            throw new IllegalStateException("The optimization state or the optimization configuration was not set");
+            LOG.warn("The optimization state was not set");
+            throw new IllegalStateException("The optimization state was not set");
         }
     }
 
     private void createEnvironment() {
-        this.maxFitness = this.environmentConfiguration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
-        this.environment = EnvironmentFactory.createEnvironment(this.environmentConfiguration);
+        this.maxFitness = this.configuration.getValue(EvaluationConfiguration.MAX_FITNESS_SCORE, Double.class);
+        ConfigurationHandler<EnvironmentConfiguration> environmentConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration, EnvironmentConfiguration.class, EvaluationConfiguration.ENVIRONMENT_CONFIGURATION);
+        this.environment = EnvironmentFactory.createEnvironment(environmentConfig);
     }
 
     private void createOptimizationMethod() {
-        // FIXME there may be a better solution then disabling the option in the gui and overriding it here
-        // difficulty is caused by independence of the environment and optimization
-        this.optimizationConfiguration.setValue(OptimizationConfiguration.MAX_FITNESS_SCORE, this.maxFitness);
-        this.maxEvaluations = this.optimizationConfiguration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
-        this.maxRuns = this.optimizationConfiguration.getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class);
-        this.optimization = OptimizationMethodFactory.createMethodForConfig(this.optimizationConfiguration, this.optimizationState);
+        ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration, OptimizationConfiguration.class, EvaluationConfiguration.OPTIMIZATION_CONFIGURATION);
+
+        this.maxEvaluations = optimizationConfig.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
+        this.maxRuns = optimizationConfig.getValue(OptimizationConfiguration.NUMBER_OF_RUNS, Integer.class);
+        this.optimization = OptimizationMethodFactory.createMethodForConfig(optimizationConfig, this.optimizationState);
     }
 
     public void reset() {
@@ -160,7 +160,9 @@ public class OptimizationEnvironmentHandler implements Runnable {
     public void pauseThread() {
         this.pauseThread.set(true);
         try {
-            this.updateThread.join();
+            if (this.updateThread != null) {
+                this.updateThread.join();
+            }
         } catch (InterruptedException e) {
             LOG.warn("Failed to pause thread", e);
         }
@@ -218,12 +220,8 @@ public class OptimizationEnvironmentHandler implements Runnable {
         this.optimizationState = optimizationState;
     }
 
-    public void setOptimizationConfiguration(ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration) {
-        this.optimizationConfiguration = optimizationConfiguration;
-    }
-
-    public void setEnvironmentConfiguration(ConfigurationHandler<EnvironmentConfiguration> environmentConfiguration) {
-        this.environmentConfiguration = environmentConfiguration;
+    public void setConfiguration(ConfigurationHandler<EvaluationConfiguration> configuration) {
+        this.configuration = configuration;
     }
 
     public int getMaxRuns() {
@@ -269,4 +267,5 @@ public class OptimizationEnvironmentHandler implements Runnable {
     public boolean stoppedBecauseOfException() {
         return stoppedBecauseOfException;
     }
+
 }

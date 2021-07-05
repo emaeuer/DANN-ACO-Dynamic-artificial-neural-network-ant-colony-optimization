@@ -72,16 +72,15 @@ public class Cart extends AbstractElement {
         // check solution died
         checkDied();
 
-        // FIXME oscillation penalty doesn't work as expected
         if (data.penalizeOscillation()) {
             if (this.step >= 100) {
                 double oscillations = 0;
                 while (!this.lastOscillations.isEmpty()) {
                     oscillations += this.lastOscillations.poll();
                 }
-                this.fitness = 0.1 * ((this.step + 1) / environment.getMaxStepNumber()) + 0.9 * (0.75 / oscillations);
+                this.fitness = 0.1 * ((this.step + 1) / 1000.0) + 0.9 * (0.75 / oscillations);
             } else {
-                this.fitness = 0.1 * ((this.step + 1) / environment.getMaxStepNumber());
+                this.fitness = 0.1 * ((this.step + 1) / 1000.0);
             }
         } else {
             this.fitness = this.step + 1;

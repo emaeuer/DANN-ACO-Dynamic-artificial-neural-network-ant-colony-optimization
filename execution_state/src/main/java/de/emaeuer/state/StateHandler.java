@@ -134,7 +134,9 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Auto
 
     @Override
     public void close() throws Exception {
-        this.writer.close();
+        if (this.writer != null) {
+            this.writer.close();
+        }
     }
 
     public void execute(Consumer<StateHandler<T>> consumer) {

@@ -28,7 +28,11 @@ public class EmbeddedConfiguration<S extends Enum<S> & DefaultConfiguration<S>> 
 
     @Override
     public String getStringRepresentation() {
-        return this.value.getName();
+        if (this.value == null) {
+            return "null";
+        } else {
+            return this.value.getName();
+        }
     }
 
     public ConfigurationHandler<S> getValue() {
@@ -42,6 +46,9 @@ public class EmbeddedConfiguration<S extends Enum<S> & DefaultConfiguration<S>> 
 
     @Override
     public AbstractConfigurationValue<ConfigurationHandler<S>> copy() {
+        if (this.value == null) {
+            return new EmbeddedConfiguration<>(null);
+        }
         ConfigurationHandler<S> handlerCopy = new ConfigurationHandler<>(this.value.getKeyClass());
         handlerCopy.setName(this.value.getName());
         return new EmbeddedConfiguration<>(handlerCopy);

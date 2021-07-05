@@ -5,6 +5,7 @@ import de.emaeuer.persistence.BackgroundFileWriter;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class ConfigurationUtil {
 
@@ -32,7 +33,8 @@ public class ConfigurationUtil {
             if (setting.getValue() instanceof EmbeddedConfiguration<?> embeddedConfig) {
                 printConfiguration(embeddedConfig.getValue(), writer, prefix + config.getName());
             } else {
-                String line = String.format("%s%s.%s=%s", prefix, config.getName(), setting.getKey().getKeyName(), setting.getValue().getStringRepresentation());
+                String value = setting.getValue() == null ? null : setting.getValue().getStringRepresentation();
+                String line = String.format("%s%s.%s=%s", prefix, config.getName(), setting.getKey().getKeyName(), value);
                 writer.writeLine(line);
             }
         }

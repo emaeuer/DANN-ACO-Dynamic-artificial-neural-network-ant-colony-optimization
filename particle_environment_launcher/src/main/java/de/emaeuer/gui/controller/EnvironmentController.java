@@ -1,10 +1,9 @@
 package de.emaeuer.gui.controller;
 
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.environment.configuration.EnvironmentConfiguration;
+import de.emaeuer.evaluation.EvaluationConfiguration;
 import de.emaeuer.evaluation.OptimizationEnvironmentHandler;
 import de.emaeuer.gui.controller.util.ShapeDrawer;
-import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.state.StateHandler;
 import javafx.animation.AnimationTimer;
@@ -45,8 +44,7 @@ public class EnvironmentController {
     private double speed = 1;
     private boolean initialStart = true;
 
-    private final ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfiguration = new SimpleObjectProperty<>();
-    private final ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfiguration = new SimpleObjectProperty<>();
+    private final ObjectProperty<ConfigurationHandler<EvaluationConfiguration>> configuration = new SimpleObjectProperty<>();
     private final ObjectProperty<StateHandler<OptimizationState>> optimizationState = new SimpleObjectProperty<>();
 
     private final BooleanProperty updatedProperty = new SimpleBooleanProperty(false);
@@ -69,14 +67,12 @@ public class EnvironmentController {
     }
 
     public void initializeController() {
-        if (this.environmentConfiguration.isNotNull().get() && this.optimizationConfiguration.isNotNull().get() && this.optimizationState.isNotNull().get()) {
-            this.handler.setEnvironmentConfiguration(this.environmentConfiguration.get());
-            this.handler.setOptimizationConfiguration(this.optimizationConfiguration.get());
+        if (this.configuration.isNotNull().get() && this.optimizationState.isNotNull().get()) {
+            this.handler.setConfiguration(this.configuration.get());
             this.handler.setOptimizationState(this.optimizationState.get());
             this.handler.setAutomaticallyStartNextRun(this.stopAfterEachRun.not().get());
 
-            this.environmentConfiguration.addListener((v, o, n) -> this.handler.setEnvironmentConfiguration(n));
-            this.optimizationConfiguration.addListener((v, o, n) -> this.handler.setOptimizationConfiguration(n));
+            this.configuration.addListener((v, o, n) -> this.handler.setConfiguration(n));
             this.optimizationState.addListener((v, o, n) -> this.handler.setOptimizationState(n));
 
             this.canvas.setWidth(800);
@@ -204,12 +200,8 @@ public class EnvironmentController {
         return canvas.getGraphicsContext2D();
     }
 
-    public ObjectProperty<ConfigurationHandler<EnvironmentConfiguration>> environmentConfigurationProperty() {
-        return environmentConfiguration;
-    }
-
-    public ObjectProperty<ConfigurationHandler<OptimizationConfiguration>> optimizationConfigurationProperty() {
-        return optimizationConfiguration;
+    public ObjectProperty<ConfigurationHandler<EvaluationConfiguration>> configurationProperty() {
+        return this.configuration;
     }
 
     public ObjectProperty<StateHandler<OptimizationState>> optimizationStateProperty() {
