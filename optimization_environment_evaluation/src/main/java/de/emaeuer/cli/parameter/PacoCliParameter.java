@@ -1,17 +1,15 @@
-package de.emaeuer.cli;
+package de.emaeuer.cli.parameter;
 
 import picocli.CommandLine;
 
 import java.io.File;
 
-public class AlternativeCliParameter {
+@CommandLine.Command(name = "dannaco")
+public class PacoCliParameter {
 
     private static final String STANDARD_DEVIATION_TEMPLATE = "(<delta>s)/(k - 1)+<epsilon>z";
     private static final String PHEROMONE_TEMPLATE = "<alpha>(n/k)^<beta>+<gamma>";
     private static final String SPLIT_PROBABILITY_TEMPLATE = "max((c^<zeta>*t^<eta>)/(<theta>d+1), 0)";
-
-    @CommandLine.Option(names = "--configFile")
-    private File configFile;
 
     @CommandLine.Option(names = "-k")
     private Integer populationSize;
@@ -147,9 +145,5 @@ public class AlternativeCliParameter {
 
     public Double getSolutionWeightFactor() {
         return solutionWeightFactor;
-    }
-
-    public File getConfigFile() {
-        return configFile;
     }
 }

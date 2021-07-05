@@ -12,4 +12,6 @@ module OptimizationEnvironmentEvaluation {
     requires neural.network;
 
     opens de.emaeuer.cli to info.picocli;
+    exports de.emaeuer.cli.parameter;
+    opens de.emaeuer.cli.parameter to info.picocli;
 }

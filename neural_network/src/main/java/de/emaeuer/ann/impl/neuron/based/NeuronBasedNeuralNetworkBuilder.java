@@ -26,12 +26,17 @@ public class NeuronBasedNeuralNetworkBuilder {
     }
 
     public static NeuronBasedNeuralNetworkBuilder buildWithConfiguration(ConfigurationHandler<NeuralNetworkConfiguration> configuration) {
-        configuration.logConfiguration();
+        if (configuration == null) {
+            configuration = new ConfigurationHandler<>(NeuralNetworkConfiguration.class);
+        } else {
+            configuration.logConfiguration();
+        }
+
         return new NeuronBasedNeuralNetworkBuilder(configuration);
     }
 
     public static NeuronBasedNeuralNetworkBuilder build() {
-        return buildWithConfiguration(new ConfigurationHandler<>(NeuralNetworkConfiguration.class));
+        return buildWithConfiguration(null);
     }
 
     public static NeuronBasedNeuralNetwork buildFromNeuronCollection(List<Neuron> neurons) {

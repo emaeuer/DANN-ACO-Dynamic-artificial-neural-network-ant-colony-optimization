@@ -71,6 +71,10 @@ public class RandomUtil {
         return new NormalDistribution(this.rng, mean, deviation).sample();
     }
 
+    public int getNextInt() {
+        return this.rng.nextInt();
+    }
+
     public int getNextInt(int min, int max) {
         return this.rng.nextInt(max - min) + min;
     }
@@ -90,6 +94,5 @@ public class RandomUtil {
     public void shuffleCollection(List<?> shuffledInput) {
         Collections.shuffle(shuffledInput, this.rng);
     }
-
 
 }
