@@ -50,6 +50,7 @@ public class ConfigurationValueInputMapper {
                 .stream()
                 .filter(e -> !e.getKey().isDisabled())
                 .filter(e -> EmbeddedConfiguration.class.equals(e.getKey().getValueType()))
+                .filter(e -> e.getValue() != null)
                 .map(e -> createPaneForConfiguration(((EmbeddedConfiguration<?>) e.getValue()).getValue(),
                         action, e.getKey().getName(), parent))
                 .forEach(nodes::addAll);
@@ -71,6 +72,8 @@ public class ConfigurationValueInputMapper {
             return createExpressionInput(configType, exprConfigValue, action, configurationHandler);
         } else if (configValue instanceof DoubleConfigurationValue doubleConfigValue) {
             return  createDoubleInput(configType, doubleConfigValue, action, configurationHandler);
+        }  else if (configValue instanceof  NumericListConfigurationValue listConfigValue) {
+            return createListInput(configType, listConfigValue, action, configurationHandler);
         }
 
         return new Label(String.format("### Unknown value Type %s for %s ###", configValue.getClass().getSimpleName(), configType.getName()));
@@ -80,6 +83,7 @@ public class ConfigurationValueInputMapper {
         Spinner<Integer> spinner = new Spinner<>(value.getMin(), value.getMax(), Integer.parseInt(value.getStringRepresentation()));
         spinner.valueProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
         spinner.setEditable(true);
+        spinner.setDisable(value.isDisabled());
 
         if (config.refreshNecessary()) {
             spinner.valueProperty().addListener((v, o, n) -> action.run());
@@ -92,6 +96,7 @@ public class ConfigurationValueInputMapper {
         CheckBox checkBox = new CheckBox();
         checkBox.setSelected(Boolean.parseBoolean(value.getStringRepresentation()));
         checkBox.selectedProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
+        checkBox.setDisable(value.isDisabled());
 
         if (config.refreshNecessary()) {
             checkBox.selectedProperty().addListener((v, o, n) -> action.run());
@@ -104,6 +109,7 @@ public class ConfigurationValueInputMapper {
         if (value.getPossibleValues().isEmpty()) {
             TextField field = new TextField(value.getStringRepresentation());
             field.textProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
+            field.setDisable(value.isDisabled());
 
             if (config.refreshNecessary()) {
                 field.textProperty().addListener((v, o, n) -> action.run());
@@ -114,6 +120,7 @@ public class ConfigurationValueInputMapper {
             ComboBox<String> comboBox = new ComboBox<>(FXCollections.observableArrayList(value.getPossibleValues()));
             comboBox.setValue(value.getStringRepresentation());
             comboBox.valueProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
+            comboBox.setDisable(value.isDisabled());
 
             if (config.refreshNecessary()) {
                 comboBox.valueProperty().addListener((v, o, n) -> action.run());
@@ -125,8 +132,9 @@ public class ConfigurationValueInputMapper {
 
     private static Node createDoubleInput(DefaultConfiguration<?> config, DoubleConfigurationValue value, Runnable action, ConfigurationHandler<?> configurationHandler) {
         TextField field = new TextField(value.getStringRepresentation());
+        field.setDisable(value.isDisabled());
         field.textProperty().addListener((v, o, n) -> {
-            if (validateFloatingPointInput(field, n)) {
+            if (inputIsValid(field, n, "[+-]?([0-9]+[.])?[0-9]+")) {
                 configurationHandler.setValue(config.getKeyName(), n);
             }
         });
@@ -138,8 +146,24 @@ public class ConfigurationValueInputMapper {
         return createStandardInput(config.getName(), field);
     }
 
-    private static boolean validateFloatingPointInput(TextField field, String value) {
-        if (!value.matches("[+-]?([0-9]+[.])?[0-9]+")) {
+    private static Node createListInput(DefaultConfiguration<?> config, NumericListConfigurationValue value, Runnable action, ConfigurationHandler<?> configurationHandler) {
+        TextField field = new TextField(value.getStringRepresentation());
+        field.setDisable(value.isDisabled());
+        field.textProperty().addListener((v, o, n) -> {
+            if (inputIsValid(field, n, "(([+-]?([0-9]+[.])?[0-9]+)(,|$){1}\\s*)*")) {
+                configurationHandler.setValue(config.getKeyName(), n);
+            }
+        });
+
+        if (config.refreshNecessary()) {
+            field.textProperty().addListener((v, o, n) -> action.run());
+        }
+
+        return createStandardInput(config.getName(), field);
+    }
+
+    private static boolean inputIsValid(TextField field, String value, String regex) {
+        if (!value.matches(regex)) {
             field.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), true);
             return false;
         }
@@ -150,6 +174,7 @@ public class ConfigurationValueInputMapper {
     private static Node createExpressionInput(DefaultConfiguration<?> config, ExpressionConfigurationValue value, Runnable action, ConfigurationHandler<?> configurationHandler) {
         TextField field = new TextField(value.getStringRepresentation());
         field.setTooltip(creatToolTipForExpression(value.getVariables()));
+        field.setDisable(value.isDisabled());
         field.textProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
 
         if (config.refreshNecessary()) {

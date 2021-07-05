@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
@@ -57,9 +58,21 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
     }
 
     public void setValue(T key, Object value) {
+        if (value == null) {
+            setValue(key, null);
+            return;
+        }
+
         AbstractConfigurationValue<?> configValue = this.configurationValues.get(key);
         configValue.setValue(value.toString());
         setValue(key, configValue);
+    }
+
+    public void setValue(String key, AbstractConfigurationValue<?> value) {
+        Arrays.stream(this.keyEnum.getEnumConstants())
+                .filter(k -> k.name().equals(key))
+                .findFirst()
+                .ifPresent(k -> setValue(k, value));
     }
 
     public void setValue(T key, AbstractConfigurationValue<?> value) {
@@ -104,24 +117,31 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
     public Map<T, String> getConfigurations() {
         return this.configurationValues.entrySet()
                 .stream()
+                .filter(e -> e.getValue() != null)
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getStringRepresentation()));
     }
 
     public void logConfiguration() {
         LOG.info("{} configuration has the following settings:", getName());
 
-        int maxKeyLength = getConfigurations()
-                .keySet()
+        Map<T, String> configurations = getConfigurations();
+
+        int maxKeyLength = configurations.keySet()
                 .stream()
+                .filter(Predicate.not(T::isDisabled))
                 .map(k -> k.toString().length())
                 .max(Integer::compareTo)
                 .orElse(0);
 
-        getConfigurations()
-                .entrySet()
+        configurations.entrySet()
                 .stream()
+                .filter(e -> !e.getKey().isDisabled())
                 .map(e -> String.format("%-" + maxKeyLength + "s = %s", e.getKey(), e.getValue()))
                 .forEach(LOG::info);
+    }
+
+    public void disableConfiguration(T key, boolean disable) {
+        this.configurationValues.get(key).setDisabled(disable);
     }
 
     public EnumMap<T, AbstractConfigurationValue<?>> getConfigurationValues() {

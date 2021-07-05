@@ -53,13 +53,12 @@ public class GuiController {
 
         showSettingPanel();
 
-        this.environmentAreaController.environmentConfigurationProperty().bind(this.configurationPanelController.environmentConfigurationProperty());
-        this.environmentAreaController.optimizationConfigurationProperty().bind(this.configurationPanelController.optimizationConfigurationProperty());
+        this.environmentAreaController.configurationProperty().bind(this.configurationPanelController.configurationProperty());
         this.environmentAreaController.optimizationStateProperty().bind(this.statePanelController.stateProperty());
         this.environmentAreaController.updatedProperty().addListener((v, o, n) -> handleProgression());
         this.environmentAreaController.finishedProperty().addListener((v, o, n) -> handleEnvironmentEnd(n));
         this.environmentAreaController.runningProperty().addListener((v,o,n) -> togglePlaying(n));
-        this.environmentAreaController.finishedProperty().addListener((v,o,n) -> switchToGeneralizationTest(n));
+        this.playButton.disableProperty().bind(this.environmentAreaController.finishedProperty());
 
         this.configurationPanelController.writerProperty().bind(this.statePanelController.writerProperty());
 
@@ -140,10 +139,6 @@ public class GuiController {
     private void togglePlaying(boolean isPlaying) {
         this.playButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("playing"), isPlaying);
         this.pauseButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("paused"), !isPlaying);
-    }
-
-    private void switchToGeneralizationTest(boolean isInGeneralizationStage) {
-        this.playButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("finished"), isInGeneralizationStage);
     }
 
     private void markButtonAsSelected(Button selected) {

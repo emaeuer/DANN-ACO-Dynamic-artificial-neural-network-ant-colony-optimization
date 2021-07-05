@@ -10,6 +10,8 @@ public abstract class AbstractConfigurationValue<T> implements Serializable {
     @Serial
     private static final long serialVersionUID = -2302558258661491611L;
 
+    private boolean disabled = false;
+
     public AbstractConfigurationValue(String value) {
         setValue(value);
     }
@@ -40,5 +42,13 @@ public abstract class AbstractConfigurationValue<T> implements Serializable {
     public int hashCode() {
         String stringRepresentation = getStringRepresentation();
         return stringRepresentation != null ? stringRepresentation.hashCode() : 0;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
 }

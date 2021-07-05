@@ -6,6 +6,7 @@ import de.emaeuer.cli.parameter.PacoCliParameter;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
+import de.emaeuer.evaluation.EvaluationConfiguration;
 import de.emaeuer.evaluation.OptimizationEnvironmentHandler;
 import de.emaeuer.optimization.OptimizationMethodNames;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
@@ -30,8 +31,7 @@ public class CliLauncher {
     private final OptimizationEnvironmentHandler optimization = new OptimizationEnvironmentHandler();
 
     private final StateHandler<OptimizationState> optimizationState = new StateHandler<>(OptimizationState.class);
-    private final ConfigurationHandler<OptimizationConfiguration> optimizationConfiguration = new ConfigurationHandler<>(OptimizationConfiguration.class);
-    private final ConfigurationHandler<EnvironmentConfiguration> environmentConfiguration = new ConfigurationHandler<>(EnvironmentConfiguration.class);
+    private final ConfigurationHandler<EvaluationConfiguration> configuration = new ConfigurationHandler<>(EvaluationConfiguration.class);
 
     private long timeMillis = -1;
 
@@ -68,15 +68,18 @@ public class CliLauncher {
 
         // seed of the environment should not be changed to have the same difficulty
 //        this.environmentConfiguration.setValue(EnvironmentConfiguration.SEED, seed);
-        this.optimizationConfiguration.setValue(OptimizationConfiguration.SEED, seed);
+        this.configuration.setValue(EvaluationConfiguration.SEED, seed);
     }
 
     private void initConfigurations(File file, Object parameters) {
-        this.environmentConfiguration.setName("ENVIRONMENT_CONFIGURATION");
-        this.optimizationConfiguration.setName("OPTIMIZATION_CONFIGURATION");
+        ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration, OptimizationConfiguration.class, EvaluationConfiguration.OPTIMIZATION_CONFIGURATION);
+        ConfigurationHandler<EnvironmentConfiguration> environmentConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration, EnvironmentConfiguration.class, EvaluationConfiguration.ENVIRONMENT_CONFIGURATION);
+        optimizationConfig.setName("OPTIMIZATION_CONFIGURATION");
+        environmentConfig.setName("ENVIRONMENT_CONFIGURATION");
+        this.configuration.setName("CONFIGURATION");
 
         if (file != null && file.exists()) {
-            ConfigurationIOHandler.importConfiguration(file, this.environmentConfiguration, this.optimizationConfiguration);
+            ConfigurationIOHandler.importConfiguration(file, this.configuration);
         }
 
         if (parameters == null) {
@@ -84,11 +87,11 @@ public class CliLauncher {
         }
 
         try {
-            if (OptimizationMethodNames.PACO.name().equals(optimizationConfiguration.getValue(OptimizationConfiguration.METHOD_NAME, String.class))) {
-                ConfigurationHandler<PacoConfiguration> config = ConfigurationHelper.extractEmbeddedConfiguration(this.optimizationConfiguration, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
+            if (OptimizationMethodNames.PACO.name().equals(optimizationConfig.getValue(OptimizationConfiguration.METHOD_NAME, String.class))) {
+                ConfigurationHandler<PacoConfiguration> config = ConfigurationHelper.extractEmbeddedConfiguration(optimizationConfig, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
                 this.applyParametersToPacoConfig(config, parameters);
-            } else if (OptimizationMethodNames.NEAT.name().equals(optimizationConfiguration.getValue(OptimizationConfiguration.METHOD_NAME, String.class))) {
-                ConfigurationHandler<NeatConfiguration> config = ConfigurationHelper.extractEmbeddedConfiguration(this.optimizationConfiguration, NeatConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
+            } else if (OptimizationMethodNames.NEAT.name().equals(optimizationConfig.getValue(OptimizationConfiguration.METHOD_NAME, String.class))) {
+                ConfigurationHandler<NeatConfiguration> config = ConfigurationHelper.extractEmbeddedConfiguration(optimizationConfig, NeatConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
                 applyParametersToNeatConfig(config, parameters);
             }
         } catch (IllegalArgumentException e) {
@@ -148,8 +151,7 @@ public class CliLauncher {
 
     public void run() {
         this.optimization.setOptimizationState(this.optimizationState);
-        this.optimization.setOptimizationConfiguration(this.optimizationConfiguration);
-        this.optimization.setEnvironmentConfiguration(this.environmentConfiguration);
+        this.optimization.setConfiguration(this.configuration);
         this.optimization.setUpdateDelta(0);
 
         this.optimization.initialize();

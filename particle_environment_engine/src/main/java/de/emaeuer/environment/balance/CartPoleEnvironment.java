@@ -61,7 +61,7 @@ public class CartPoleEnvironment extends AbstractEnvironment {
     public void step() {
         super.step();
 
-        // increment scores and check if at least one bird lives (ignore this.bestParticle)
+        // increment scores and check if at least one bird lives
         List<Cart> deadCarts = new ArrayList<>();
         getAgents().stream()
                 .filter(Cart.class::isInstance)
