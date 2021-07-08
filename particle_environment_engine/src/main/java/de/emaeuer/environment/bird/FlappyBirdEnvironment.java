@@ -2,7 +2,9 @@ package de.emaeuer.environment.bird;
 
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.AgentController;
+import de.emaeuer.environment.GeneralizationHandler;
 import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
+import de.emaeuer.environment.bird.configuration.FlappyBirdGeneralizationConfiguration;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.elements.AbstractElement;
@@ -17,59 +19,60 @@ import de.emaeuer.environment.util.ForceHelper;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public class FlappyBirdEnvironment extends AbstractEnvironment {
+public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneralizationConfiguration> {
 
     private static final int BIRD_X = 80;
     private static final int BIRD_SIZE = 20;
 
-    private static final BiConsumer<AbstractElement, AbstractEnvironment> DIE_ON_BORDER = (particle, env) -> {
+    private static final BiConsumer<AbstractElement, AbstractEnvironment<FlappyBirdGeneralizationConfiguration>> DIE_ON_BORDER = (particle, env) -> {
         if (particle instanceof FlappyBird bird && !bird.isDead()) {
             boolean isDead = bird.getPosition().getY() + bird.getRadius() > env.getHeight();
             isDead |= particle.getPosition().getY() - bird.getRadius() <= 0;
-
-            if (particle.getPosition().getY() - bird.getRadius() <= 0) {
-                bird.setScore(bird.getScore() * 0.5);
-            }
-
             bird.setDead(isDead);
         }
     };
 
-    private boolean areAllBirdsDead = false;
+    private boolean finished = false;
 
-    private final int gapSize;
-    private final int pipeWidth;
-    private final int pipeDistance;
+    private int gapSize;
+    private int pipeWidth;
+    private int pipeDistance;
 
     private final List<Pipe> pipes = new ArrayList<>();
 
-    private Map<Integer, Integer[]> colors;
-    private FlappyBird bestParticle;
+    private final ConfigurationHandler<FlappyBirdConfiguration> configuration;
+    private final ConfigurationHandler<FlappyBirdGeneralizationConfiguration> generalizationConfig;
 
     public FlappyBirdEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         super(DIE_ON_BORDER, configuration);
 
-        ConfigurationHandler<FlappyBirdConfiguration> implementationConfiguration =
-                ConfigurationHelper.extractEmbeddedConfiguration(configuration, FlappyBirdConfiguration.class, EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION);
+        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, FlappyBirdConfiguration.class, EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION);
+        if (configuration.getValue(EnvironmentConfiguration.TEST_GENERALIZATION, Boolean.class)) {
+            this.generalizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(configuration, FlappyBirdGeneralizationConfiguration.class, EnvironmentConfiguration.GENERALIZATION_IMPLEMENTATION);
+        } else {
+            this.generalizationConfig = null;
+        }
 
-        this.gapSize = implementationConfiguration.getValue(FlappyBirdConfiguration.GAP_SIZE, Integer.class);
-        this.pipeWidth = implementationConfiguration.getValue(FlappyBirdConfiguration.PIPE_WIDTH, Integer.class);
-        this.pipeDistance = implementationConfiguration.getValue(FlappyBirdConfiguration.PIPE_DISTANCE, Integer.class);
+        setEnvironmentParameters();
     }
 
     @Override
     protected void initializeParticles(List<AgentController> controllers) {
-        controllers.stream()
-                .map(this::buildFlappyBird)
-                .forEach(getAgents()::add);
+        initializeParticles(controllers, getHeight() * 0.5);
     }
 
-    private FlappyBird buildFlappyBird(AgentController controller) {
+    protected void initializeParticles(List<AgentController> controllers, double initialHeight) {
+        controllers.stream()
+                .map(c -> buildFlappyBird(c, initialHeight))
+                .forEach(getAgentsToDraw()::add);
+    }
+
+    private FlappyBird buildFlappyBird(AgentController controller, double initialHeight) {
         FlappyBirdBuilder builder = new FlappyBirdBuilder()
                 .controller(controller)
                 .radius(BIRD_SIZE)
                 .environment(this)
-                .setStartPosition(BIRD_X, getHeight() / 2)
+                .setStartPosition(BIRD_X, initialHeight)
                 .maxVelocity(15)
                 .addPermanentForce(ForceHelper.createBasicForce(new Vector2D(0, 2)));
 
@@ -79,18 +82,29 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
     }
 
     private void assignColor(FlappyBirdBuilder builder) {
-       if (this.colors == null) {
-           this.colors = new HashMap<>();
-       }
-
        builder.color(0,0,0,0.5);
     }
 
     @Override
     public void restart() {
         super.restart();
-        this.areAllBirdsDead = false;
+        this.finished = false;
         this.pipes.clear();
+
+        setEnvironmentParameters();
+    }
+
+    private void setEnvironmentParameters() {
+        this.gapSize = this.configuration.getValue(FlappyBirdConfiguration.GAP_SIZE, Integer.class);
+        this.pipeWidth = this.configuration.getValue(FlappyBirdConfiguration.PIPE_WIDTH, Integer.class);
+        this.pipeDistance = this.configuration.getValue(FlappyBirdConfiguration.PIPE_DISTANCE, Integer.class);
+
+        if (isTestingGeneralization()) {
+            getRNG().reset((int) getGeneralizationHandler().getNextValue(FlappyBirdGeneralizationConfiguration.NUMBER_OF_SEEDS));
+            this.gapSize *= getGeneralizationHandler().getNextValue(FlappyBirdGeneralizationConfiguration.GAP_SIZES);
+            this.pipeWidth *= getGeneralizationHandler().getNextValue(FlappyBirdGeneralizationConfiguration.PIPE_WIDTHS);
+            this.pipeDistance *= getGeneralizationHandler().getNextValue(FlappyBirdGeneralizationConfiguration.PIPE_DISTANCES);
+        }
     }
 
     @Override
@@ -101,31 +115,34 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
 
         // increment scores and check if at least one bird lives (ignore this.bestParticle)
         List<FlappyBird> deadBirds = new ArrayList<>();
-        getAgents().stream()
-                .filter(p -> p != this.bestParticle)
+        getAgentsToDraw().stream()
                 .filter(FlappyBird.class::isInstance)
                 .map(FlappyBird.class::cast)
                 .peek(FlappyBird::incrementScore)
-                .peek(this::checkReachedMaximumFitness)
+                .peek(this::checkBird)
                 .filter(FlappyBird::isDead)
+                .peek(b -> getOriginControllers().remove(b.getController()))
                 .forEach(deadBirds::add);
 
-        if (this.bestParticle != null && this.bestParticle.isDead()) {
-            getAgents().remove(this.bestParticle);
-        }
+        getAgentsToDraw().removeAll(deadBirds);
 
-        // terminate iteration if only this.bestParticle remains
-        if (getAgents().size() == 1 && getAgents().get(0) == this.bestParticle) {
-            getAgents().clear();
-        }
-
-        getAgents().removeAll(deadBirds);
-        this.areAllBirdsDead = getAgents().isEmpty();
+        this.finished = getAgentsToDraw().isEmpty();
     }
 
-    private void checkReachedMaximumFitness(FlappyBird bird) {
+    private void checkBird(FlappyBird bird) {
         if (bird.getScore() >= getMaxFitnessScore()) {
             bird.setDead(true);
+            setControllerFinishedWithoutDying(true);
+
+            handleGeneralizationChecks(bird);
+        }
+    }
+
+    private void handleGeneralizationChecks(FlappyBird bird) {
+        if (isTestingGeneralization()) {
+            AgentController origin = getOriginControllers().get(bird.getController());
+            origin.setGeneralizationCapability(origin.getGeneralizationCapability() + (1.0 / getGeneralizationHandler().getNumberOfGeneralizationIterations()));
+            setCurrentGeneralizationCapability(Math.max(getCurrentGeneralizationProgress(), origin.getGeneralizationCapability()));
         }
     }
 
@@ -196,6 +213,37 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
     }
 
     @Override
+    protected GeneralizationHandler<FlappyBirdGeneralizationConfiguration> getNewGeneralizationHandler() {
+        return new FlappyBirdGeneralizationHandler(this.generalizationConfig, getRNG());
+    }
+
+    @Override
+    public void nextGeneralizationIteration() {
+        super.nextGeneralizationIteration();
+        this.pipes.clear();
+
+        if (finishedGeneralization()) {
+            return;
+        }
+
+        setEnvironmentParameters();
+        getGeneralizationHandler().next();
+
+        List<Double> heights = ConfigurationHelper.getNumericListValue(this.generalizationConfig, FlappyBirdGeneralizationConfiguration.BIRD_START_HEIGHTS);
+
+        for (double height : heights) {
+            List<AgentController> copyControllers = new ArrayList<>();
+            for (AgentController agent : getAgents()) {
+                AgentController copy = agent.copy();
+                copyControllers.add(copy);
+                getOriginControllers().put(copy, agent);
+            }
+
+            initializeParticles(copyControllers, getHeight() * height);
+        }
+    }
+
+    @Override
     public List<AbstractElement> getAdditionalEnvironmentElements() {
         List<AbstractElement> elements = super.getAdditionalEnvironmentElements();
         elements.addAll(getPipes());
@@ -203,12 +251,11 @@ public class FlappyBirdEnvironment extends AbstractEnvironment {
     }
 
     @Override
-    public boolean allAgentsFinished() {
-        return this.areAllBirdsDead;
+    public boolean environmentFinished() {
+        return this.finished;
     }
 
     public List<Pipe> getPipes() {
         return pipes;
     }
-
 }

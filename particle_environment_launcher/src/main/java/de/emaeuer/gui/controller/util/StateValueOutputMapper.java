@@ -122,11 +122,6 @@ public class StateValueOutputMapper {
         // executed by state for automatic handling of locking
         this.state.execute(s -> newData.putAll(dataSeries.getChangedData()));
 
-        if (newData.isEmpty()) {
-            property.clear();
-            return;
-        }
-
         List<Series<Number, Number>> seriesToRemove = new ArrayList<>();
 
         for (Series<Number, Number> series : property) {

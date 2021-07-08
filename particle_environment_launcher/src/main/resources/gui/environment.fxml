@@ -24,6 +24,9 @@
         <VBox minHeight="20" maxHeight="20"/>
         <Label text="Reached fitness"/>
         <ProgressBar prefWidth="300" progress="0" fx:id="fitnessProgress"/>
+        <VBox minHeight="20" maxHeight="20"/>
+        <Label text="Generalization progress"/>
+        <ProgressBar prefWidth="300" progress="0" fx:id="generalizationProgress"/>
     </VBox>
 
 </StackPane>

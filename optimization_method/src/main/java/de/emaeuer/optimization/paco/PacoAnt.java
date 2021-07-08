@@ -8,6 +8,7 @@ import org.apache.commons.math3.linear.RealVector;
 public class PacoAnt implements Solution {
 
     private double fitness = 0;
+    private double generalizationCapability = 0;
 
     private final TopologyData solution;
 
@@ -36,6 +37,21 @@ public class PacoAnt implements Solution {
     @Override
     public NeuralNetwork getNeuralNetwork() {
         return solution.getInstance();
+    }
+
+    @Override
+    public double getGeneralizationCapability() {
+        return generalizationCapability;
+    }
+
+    @Override
+    public void setGeneralizationCapability(double value) {
+        this.generalizationCapability = value;
+    }
+
+    @Override
+    public Solution copy() {
+        return new PacoAnt(this.solution.copy());
     }
 
     public TopologyData getTopologyData() {

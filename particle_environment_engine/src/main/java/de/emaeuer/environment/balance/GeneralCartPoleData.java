@@ -45,6 +45,28 @@ public record GeneralCartPoleData(
                 configuration.getValue(PENALIZE_OSCILLATION, Boolean.class)
         );
     }
+
+    public GeneralCartPoleData(GeneralCartPoleData data, double poleOneStartAngle) {
+        this(
+            data.trackLength,
+            data.poleAngleThreshold,
+            data.poleOneLength,
+            data.poleOneMass,
+            poleOneStartAngle,
+            data.poleTwoLength,
+            data.poleTwoMass,
+            data.poleTwoStartAngle,
+            data.forceMagnitude,
+            data.gravity,
+            data.pivotFriction,
+            data.cartMass,
+            data.timeDelta,
+            data.velocityInput,
+            data.randomStartAngle,
+            data.twoPoles,
+            data.penalizeOscillation
+        );
+    }
 }
 
 

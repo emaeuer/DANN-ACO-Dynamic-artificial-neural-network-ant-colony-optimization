@@ -10,6 +10,7 @@ public enum OptimizationRunState implements StateParameter<OptimizationRunState>
     USED_HIDDEN_NODES("Used hidden nodes", CollectionDistributionStateValue.class, true),
     USED_CONNECTIONS("Used connections", CollectionDistributionStateValue.class, true),
     FITNESS_VALUES("Fitness values", CollectionDistributionStateValue.class, true),
+    GENERALIZATION_CAPABILITY("Generalization capability", NumberStateValue.class, true),
     CURRENT_BEST_SOLUTION("Currently best solution", GraphStateValue.class, false),
     RUN_FINISHED("Run finished", NumberStateValue.class, true),
     IMPLEMENTATION_RUN_STATE("State of the optimization method", EmbeddedState.class, false);

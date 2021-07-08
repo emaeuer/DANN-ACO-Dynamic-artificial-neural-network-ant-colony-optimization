@@ -339,4 +339,24 @@ public class Cart extends AbstractElement {
     public double getFitness() {
         return this.fitness;
     }
+
+    public void setCartVelocity(double cartVelocity) {
+        this.cartVelocity = cartVelocity;
+    }
+
+    public void setCartPosition(double cartPosition) {
+        this.cartPosition = cartPosition;
+    }
+
+    public void setPoleOneVelocity(double poleOneVelocity) {
+        this.poleOneVelocity = poleOneVelocity;
+    }
+
+    public void setPoleOneAngle(double poleOneAngle) {
+        this.poleOneAngle = poleOneAngle;
+    }
+
+    public AgentController getController() {
+        return this.controller;
+    }
 }

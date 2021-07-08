@@ -1,30 +1,40 @@
 package de.emaeuer.environment;
 
 import de.emaeuer.configuration.ConfigurationHandler;
+import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
+import de.emaeuer.environment.configuration.GeneralizationConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.optimization.util.RandomUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiConsumer;
 
-public abstract class AbstractEnvironment {
+public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfiguration<T> & GeneralizationConfiguration<T>> {
 
     private final double width = 800;
     private final double height = 800;
 
-    private final List<AbstractElement> agents = Collections.synchronizedList(new ArrayList<>());
+    private final List<AgentController> agentControllers = Collections.synchronizedList(new ArrayList<>());
+    private final List<AbstractElement> agentsToDraw = Collections.synchronizedList(new ArrayList<>());
 
-    private final BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy;
+    private final Map<AgentController, AgentController> originControllers = new IdentityHashMap<>();
 
-    private double maxFitnessScore = 1000;
-    private double maxStepNumber = 1000;
+    private final BiConsumer<AbstractElement, AbstractEnvironment<T>> borderStrategy;
 
-    private RandomUtil rng;
+    private double maxFitnessScore;
+    private double maxStepNumber;
+    private double currentGeneralizationCapability;
 
-    public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration) {
+    private boolean controllerFinishedWithoutDying = false;
+    private boolean finishedGeneralization = false;
+    private boolean testingGeneralization = false;
+
+    private GeneralizationHandler<T> generalizationHandler;
+
+    private final RandomUtil rng;
+
+    public AbstractEnvironment(BiConsumer<AbstractElement, AbstractEnvironment<T>> borderStrategy, ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.borderStrategy = borderStrategy;
         this.rng = new RandomUtil(configuration.getValue(EnvironmentConfiguration.SEED, Integer.class));
 
@@ -40,19 +50,59 @@ public abstract class AbstractEnvironment {
 
     public void setControllers(List<AgentController> controllers) {
         restart();
+        this.agentControllers.addAll(controllers);
         initializeParticles(controllers);
     }
 
     public void step() {
-        this.agents.stream()
+        this.agentsToDraw.stream()
                 .peek(AbstractElement::step)
                 .forEach(this::checkBorderCase);
+    }
+
+    public void testGeneralization() {
+        List<AgentController> controllersToRemove = getAgents().stream()
+                .filter(c -> c.getScore() < getMaxFitnessScore())
+                .toList();
+
+        getAgents().removeAll(controllersToRemove);
+
+        setTestingGeneralization(true);
+
+        this.generalizationHandler = getNewGeneralizationHandler();
+
+        if (this.generalizationHandler == null || getAgents().isEmpty()) {
+            setTestingGeneralization(false);
+            setFinishedGeneralization(true);
+        } else {
+            setTestingGeneralization(true);
+            setFinishedGeneralization(false);
+        }
+
+        nextGeneralizationIteration();
+    }
+
+    protected abstract GeneralizationHandler<T> getNewGeneralizationHandler();
+
+    public void nextGeneralizationIteration() {
+        this.rng.reset();
+        this.agentsToDraw.clear();
+
+        if (finishedGeneralization() || getGeneralizationHandler().getNumberOfGeneralizationIterations() == 0 || getGeneralizationHandler().reachedEnd()) {
+            setFinishedGeneralization(true);
+            setTestingGeneralization(false);
+        }
     }
 
     protected abstract void initializeParticles(List<AgentController> controllers);
 
     public void restart() {
         this.rng.reset();
+        setControllerFinishedWithoutDying(false);
+        setFinishedGeneralization(false);
+        setCurrentGeneralizationCapability(0);
+        this.agentsToDraw.clear();
+        this.agentControllers.clear();
     }
 
     private void checkBorderCase(AbstractElement particle) {
@@ -73,11 +123,15 @@ public abstract class AbstractEnvironment {
         return height;
     }
 
-    public List<AbstractElement> getAgents() {
-        return agents;
+    public List<AgentController> getAgents() {
+        return agentControllers;
     }
 
-    public abstract boolean allAgentsFinished();
+    public List<AbstractElement> getAgentsToDraw() {
+        return agentsToDraw;
+    }
+
+    public abstract boolean environmentFinished();
 
     public double getMaxFitnessScore() {
         return this.maxFitnessScore;
@@ -89,5 +143,45 @@ public abstract class AbstractEnvironment {
 
     protected RandomUtil getRNG() {
         return this.rng;
+    }
+
+    public boolean controllerFinishedWithoutDying() {
+        return this.controllerFinishedWithoutDying;
+    }
+
+    protected void setControllerFinishedWithoutDying(boolean controllerFinishedWithoutDying) {
+        this.controllerFinishedWithoutDying = controllerFinishedWithoutDying;
+    }
+
+    public boolean finishedGeneralization() {
+        return this.finishedGeneralization;
+    }
+
+    protected void setFinishedGeneralization(boolean finishedGeneralization) {
+        this.finishedGeneralization = finishedGeneralization;
+    }
+
+    public boolean isTestingGeneralization() {
+        return testingGeneralization;
+    }
+
+    protected void setTestingGeneralization(boolean testingGeneralization) {
+        this.testingGeneralization = testingGeneralization;
+    }
+
+    public double getCurrentGeneralizationProgress() {
+        return this.currentGeneralizationCapability;
+    }
+
+    protected void setCurrentGeneralizationCapability(double currentGeneralizationCapability) {
+        this.currentGeneralizationCapability = currentGeneralizationCapability;
+    }
+
+    protected Map<AgentController, AgentController> getOriginControllers() {
+        return originControllers;
+    }
+
+    public GeneralizationHandler<T> getGeneralizationHandler() {
+        return generalizationHandler;
     }
 }

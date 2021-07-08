@@ -4,7 +4,6 @@ import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
 import de.emaeuer.environment.balance.configuration.CartPoleConfiguration;
 import de.emaeuer.environment.xor.XORConfiguration;
-import de.emaeuer.environment.xor.XorEnvironment;
 
 public class EnvironmentConfigurationFactory {
     

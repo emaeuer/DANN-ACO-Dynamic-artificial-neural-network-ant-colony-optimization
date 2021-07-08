@@ -63,7 +63,9 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
 
     public void updatePheromone() {
         this.currentAnts.stream()
-                .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
+                .sorted(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
+                        .thenComparingDouble(PacoAnt::getFitness)
+                        .reversed())
                 .limit(calculateNumberOfAntsToAdd())
                 .map(this::addAnt)
                 .filter(Optional::isPresent)

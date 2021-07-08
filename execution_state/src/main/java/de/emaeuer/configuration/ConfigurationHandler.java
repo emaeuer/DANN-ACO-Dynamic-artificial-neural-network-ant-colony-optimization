@@ -34,6 +34,9 @@ public class ConfigurationHandler<T extends Enum<T> & DefaultConfiguration<T>> {
         // Default configuration name
         this.configurationName = defaultConfiguration.getName() + "_" +
                 new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+
+        // set the values to the default values to trigger the change action initially
+        this.configurationValues.forEach(this::setValue);
     }
 
     public ConfigurationHandler(Class<T> defaultConfiguration, String name) {

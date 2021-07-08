@@ -12,17 +12,17 @@ public class ChromosomeSolutionMapper {
 
     private static Logger LOG = LogManager.getLogger(ChromosomeSolutionMapper.class);
 
-    private final ActivatorTranscriber transcriber;
+    private static ActivatorTranscriber TRANSCRIBER;
 
-    public ChromosomeSolutionMapper(Properties props) {
-        this.transcriber = new ActivatorTranscriber();
-        this.transcriber.init(props);
+    public synchronized static void init(Properties props) {
+        TRANSCRIBER = new ActivatorTranscriber();
+        TRANSCRIBER.init(props);
     }
 
-    public ChromosomeSolutionMapping map(Chromosome chromosome, double maxFitness) {
+    public synchronized static ChromosomeSolutionMapping map(Chromosome chromosome, double maxFitness) {
         Activator activator;
         try {
-            activator = this.transcriber.newActivator(chromosome);
+            activator = TRANSCRIBER.newActivator(chromosome);
             return new ChromosomeSolutionMapping(chromosome, activator, maxFitness);
         } catch (TranscriberException e) {
             LOG.warn("Failed to map chromosome due to an unexpected exception", e);

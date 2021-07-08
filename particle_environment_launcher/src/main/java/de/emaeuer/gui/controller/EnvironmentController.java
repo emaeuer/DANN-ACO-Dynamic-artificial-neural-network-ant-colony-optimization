@@ -29,13 +29,16 @@ public class EnvironmentController {
     private Canvas canvas;
 
     @FXML
-    public ProgressBar evaluationProgress;
+    private ProgressBar evaluationProgress;
 
     @FXML
-    public ProgressBar fitnessProgress;
+    private ProgressBar fitnessProgress;
 
     @FXML
-    public ProgressBar runProgress;
+    private ProgressBar runProgress;
+
+    @FXML
+    private ProgressBar generalizationProgress;
 
     private final OptimizationEnvironmentHandler handler = new OptimizationEnvironmentHandler();
 
@@ -121,6 +124,8 @@ public class EnvironmentController {
         this.evaluationProgress.progressProperty().set(((double) this.handler.getEvaluationCounter()) / this.handler.getMaxEvaluations());
         this.fitnessProgress.progressProperty().set(this.handler.getFitness() / this.handler.getMaxFitness());
         this.finishedProperty.set(this.handler.isFinished());
+        this.generalizationProgress.disableProperty().set(!this.handler.isTestingGeneralization());
+        this.generalizationProgress.progressProperty().set(this.handler.getGeneralizationCapability());
 
         if (this.handler.isFinished()) {
             this.updatedProperty.set(this.updatedProperty.not().get());

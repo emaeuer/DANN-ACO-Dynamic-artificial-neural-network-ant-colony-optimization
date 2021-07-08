@@ -1,14 +1,12 @@
 package de.emaeuer.optimization.paco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class GroupBasedPopulation extends AgeBasedPopulation {
@@ -34,14 +32,14 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
 
         bestOfEachGroup.values()
                 .stream()
-                .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
+                .sorted(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
+                        .thenComparingDouble(PacoAnt::getFitness)
+                        .reversed())
                 .limit(calculateNumberOfAntsToAdd())
                 .map(this::addAnt)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .forEach(getPheromone()::addAnt);
-
-        System.out.println();
 
         IntStream.range(0, Math.max(0, getSize() - getMaxSize()))
                 .mapToObj(i -> this.removeAnt())

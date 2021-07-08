@@ -12,7 +12,7 @@ import java.util.*;
 public class FitnessBasedPopulation extends AbstractPopulation<PriorityQueue<PacoAnt>> {
 
     public FitnessBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
-        super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getFitness)), baseNetwork, rng);
+        super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability).thenComparingDouble(PacoAnt::getFitness)), baseNetwork, rng);
     }
 
     @Override

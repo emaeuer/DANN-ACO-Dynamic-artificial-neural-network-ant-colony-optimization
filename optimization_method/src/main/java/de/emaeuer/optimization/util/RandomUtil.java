@@ -91,6 +91,10 @@ public class RandomUtil {
         this.rng.setSeed(this.seed);
     }
 
+    public void reset(int seed) {
+        this.rng.setSeed(seed);
+    }
+
     public void shuffleCollection(List<?> shuffledInput) {
         Collections.shuffle(shuffledInput, this.rng);
     }

@@ -17,7 +17,7 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     PROGRESSION_ITERATIONS("Threshold for number of iterations without progress", new IntegerConfigurationValue(200, 1, Integer.MAX_VALUE)),
     NUMBER_OF_RUNS("Number of runs", new IntegerConfigurationValue(10, 1, Integer.MAX_VALUE)),
     MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE), true),
-    GENERALIZATION_MAX_FITNESS_SCORE("Fitness threshold for generalization", new DoubleConfigurationValue(10000, 0, Double.MAX_VALUE), true),
+    GENERALIZATION_CAPABILITY_THRESHOLD("Generalization capability threshold", new DoubleConfigurationValue(0.5, 0, 1), true),
     TEST_GENERALIZATION("Test the generalization capability", new BooleanConfigurationValue(false), true),
     IMPLEMENTATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.PACO))),
     METHOD_NAME("The name of the optimization method", new StringConfigurationValue("PACO", OptimizationMethodNames.getNames()),

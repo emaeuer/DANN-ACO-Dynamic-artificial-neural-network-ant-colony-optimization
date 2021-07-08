@@ -28,10 +28,13 @@ public enum EvaluationConfiguration implements DefaultConfiguration<EvaluationCo
             }),
     GENERALIZATION_MAX_FITNESS_SCORE("Fitness threshold for generalization", new DoubleConfigurationValue(10000, 0, Double.MAX_VALUE),
             (v, h) -> {
-                ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, OptimizationConfiguration.class, OPTIMIZATION_CONFIGURATION);
                 ConfigurationHandler<EnvironmentConfiguration> environmentConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, EnvironmentConfiguration.class, ENVIRONMENT_CONFIGURATION);
-                optimizationConfig.setValue(OptimizationConfiguration.GENERALIZATION_MAX_FITNESS_SCORE, v.getStringRepresentation());
                 environmentConfig.setValue(EnvironmentConfiguration.GENERALIZATION_MAX_FITNESS_SCORE, v.getStringRepresentation());
+            }),
+    GENERALIZATION_CAPABILITY("Generalization capability threshold", new DoubleConfigurationValue(0.5, 0, 1),
+            (v, h) -> {
+                ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, OptimizationConfiguration.class, OPTIMIZATION_CONFIGURATION);
+                optimizationConfig.setValue(OptimizationConfiguration.GENERALIZATION_CAPABILITY_THRESHOLD, v.getStringRepresentation());
             }),
     TEST_GENERALIZATION("Test the generalization capability", new BooleanConfigurationValue(true),
             (v, h) -> {
@@ -41,6 +44,7 @@ public enum EvaluationConfiguration implements DefaultConfiguration<EvaluationCo
                 environmentConfig.setValue(EnvironmentConfiguration.TEST_GENERALIZATION, v.getStringRepresentation());
                 boolean value = Boolean.parseBoolean(v.getStringRepresentation());
                 h.disableConfiguration(GENERALIZATION_MAX_FITNESS_SCORE, !value);
+                h.disableConfiguration(GENERALIZATION_CAPABILITY, !value);
             });
 
     private final String name;

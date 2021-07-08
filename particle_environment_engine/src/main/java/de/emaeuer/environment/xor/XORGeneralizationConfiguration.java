@@ -2,20 +2,17 @@ package de.emaeuer.environment.xor;
 
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
-import de.emaeuer.configuration.value.BooleanConfigurationValue;
-import de.emaeuer.configuration.value.DoubleConfigurationValue;
 import de.emaeuer.configuration.value.IntegerConfigurationValue;
+import de.emaeuer.environment.configuration.GeneralizationConfiguration;
 
-public enum XORConfiguration implements DefaultConfiguration<XORConfiguration> {
-    TARGET_RANGE("Target range (smaller errors are considered as 0)", new DoubleConfigurationValue(0.2, 0, 1)),
-    SHUFFLE_DATA_SET("Shuffle the data set", new BooleanConfigurationValue(true)),
-    DATA_SET_SIZE("Size of the data set", new IntegerConfigurationValue(4, 1, 100));
+public enum XORGeneralizationConfiguration implements DefaultConfiguration<XORGeneralizationConfiguration>, GeneralizationConfiguration<XORGeneralizationConfiguration> {
+    GENERALIZATION_DATA_SET_SIZE("Number of random input pairs", new IntegerConfigurationValue(50, 1, 200));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;
     private final Class<? extends AbstractConfigurationValue<?>> type;
 
-    XORConfiguration(String name, AbstractConfigurationValue<?> defaultValue) {
+    XORGeneralizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue) {
         this.defaultValue = defaultValue;
         //noinspection unchecked no safe way to cast generic
         this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
@@ -46,4 +43,5 @@ public enum XORConfiguration implements DefaultConfiguration<XORConfiguration> {
     public String getKeyName() {
         return name();
     }
+
 }

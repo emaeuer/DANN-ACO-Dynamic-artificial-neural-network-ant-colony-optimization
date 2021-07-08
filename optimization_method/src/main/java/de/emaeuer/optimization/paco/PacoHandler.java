@@ -74,7 +74,8 @@ public class PacoHandler extends OptimizationMethod {
 
         PacoAnt bestOfThisIteration = this.population.getCurrentAnts()
                 .stream()
-                .max(Comparator.comparingDouble(PacoAnt::getFitness))
+                .max(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
+                        .thenComparingDouble(PacoAnt::getFitness))
                 .orElse(null);
 
         this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
@@ -82,8 +83,9 @@ public class PacoHandler extends OptimizationMethod {
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix
-            PacoAnt bestCopy = new PacoAnt(bestOfThisIteration.getTopologyData().copy());
+            Solution bestCopy = bestOfThisIteration.copy();
             bestCopy.setFitness(bestOfThisIteration.getFitness());
+            bestCopy.setGeneralizationCapability(bestOfThisIteration.getGeneralizationCapability());
             setCurrentlyBestSolution(bestCopy);
         }
 

@@ -9,9 +9,9 @@ public enum OptimizationState implements StateParameter<OptimizationState> {
     HIDDEN_NODES_DISTRIBUTION("Distribution of number of hidden nodes", DistributionStateValue.class),
     CONNECTIONS_DISTRIBUTION("Distribution of number of connections", DistributionStateValue.class),
     FINISHED_RUN_DISTRIBUTION("Distribution of number of finished runs", DistributionStateValue.class),
+    AVERAGE_GENERALIZATION_CAPABILITY("Average generalization capability over all runs", DistributionStateValue.class),
     AVERAGE_RUN_FITNESS_SERIES("Average fitness over all runs", DataSeriesStateValue.class),
     GLOBAL_BEST_SOLUTION("Best solution found", GraphStateValue.class),
-
     STATE_OF_CURRENT_RUN("State of the current run", EmbeddedState.class),
     IMPLEMENTATION_STATE("State of the optimization method", EmbeddedState.class);
 

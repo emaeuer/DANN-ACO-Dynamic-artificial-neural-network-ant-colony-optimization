@@ -1,7 +1,11 @@
 package de.emaeuer.configuration;
 
+import de.emaeuer.configuration.value.AbstractConfigurationValue;
+import de.emaeuer.configuration.value.NumericListConfigurationValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.List;
 
 public class ConfigurationHelper {
 
@@ -22,4 +26,14 @@ public class ConfigurationHelper {
         return handler;
     }
 
+    public static <T extends Enum<T> & DefaultConfiguration<T>, S extends Enum<S> & DefaultConfiguration<S>> List<Double> getNumericListValue(ConfigurationHandler<S> config, S key) {
+        AbstractConfigurationValue<?> value = config.getConfigurationValues().get(key);
+        if (value instanceof NumericListConfigurationValue listValue) {
+            return listValue.getValueForState(null);
+        }
+
+        String message = String.format("Can't extract list of numbers from configuration value of type %s", value.getClass().getSimpleName());
+        LOG.warn(message);
+        throw new IllegalArgumentException(message);
+    }
 }

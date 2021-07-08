@@ -23,7 +23,9 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
     public void updatePheromone() {
         addedTopologies.clear();
 
-        getCurrentAnts().sort(Comparator.comparingDouble(PacoAnt::getFitness).reversed());
+        getCurrentAnts().sort(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
+                .thenComparingDouble(PacoAnt::getFitness)
+                .reversed());
         int remainingAntUpdates = calculateNumberOfAntsToAdd();
         for (PacoAnt ant : getCurrentAnts()) {
             if (remainingAntUpdates <= 0) {

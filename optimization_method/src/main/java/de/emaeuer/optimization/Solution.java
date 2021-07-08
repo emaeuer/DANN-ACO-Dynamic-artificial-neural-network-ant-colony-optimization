@@ -12,4 +12,10 @@ public interface Solution {
     void setFitness(double fitness);
 
     NeuralNetwork getNeuralNetwork();
+
+    double getGeneralizationCapability();
+
+    void setGeneralizationCapability(double value);
+
+    Solution copy();
 }

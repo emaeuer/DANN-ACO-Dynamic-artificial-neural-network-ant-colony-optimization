@@ -14,6 +14,7 @@ public class ChromosomeSolutionMapping implements Solution {
 
     private final double maxFitness;
     private double fitness = 0;
+    private double generalizationCapability = 0;
 
     private NeuralNetwork mappedNN = null;
 
@@ -52,5 +53,20 @@ public class ChromosomeSolutionMapping implements Solution {
             this.mappedNN = AnjiNetToNeuralNetwork.mapToNeuralNetwork(this.activator);
         }
         return this.mappedNN;
+    }
+
+    @Override
+    public double getGeneralizationCapability() {
+        return generalizationCapability;
+    }
+
+    @Override
+    public void setGeneralizationCapability(double value) {
+        this.generalizationCapability = value;
+    }
+
+    @Override
+    public Solution copy() {
+        return ChromosomeSolutionMapper.map(new Chromosome(this.chromosome.cloneMaterial(), this.chromosome.getId()), this.maxFitness);
     }
 }

@@ -20,7 +20,9 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     public void updatePheromone() {
         getCurrentAnts().stream()
-                .sorted(Comparator.comparingDouble(PacoAnt::getFitness).reversed())
+                .sorted(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
+                        .thenComparingDouble(PacoAnt::getFitness)
+                        .reversed())
                 .limit(calculateNumberOfAntsToAdd())
                 .map(this::addAnt)
                 .filter(Optional::isPresent)

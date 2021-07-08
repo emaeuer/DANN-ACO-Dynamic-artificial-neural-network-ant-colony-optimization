@@ -64,6 +64,10 @@ public class FlappyBird extends Particle {
         return activation > middle ? 1 : 0;
     }
 
+    public AgentController getController() {
+        return controller;
+    }
+
     public void setController(AgentController controller) {
         this.controller = controller;
     }

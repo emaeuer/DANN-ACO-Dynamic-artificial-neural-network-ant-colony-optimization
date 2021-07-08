@@ -221,7 +221,9 @@ public class PacoPheromone {
         int selectedIndex = rng.selectRandomElementFromVector(weights);
 
         if (!solutionsAreSorted) {
-            this.solutions.sort(Comparator.comparingDouble(PacoAnt::getFitness).reversed());
+            this.solutions.sort(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
+                    .thenComparingDouble(PacoAnt::getFitness)
+                    .reversed());
         }
 
         PacoAnt templateAnt = this.solutions.get(selectedIndex);

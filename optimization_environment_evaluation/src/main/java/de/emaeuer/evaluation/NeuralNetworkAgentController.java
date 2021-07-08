@@ -18,8 +18,23 @@ public class NeuralNetworkAgentController implements AgentController {
     }
 
     @Override
+    public double getScore() {
+        return this.brain.getFitness();
+    }
+
+    @Override
     public void setScore(double score) {
         brain.setFitness(score);
+    }
+
+    @Override
+    public double getGeneralizationCapability() {
+        return brain.getGeneralizationCapability();
+    }
+
+    @Override
+    public void setGeneralizationCapability(double value) {
+        this.brain.setGeneralizationCapability(value);
     }
 
     @Override
@@ -32,4 +47,8 @@ public class NeuralNetworkAgentController implements AgentController {
         return this.brain.getNeuralNetwork().getMinActivation();
     }
 
+    @Override
+    public AgentController copy() {
+        return new NeuralNetworkAgentController(brain.copy());
+    }
 }

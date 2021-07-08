@@ -29,11 +29,7 @@ public class NeatHandler extends OptimizationMethod {
 
     private Genotype population;
 
-    private ChromosomeSolutionMapper mapper;
-
     private final List<ChromosomeSolutionMapping> solutions = new ArrayList<>();
-
-
 
     public NeatHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
@@ -51,7 +47,7 @@ public class NeatHandler extends OptimizationMethod {
             NeatConfiguration neatConfig = new NeatConfiguration(props);
 
             this.population = Genotype.randomInitialGenotype(neatConfig);
-            this.mapper = new ChromosomeSolutionMapper(props);
+            ChromosomeSolutionMapper.init(props);
         } catch (InvalidConfigurationException e) {
             LOG.log(Level.WARN, "Failed to initialize neat handler due to an internal neat error", e);
         }
@@ -85,7 +81,7 @@ public class NeatHandler extends OptimizationMethod {
         double maxFitness = getOptimizationConfiguration().getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
 
         entities.stream()
-                .map(c -> this.mapper.map(c, maxFitness))
+                .map(c -> ChromosomeSolutionMapper.map(c, maxFitness))
                 .forEach(this.solutions::add);
 
         return this.solutions;
@@ -95,7 +91,8 @@ public class NeatHandler extends OptimizationMethod {
     public void update() {
         ChromosomeSolutionMapping bestOfIteration = this.solutions
                 .stream()
-                .max(Comparator.comparingDouble(ChromosomeSolutionMapping::getFitness))
+                .max(Comparator.comparingDouble(ChromosomeSolutionMapping::getGeneralizationCapability)
+                        .thenComparingDouble(ChromosomeSolutionMapping::getFitness))
                 .orElse(null);
 
         setCurrentlyBestSolution(bestOfIteration);

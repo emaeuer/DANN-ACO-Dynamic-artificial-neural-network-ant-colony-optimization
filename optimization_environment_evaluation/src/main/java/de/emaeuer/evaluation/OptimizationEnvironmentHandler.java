@@ -98,7 +98,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     public void update() {
-        if (environment.allAgentsFinished()) {
+        if (environment.environmentFinished()) {
             handleRestart();
             this.updateNotifier = !this.updateNotifier;
         }
@@ -109,12 +109,22 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     private void handleRestart() {
+        // next iteration starts only if the generalization was finished
+        boolean startedGeneralization = startGeneralizationIfNecessary();
+        if (startedGeneralization) {
+            return;
+        } else if (this.environment.isTestingGeneralization()) {
+            this.environment.nextGeneralizationIteration();
+            return;
+        }
+
         // optimization update only if the optimization already started
         if (optimization.getEvaluationCounter() > 0) {
             this.optimization.update();
         }
 
         if (optimization.isRunFinished() && !this.automaticallyStartNextRun && !this.currentlyAutomaticallyPaused) {
+            // wait for user to continue with the next run
             this.pauseThread.set(true);
             this.currentlyAutomaticallyPaused = true;
         } else if (optimization.isOptimizationFinished()) {
@@ -143,6 +153,19 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
         this.environment.setControllers(solutions);
+    }
+
+    private boolean startGeneralizationIfNecessary() {
+        boolean mustStartGeneralization = this.configuration.getValue(EvaluationConfiguration.TEST_GENERALIZATION, Boolean.class)
+            && this.environment.controllerFinishedWithoutDying()
+            && !this.environment.finishedGeneralization()
+            && !this.environment.isTestingGeneralization();
+
+        if (mustStartGeneralization) {
+            this.environment.testGeneralization();
+        }
+
+        return mustStartGeneralization;
     }
 
     private void step() {
@@ -205,7 +228,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     public List<AbstractElement> getAgents() {
-        return this.environment.getAgents();
+        return this.environment.getAgentsToDraw();
     }
 
     public List<AbstractElement> getAdditionalEnvironmentElements() {
@@ -268,4 +291,13 @@ public class OptimizationEnvironmentHandler implements Runnable {
         return stoppedBecauseOfException;
     }
 
+    public boolean isTestingGeneralization() {
+        return this.environment != null && this.environment.isTestingGeneralization();
+    }
+
+    public double getGeneralizationCapability() {
+        return this.environment == null
+                ? 0
+                : this.environment.getCurrentGeneralizationProgress();
+    }
 }

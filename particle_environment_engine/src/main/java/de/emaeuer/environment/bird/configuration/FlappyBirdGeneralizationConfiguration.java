@@ -1,32 +1,34 @@
-package de.emaeuer.environment.balance.configuration;
+package de.emaeuer.environment.bird.configuration;
 
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
+import de.emaeuer.configuration.value.IntegerConfigurationValue;
 import de.emaeuer.configuration.value.NumericListConfigurationValue;
 import de.emaeuer.environment.configuration.GeneralizationConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
 
-public enum CartPoleGeneralizationConfiguration implements DefaultConfiguration<CartPoleGeneralizationConfiguration>, GeneralizationConfiguration<CartPoleGeneralizationConfiguration> {
-    POSITION_START_VALUE("Initial cart position", new NumericListConfigurationValue("0.05,0.25,0.5,0.75,0.95")),
-    CART_VELOCITY_START_VALUE("Initial cart velocity", new NumericListConfigurationValue("0.05,0.25,0.5,0.75,0.95")),
-    ANGLE_START_VALUE("Initial pole one angle", new NumericListConfigurationValue("0.05,0.25,0.5,0.75,0.95")),
-    ANGLE_VELOCITY_START_VALUE("Initial pole one velocity", new NumericListConfigurationValue("0.05,0.25,0.5,0.75,0.95"));
+public enum FlappyBirdGeneralizationConfiguration implements DefaultConfiguration<FlappyBirdGeneralizationConfiguration>, GeneralizationConfiguration<FlappyBirdGeneralizationConfiguration> {
+    NUMBER_OF_SEEDS("Number of random seeds to try", new IntegerConfigurationValue(10, 1, 100)),
+    BIRD_START_HEIGHTS("Start height of the birds", new NumericListConfigurationValue("0.1, 0.25, 0.5, 0.75, 0.9")),
+    GAP_SIZES("Gap sizes relative to the defined value", new NumericListConfigurationValue("0.7, 1, 1.3")),
+    PIPE_DISTANCES("Pipe distance relative to the defined value", new NumericListConfigurationValue("0.5, 1, 1.5")),
+    PIPE_WIDTHS("Pipe width relative to the defined value", new NumericListConfigurationValue("0.5, 1, 1.5"));
 
     private final String name;
     private final AbstractConfigurationValue<?> defaultValue;
     private final Class<? extends AbstractConfigurationValue<?>> type;
 
-    CartPoleGeneralizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue) {
+    FlappyBirdGeneralizationConfiguration(String name, AbstractConfigurationValue<?> defaultValue) {
         this.defaultValue = defaultValue;
         //noinspection unchecked no safe way to cast generic
         this.type = (Class<? extends AbstractConfigurationValue<?>>) defaultValue.getClass();
         this.name = name;
     }
 
-    public static List<CartPoleGeneralizationConfiguration> getKeysForGeneralization() {
-        return Arrays.asList(POSITION_START_VALUE, CART_VELOCITY_START_VALUE, ANGLE_START_VALUE, ANGLE_VELOCITY_START_VALUE);
+    public static List<FlappyBirdGeneralizationConfiguration> getKeysForGeneralization() {
+        return Arrays.asList(GAP_SIZES, PIPE_DISTANCES, PIPE_WIDTHS);
     }
 
     @Override
@@ -53,4 +55,5 @@ public enum CartPoleGeneralizationConfiguration implements DefaultConfiguration<
     public String getKeyName() {
         return name();
     }
+
 }
