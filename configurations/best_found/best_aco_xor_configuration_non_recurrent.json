@@ -1,0 +1,64 @@
+{"CONFIGURATION": {
+    "CONFIG_TYPE": "de.emaeuer.evaluation.EvaluationConfiguration",
+    "GENERALIZATION_CAPABILITY": "0.5",
+    "ENVIRONMENT_CONFIGURATION": {
+        "MAX_STEP_NUMBER": "10000.0",
+        "CONFIG_TYPE": "de.emaeuer.environment.configuration.EnvironmentConfiguration",
+        "SEED": "9369319",
+        "MAX_FITNESS_SCORE": "1.0",
+        "ENVIRONMENT_IMPLEMENTATION_NAME": "XOR",
+        "ENVIRONMENT_IMPLEMENTATION": {
+            "CONFIG_TYPE": "de.emaeuer.environment.xor.XORConfiguration",
+            "DATA_SET_SIZE": "4",
+            "TARGET_RANGE": "0.1",
+            "SHUFFLE_DATA_SET": "true"
+        },
+        "GENERALIZATION_MAX_STEP_NUMBER": "10000.0",
+        "TEST_GENERALIZATION": "false",
+        "GENERALIZATION_MAX_FITNESS_SCORE": "10000.0"
+    },
+    "SEED": "9369319",
+    "MAX_FITNESS_SCORE": "1.0",
+    "TEST_GENERALIZATION": "false",
+    "OPTIMIZATION_CONFIGURATION": {
+        "PROGRESSION_ITERATIONS": "200",
+        "CONFIG_TYPE": "de.emaeuer.optimization.configuration.OptimizationConfiguration",
+        "SEED": "9369319",
+        "MAX_FITNESS_SCORE": "1.0",
+        "NUMBER_OF_RUNS": "200",
+        "IMPLEMENTATION_CONFIGURATION": {
+            "TOPOLOGY_PHEROMONE": "0.2515(n/k)^9.5584+0.705",
+            "REUSE_SPLIT_KNOWLEDGE": "false",
+            "ANTS_PER_ITERATION": "10",
+            "DEVIATION_FUNCTION": "(0.4093s)/(k - 1)+0.5126z",
+            "UPDATE_STRATEGY": "INNOVATION_PROTECTING",
+            "SPLIT_PROBABILITY": "max((c^0.9893*t^0.1453)/(0.1113d+1), 0)",
+            "SOLUTION_WEIGHT_FACTOR": "0.1109",
+            "ENABLE_NEURON_ISOLATION": "false",
+            "CONNECTION_PHEROMONE": "0.0132(n/k)^0.2567+0.9059",
+            "CONFIG_TYPE": "de.emaeuer.optimization.paco.configuration.PacoConfiguration",
+            "TOPOLOGY_SIMILARITY_THRESHOLD": "0.7",
+            "ELITISM": "false",
+            "UPDATES_PER_ITERATION": "2",
+            "NUMBER_OF_VALUES_PENALTY": "(k-n)/(n+1)",
+            "POPULATION_SIZE": "12"
+        },
+        "METHOD_NAME": "PACO",
+        "PROGRESSION_THRESHOLD": "0.0",
+        "GENERALIZATION_CAPABILITY_THRESHOLD": "0.5",
+        "TEST_GENERALIZATION": "false",
+        "NEURAL_NETWORK_CONFIGURATION": {
+            "OUTPUT_ACTIVATION_FUNCTION": "SIGMOID",
+            "CONFIG_TYPE": "de.emaeuer.ann.configuration.NeuralNetworkConfiguration",
+            "OUTPUT_LAYER_SIZE": "1",
+            "INPUT_ACTIVATION_FUNCTION": "IDENTITY",
+            "INPUT_LAYER_SIZE": "2",
+            "WEIGHT_MIN": "-10.0",
+            "WEIGHT_MAX": "10.0",
+            "HIDDEN_ACTIVATION_FUNCTION": "SIGMOID",
+            "DISABLE_RECURRENT_CONNECTIONS": "true"
+        },
+        "MAX_NUMBER_OF_EVALUATIONS": "20000"
+    },
+    "GENERALIZATION_MAX_FITNESS_SCORE": "10000.0"
+}}

@@ -24,6 +24,7 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
 
     private double maxFitnessScore;
     private double maxStepNumber;
+    private double maxGeneralizationStepNumber;
     private double currentGeneralizationCapability;
 
     private boolean controllerFinishedWithoutDying = false;
@@ -46,6 +47,7 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
     protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         this.maxFitnessScore = configuration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
         this.maxStepNumber = configuration.getValue(EnvironmentConfiguration.MAX_STEP_NUMBER, Double.class);
+        this.maxGeneralizationStepNumber = configuration.getValue(EnvironmentConfiguration.GENERALIZATION_MAX_STEP_NUMBER, Double.class);
     }
 
     public void setControllers(List<AgentController> controllers) {
@@ -139,6 +141,10 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
 
     public double getMaxStepNumber() {
         return maxStepNumber;
+    }
+
+    public double getMaxGeneralizationStepNumber() {
+        return maxGeneralizationStepNumber;
     }
 
     protected RandomUtil getRNG() {

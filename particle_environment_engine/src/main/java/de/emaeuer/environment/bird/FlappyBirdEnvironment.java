@@ -69,6 +69,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
 
     private FlappyBird buildFlappyBird(AgentController controller, double initialHeight) {
         FlappyBirdBuilder builder = new FlappyBirdBuilder()
+                .applyConfiguration(this.configuration)
                 .controller(controller)
                 .radius(BIRD_SIZE)
                 .environment(this)

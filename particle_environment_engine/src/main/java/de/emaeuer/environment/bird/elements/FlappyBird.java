@@ -1,11 +1,17 @@
 package de.emaeuer.environment.bird.elements;
 
+import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.AgentController;
+import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
 import de.emaeuer.environment.elements.Particle;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.math.Vector2D;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 
 public class FlappyBird extends Particle {
 
@@ -16,6 +22,8 @@ public class FlappyBird extends Particle {
     private double score = 0;
 
     private AgentController controller;
+
+    private int inputPattern = 0b1111;
 
     private void jump() {
         // disable jump if bird is already going upwards
@@ -33,12 +41,7 @@ public class FlappyBird extends Particle {
 
         super.step();
 
-        // create input vector and normalize input parameters
-        double currentHeight = getPosition().getY() / this.environment.getHeight();
-        double yVelocity = getVelocity().getY() / getMaxVelocity();
-        double nextGapHeight = this.environment.getHeightOfNextGap() / this.environment.getHeight();
-        double distanceToNextPipe = this.environment.getDistanceToNextPipeEnd() / this.environment.getWidth();
-        double[] input = new double[]{currentHeight, yVelocity, nextGapHeight, distanceToNextPipe};
+        double[] input = createInput();
 
         // get the action of the agent controller
         double activation = this.controller.getAction(input)[0];
@@ -52,6 +55,34 @@ public class FlappyBird extends Particle {
         if (this.environment.collidesWithNextPipe(this)) {
             setDead(true);
         }
+    }
+
+    private double[] createInput() {
+        List<Double> inputs = new ArrayList<>();
+
+        if ((this.inputPattern & 1) == 1) {
+            // input current height
+            inputs.add(getPosition().getY() / this.environment.getHeight());
+        }
+
+        if (((this.inputPattern >> 1) & 1) == 1) {
+            // input y velocity
+            inputs.add(getVelocity().getY() / getMaxVelocity());
+        }
+
+        if (((this.inputPattern >> 2) & 1) == 1) {
+            // input gap height
+            inputs.add(this.environment.getHeightOfNextGap() / this.environment.getHeight());
+        }
+
+        if (((this.inputPattern >> 3) & 1) == 1) {
+            // input distance to next pipe
+            inputs.add(this.environment.getDistanceToNextPipeEnd() / this.environment.getWidth());
+        }
+
+        return inputs.stream()
+                .mapToDouble(v -> v)
+                .toArray();
     }
 
     private double adjustActivation(double activation, AgentController controller) {
@@ -95,5 +126,9 @@ public class FlappyBird extends Particle {
 
     public void setEnvironment(FlappyBirdEnvironment environment) {
         this.environment = environment;
+    }
+
+    public void setInputPattern(int inputPattern) {
+        this.inputPattern = inputPattern;
     }
 }

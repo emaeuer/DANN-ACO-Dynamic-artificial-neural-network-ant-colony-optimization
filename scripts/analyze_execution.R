@@ -3,6 +3,7 @@ library(hrbrthemes)
 library(viridis)
 library(dplyr)
 library(tidyr)
+library(stringr)
 
 setClass("Configuration", slots=list(runNumber="numeric", maxFitness="numeric", name="character"))
 
@@ -20,11 +21,11 @@ extractIterationData <- function(filepath) {
       break
     }
 
-    if (grepl("^OPTIMIZATION_CONFIGURATION\\.METHOD_NAME", line)) {
+    if (grepl("^CONFIGURATION\\.OPTIMIZATION_CONFIGURATION\\.METHOD_NAME", line)) {
       configuration@name <- str_split(line, "=", 2)[[1]][2]
-    } else if (grepl("^ENVIRONMENT_CONFIGURATION\\.MAX_FITNESS_SCORE", line)) {
+    } else if (grepl("^CONFIGURATION\\.ENVIRONMENT_CONFIGURATION\\.MAX_FITNESS_SCORE", line)) {
       configuration@maxFitness <- as.numeric(str_split(line, "=", 2)[[1]][2])
-    } else if (grepl("^OPTIMIZATION_CONFIGURATION\\.NUMBER_OF_RUNS", line)) {
+    } else if (grepl("^CONFIGURATION\\.OPTIMIZATION_CONFIGURATION\\.NUMBER_OF_RUNS", line)) {
       configuration@runNumber <- as.numeric(str_split(line, "=", 2)[[1]][2])
     } else if (grepl("^GENERAL_STATE\\.RUN_\\d*?\\.RUN_NUMBER", line)) {
       if (currentRow$runID != 0) {
@@ -92,35 +93,7 @@ drawRunSummary <- function(fileName, runNumber) {
 compareResultsFromDifferentFiles <- function(...) {
   df <- data.frame()
 
-  for (fileName in list(...)) {
-    result <- extractIterationData(fileName)
-    data <- result[["data"]]
-    configuration <- result[["configuration"]]
-
-    filteredData <- data %>%
-      rowwise() %>%
-      mutate(fitness = max(unlist(fitnessValues)), type = configuration@name) %>%
-      select(runID, evaluation, fitness, type) %>%
-      group_by(evaluation) %>%
-      summarise(fitness = (sum(fitness) + (configuration@runNumber - n()) * configuration@maxFitness) / configuration@runNumber, type = type)
-
-    df <- rbind(df, filteredData)
-  }
-
-  ggplot(df, aes(x = evaluation, y = fitness, color=type, group=type)) +
-    geom_line(size = 1) +
-    theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
-          axis.title.y=element_text(size = 18, family = "LM Roman 10"),
-          panel.border = element_rect(colour = "black", fill=NA, size=1),
-          plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
-          axis.text = element_text(size = 18, family = "LM Roman 10"))
-}
-
-compareResultsFromDifferentFiles <- function(...) {
-  df <- data.frame()
-
-  for (fileName in list(...)) {
-    result <- extractIterationData(fileName)
+  for (result in list(...)) {
     data <- result[["data"]]
     configuration <- result[["configuration"]]
 
@@ -146,8 +119,7 @@ compareResultsFromDifferentFiles <- function(...) {
 boxPlotEvaluations <- function(...) {
   df <- data.frame()
 
-  for (fileName in list(...)) {
-    result <- extractIterationData(fileName)
+  for (result in list(...)) {
     data <- result[["data"]]
     configuration <- result[["configuration"]]
 
@@ -159,7 +131,7 @@ boxPlotEvaluations <- function(...) {
     df <- rbind(df, filteredData)
   }
 
-  ggplot(df, aes(x = type, y = connections)) +
+  ggplot(df, aes(x = type, y = fitness)) +
     geom_boxplot() +
     theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
           axis.title.y=element_text(size = 18, family = "LM Roman 10"),
@@ -196,15 +168,16 @@ trendOfWeights <- function(...) {
           axis.text = element_text(size = 18, family = "LM Roman 10"))
 }
 
-# drawRunSummary("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt", 5)
+dannacoResult <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\important_runs\\aco_xor_non_recurrent.txt")
+neatResult <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\important_runs\\neat_xor_non_recurrent.txt")
 
-# compareResultsFromDifferentFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt",
-#                                  "C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-02_10-24-15-193.txt")
+#drawRunSummary("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\important_runs\\aco_xor_non_recurrent.txt", 5)
 
-# boxPlotEvaluations("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt",
-#                                  "C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-02_10-24-15-193.txt")
+compareResultsFromDifferentFiles(dannacoResult, neatResult)
 
-trendOfWeights("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt")
+boxPlotEvaluations(dannacoResult, neatResult)
+
+#trendOfWeights("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\execution_2021-07-01_14-08-56-365.txt")
 
 
 

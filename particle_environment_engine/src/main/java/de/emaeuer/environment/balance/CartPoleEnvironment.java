@@ -126,16 +126,14 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
     }
 
     private void checkReachedMaxStepNumber(Cart cart) {
-        if (cart.getStep() >= getMaxStepNumber()) {
+        if (!isTestingGeneralization() && cart.getStep() >= getMaxStepNumber()) {
+            cart.setDead(true);
+            setControllerFinishedWithoutDying(true);
+        } else if (isTestingGeneralization() && cart.getStep() >= getMaxGeneralizationStepNumber()) {
+            System.out.println(cart.getStep());
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
 
-            handleGeneralizationChecks(cart);
-        }
-    }
-
-    private void handleGeneralizationChecks(Cart cart) {
-        if (isTestingGeneralization()) {
             AgentController origin = getOriginControllers().get(cart.getController());
             origin.setGeneralizationCapability(origin.getGeneralizationCapability() + (1.0 / getGeneralizationHandler().getNumberOfGeneralizationIterations()));
             setCurrentGeneralizationCapability(Math.max(getCurrentGeneralizationProgress(), origin.getGeneralizationCapability()));

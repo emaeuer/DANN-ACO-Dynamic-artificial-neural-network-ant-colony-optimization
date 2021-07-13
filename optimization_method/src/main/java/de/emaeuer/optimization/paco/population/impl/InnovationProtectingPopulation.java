@@ -15,8 +15,11 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
 
     private final List<Set<String>> addedTopologies = new ArrayList<>();
 
+    private final double similarityThreshold;
+
     public InnovationProtectingPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, baseNetwork, rng);
+        this.similarityThreshold = configuration.getValue(PacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, Double.class);
     }
 
     @Override
@@ -81,7 +84,7 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
 
             double jaccardSimilarity = ((double) intersection.size()) / union.size();
 
-            if (jaccardSimilarity > 0.7) {
+            if (jaccardSimilarity > this.similarityThreshold) {
                 return false;
             }
         }
