@@ -147,5 +147,4 @@ public class StateHandler<T extends Enum<T> & StateParameter<T>> implements Auto
             this.lock.unlock();
         }
     }
-
 }

@@ -38,7 +38,7 @@ public class ConfigurationIOHandler {
         for (Map.Entry<? extends Enum<?>, AbstractConfigurationValue<?>> configValue : configuration.getConfigurationValues().entrySet()) {
             if (configValue.getValue() instanceof EmbeddedConfiguration<?> embeddedConfiguration) {
                 json.put(configValue.getKey().name(), configToJson(embeddedConfiguration.getValue()));
-            } else {
+            } else if (configValue.getValue() != null) {
                 json.put(configValue.getKey().name(), configValue.getValue().getStringRepresentation());
             }
         }

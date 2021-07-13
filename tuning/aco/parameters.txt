@@ -29,8 +29,8 @@
 populationSize          "-k "                       i   (5, 50)
 updatesPerIteration     "-o "                       i   (1, 4)
 antsPerIteration        "-m "                       i   (5, 100)
-##updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS", "PROBABILITY", "AGE_PROBABILITY", "INNOVATION_PROTECTING", "GROUP_BASED")
-updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS")
+updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS", "PROBABILITY", "AGE_PROBABILITY", "INNOVATION_PROTECTING", "GROUP_BASED")
+##updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS")
 elitism                 ""                          c   ("", "--elitism ")                                                                              | updateStrategy != "FITNESS"
 neuronIsolation         ""                          c   ("", "--neuronIsolation ")
 reuseSplitKnowledge     ""                          c   ("", "--reuseSplitKnowledge ")

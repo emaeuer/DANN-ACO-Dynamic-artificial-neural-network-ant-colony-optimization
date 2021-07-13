@@ -11,5 +11,10 @@
 ## parameter conditions (NA should be used for those parameters that
 ## are not enabled for a given configuration) and, if given, the
 ## constraints that describe forbidden configurations.
-survivalRate    topologyMutationType    populationSize  chromExCoef     chromDisCoef    chromComCoef    speciationThreshold     useElitism      elitismMinSpeciesSize   useRouletteSelection    addConnectionMutationRate   addNeuronMutationRate   removeConnectionMutationRate    removeConnectionMaxWeight   removeConnectionStrategy    weightMutationRate  weightMutationDeviation
-0.2             "-tmt "                 50              1               1               0.4             0.2                     "-e "           1                       ""                      0.025                       0.015                   0                               1                           "skewed"                    0.72                1.5
+
+# Configuration for ANJI
+#survivalRate    topologyMutationType    populationSize  chromExCoef     chromDisCoef    chromComCoef    speciationThreshold     useElitism      elitismMinSpeciesSize   useRouletteSelection    addConnectionMutationRate   addNeuronMutationRate   removeConnectionMutationRate    removeConnectionMaxWeight   removeConnectionStrategy    weightMutationRate  weightMutationDeviation
+#0.2             "-tmt "                 50              1               1               0.4             0.2                     "-e "           1                       ""                      0.025                       0.015                   0                               1                           "skewed"                    0.72                1.5
+# Configuration closer to NEAT
+survivalRate    populationSize  chromExCoef     chromDisCoef    chromComCoef    speciationThreshold     useElitism      elitismMinSpeciesSize   useRouletteSelection    addConnectionMutationRate   addNeuronMutationRate   weightMutationRate  weightMutationDeviation
+0.2             50              1               1               0.4             0.2                     "-e "           1                       ""                      0.025                       0.015                   0.72                1.5

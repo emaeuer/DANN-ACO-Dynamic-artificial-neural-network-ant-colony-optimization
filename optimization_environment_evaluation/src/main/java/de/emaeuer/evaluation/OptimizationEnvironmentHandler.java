@@ -43,7 +43,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private StateHandler<OptimizationState> optimizationState;
     private ConfigurationHandler<EvaluationConfiguration> configuration;
 
-    private AbstractEnvironment environment;
+    private AbstractEnvironment<?> environment;
     private OptimizationMethod optimization;
 
     private final Lock updateLock = new ReentrantLock(true);
