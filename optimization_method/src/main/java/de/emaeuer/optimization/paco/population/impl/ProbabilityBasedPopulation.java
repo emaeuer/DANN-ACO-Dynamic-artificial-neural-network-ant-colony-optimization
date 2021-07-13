@@ -61,7 +61,7 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     protected PacoAnt determineAntToRemove() {
         double[] removeProbabilities = calculateRemoveProbabilities();
-        int indexToRemove = getRNG().selectRandomElementFromVector(removeProbabilities);
+        int indexToRemove = getRNG().selectRandomElementFromVector(removeProbabilities, true);
         PacoAnt antToRemove = getPopulation().get(indexToRemove);
 
         // if elitism is used select new ant to remove if the global best ant should be removed
@@ -74,16 +74,8 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
     }
 
     private double[] calculateRemoveProbabilities() {
-        DoubleSummaryStatistics fitnessSummary = getPopulation().stream()
-                .mapToDouble(PacoAnt::getFitness)
-                .summaryStatistics();
-
-        double minimum = fitnessSummary.getMin();
-        double average = (fitnessSummary.getSum() - minimum * getPopulation().size()) / getPopulation().size();
-
         return getPopulation().stream()
                 .mapToDouble(PacoAnt::getFitness)
-                .map(f -> f - minimum + average)
                 .toArray();
     }
 

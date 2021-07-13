@@ -1,0 +1,19 @@
+## This is an example of specifying instances with a file.
+
+# Each line is an instance relative to testInstancesDir
+# (see scenario.txt.tmpl) and an optional sequence of instance-specific
+# parameters that will be passed to target-runnerx when invoked on that
+# instance.
+
+# Empty lines and comments are ignored.
+# instances duplicated 10 times to test each entity 10 times with different seeds
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat

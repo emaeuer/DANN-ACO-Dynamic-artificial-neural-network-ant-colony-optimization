@@ -53,12 +53,12 @@ public class RandomUtil {
         throw new IllegalArgumentException("Failed to select a random element from the vector " + Arrays.toString(vector));
     }
 
-    public int selectRandomElementFromVector(RealVector vector, boolean invertedProbabilities) {
+    public int selectRandomElementFromVector(double[] vector, boolean invertedProbabilities) {
         if (invertedProbabilities) {
-            double sum = vector.getL1Norm();
-            vector = vector.map(v -> v == 0
-                    ? 0
-                    : 1 - ((v / sum) == 1 ? 0 : v / sum)); // 0 stays 0
+            double sum = Arrays.stream(vector).sum();
+            vector = Arrays.stream(vector)
+                    .map(v -> 1 - (v / sum))
+                    .toArray();
         }
 
         return selectRandomElementFromVector(vector);

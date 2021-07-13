@@ -16,6 +16,7 @@ import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.persistence.ConfigurationIOHandler;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.value.DistributionStateValue;
+import de.emaeuer.state.value.GraphStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -23,6 +24,7 @@ import picocli.CommandLine;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class CliLauncher {
 
@@ -166,9 +168,27 @@ public class CliLauncher {
             return Double.POSITIVE_INFINITY;
         }
 
-        // penalty for runs that didn't finish
+        GraphStateValue.GraphData bestTopology = this.optimizationState.getValue(OptimizationState.GLOBAL_BEST_SOLUTION, GraphStateValue.GraphData.class);
+        long numberOfHiddenNodes = bestTopology.connections()
+                .stream()
+                .flatMap(c -> Stream.of(c.start(), c.target()))
+                .distinct()
+                .filter(n -> n.startsWith("1-"))
+                .count();
+
         double runsNotFinished = 1 - ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
-        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() + runsNotFinished * this.optimization.getMaxEvaluations();
+        double evaluationCost = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() / this.optimization.getMaxEvaluations();
+        evaluationCost = Math.min(1, evaluationCost);
+        double topologyCost = 1;
+
+        if (runsNotFinished == 0) {
+            topologyCost = 1 - (1 / (0.5 * numberOfHiddenNodes + 1));
+        }
+
+        return topologyCost * 0.5 + evaluationCost * 0.5;
+//        // penalty for runs that didn't finish
+//        double runsNotFinished = 1 - ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
+//        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() + runsNotFinished * this.optimization.getMaxEvaluations();
     }
 
     public long getTimeMillis() {

@@ -15,27 +15,35 @@ import java.util.Optional;
 public class IRaceRunner {
 
     public static void main(String[] args) {
-        System.setProperty("logFilename", args[0]);
-        Logger log = LogManager.getLogger(IRaceRunner.class);
+        Logger log = null;
+        try {
+            System.setProperty("logFilename", args[0]);
+            log = LogManager.getLogger(IRaceRunner.class);
 
-        searchInFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\tuning\\execDir\\log");
-        log.debug("IRACE-Call-Parameters: " + Arrays.toString(args));
-        if (args.length < 5) {
-            log.warn("\nUsage: ./target-runner.jar <configuration_id> <instance_id> <seed> <instance_path_name> <list of parameters>\n");
-            System.exit(1);
+            //        searchInFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\tuning\\execDir\\log");
+            log.debug("IRACE-Call-Parameters: " + Arrays.toString(args));
+            if (args.length < 5) {
+                log.warn("\nUsage: ./target-runner.jar <configuration_id> <instance_id> <seed> <instance_path_name> <list of parameters>\n");
+                System.exit(1);
+            }
+
+            //        long instanceID = Long.parseLong(args[1]);
+            int seed = Integer.parseInt(args[2]);
+            //        String instancePathName = args[3];
+
+            String[] algParameters = Arrays.copyOfRange(args, 4, args.length);
+
+            log.debug("Starting optimization");
+            CliLauncher algorithmRunner = new CliLauncher(algParameters, seed);
+            algorithmRunner.run();
+            log.debug("Optimization finished after {} milliseconds and cost of {}", algorithmRunner.getTimeMillis(), algorithmRunner.getCost());
+            System.out.println(algorithmRunner.getCost() + " " + algorithmRunner.getTimeMillis());
+        } catch (Exception e) {
+            if (log != null) {
+                log.warn("Unexpected exception", e);
+            }
+            System.out.println(Double.POSITIVE_INFINITY + " " + 0);
         }
-
-//        long instanceID = Long.parseLong(args[1]);
-        int seed = Integer.parseInt(args[2]);
-//        String instancePathName = args[3];
-
-        String[] algParameters = Arrays.copyOfRange(args, 4, args.length);
-
-        log.debug("Starting optimization");
-        CliLauncher algorithmRunner = new CliLauncher(algParameters, seed);
-        algorithmRunner.run();
-        log.debug("Optimization finished after {} milliseconds and cost of {}", algorithmRunner.getTimeMillis(), algorithmRunner.getCost());
-        System.out.println((algorithmRunner.getCost()) + " " + algorithmRunner.getTimeMillis());
     }
 
     public static void searchInFiles(String directoryName) {
