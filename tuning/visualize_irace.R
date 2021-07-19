@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "C:/Users/emaeu/Desktop/irace_results/neat_xor_non_recurrent_with_test.Rdata"
+fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_xor_recurrent.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 

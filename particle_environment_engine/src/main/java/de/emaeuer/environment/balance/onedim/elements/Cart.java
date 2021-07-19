@@ -1,10 +1,10 @@
-package de.emaeuer.environment.balance.elements;
+package de.emaeuer.environment.balance.onedim.elements;
 
 import com.google.common.collect.EvictingQueue;
 import com.google.common.primitives.Doubles;
 import de.emaeuer.environment.AgentController;
-import de.emaeuer.environment.balance.CartPoleEnvironment;
-import de.emaeuer.environment.balance.GeneralCartPoleData;
+import de.emaeuer.environment.balance.onedim.CartPoleEnvironment;
+import de.emaeuer.environment.balance.onedim.GeneralCartPoleData;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.elements.shape.CartShape;
 import de.emaeuer.environment.elements.shape.ShapeEntity;
@@ -28,7 +28,7 @@ public class Cart extends AbstractElement {
 
     private int step = 0;
 
-    Queue<Double> lastOscillations = EvictingQueue.create(100);
+    private final Queue<Double> lastOscillations = EvictingQueue.create(100);
 
     private double cartPosition = 0;
     private double cartVelocity = 0;
@@ -62,7 +62,7 @@ public class Cart extends AbstractElement {
             updateCartOnePoleState(activation);
         }
 
-        if (data.penalizeOscillation()) {
+        if (data.penalizeOscillation() && this.step <= 1000) {
             this.lastOscillations.add(Math.abs(cartPosition) + Math.abs(cartVelocity) + Math.abs(poleOneAngle) + Math.abs(poleOneVelocity));
         }
 
@@ -71,20 +71,23 @@ public class Cart extends AbstractElement {
 
         // check solution died
         checkDied();
+    }
 
+    public void calculateFitness() {
         if (data.penalizeOscillation()) {
             if (this.step >= 100) {
                 double oscillations = 0;
                 while (!this.lastOscillations.isEmpty()) {
                     oscillations += this.lastOscillations.poll();
                 }
-                this.fitness = 0.1 * ((this.step + 1) / 1000.0) + 0.9 * (0.75 / oscillations);
+                this.fitness = ((this.step + 1) / 10000.0) + 0.9 * (0.75 / oscillations);
             } else {
-                this.fitness = 0.1 * ((this.step + 1) / 1000.0);
+                this.fitness = ((this.step + 1) / 10000.0);
             }
         } else {
             this.fitness = this.step + 1;
         }
+
         this.controller.setScore(this.fitness);
     }
 
@@ -95,8 +98,12 @@ public class Cart extends AbstractElement {
         double activationRange = maxActivation - minActivation;
         double middle = (maxActivation + minActivation) / 2;
 
-        // adjust to [-1:1]
-        return (2 * (activation - middle)) / activationRange;
+        if (data.binaryForce()) {
+            return activation > middle ? 1 : -1;
+        } else {
+            // adjust to [-1:1]
+            return (2 * (activation - middle)) / activationRange;
+        }
     }
 
     private void refreshCartPosition() {
@@ -107,7 +114,10 @@ public class Cart extends AbstractElement {
     private double[] createNetworkInput() {
         List<Double> inputs = new ArrayList<>();
 
-        inputs.add(this.cartPosition / (data.trackLength() / 2));
+        if (data.positionInput()) {
+            inputs.add(this.cartPosition / (data.trackLength() / 2));
+        }
+
         inputs.add(poleOneAngle / data.poleAngleThreshold());
 
         if (data.velocityInput()) {
@@ -273,13 +283,15 @@ public class Cart extends AbstractElement {
             yout[i] = y[i] + h6 * (dydx[i] + dyt[i] + 2.0 * dym[i]);
     }
 
-    private void checkDied() {
+    private boolean checkDied() {
         this.dead |= Math.abs(cartPosition) > (data.trackLength() / 2);
         this.dead |= Math.abs(this.poleOneAngle) > data.poleAngleThreshold();
 
         if (data.twoPoles()) {
             this.dead |= Math.abs(this.poleTwoAngle) > data.poleAngleThreshold();
         }
+
+        return this.dead;
     }
 
     public void configure(GeneralCartPoleData data) {

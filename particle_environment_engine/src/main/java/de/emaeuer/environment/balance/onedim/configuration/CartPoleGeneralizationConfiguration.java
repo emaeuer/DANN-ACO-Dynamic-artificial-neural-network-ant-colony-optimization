@@ -1,4 +1,4 @@
-package de.emaeuer.environment.balance.configuration;
+package de.emaeuer.environment.balance.onedim.configuration;
 
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;

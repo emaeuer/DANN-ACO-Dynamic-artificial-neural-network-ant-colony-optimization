@@ -1,17 +1,14 @@
-package de.emaeuer.environment.balance;
+package de.emaeuer.environment.balance.onedim;
 
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.AbstractEnvironment;
 import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.GeneralizationHandler;
-import de.emaeuer.environment.balance.configuration.CartPoleConfiguration;
-import de.emaeuer.environment.balance.configuration.CartPoleGeneralizationConfiguration;
-import de.emaeuer.environment.balance.elements.Cart;
-import de.emaeuer.environment.balance.elements.builder.CartPoleBuilder;
-import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
-import de.emaeuer.environment.bird.configuration.FlappyBirdGeneralizationConfiguration;
-import de.emaeuer.environment.bird.elements.FlappyBird;
+import de.emaeuer.environment.balance.onedim.configuration.CartPoleConfiguration;
+import de.emaeuer.environment.balance.onedim.configuration.CartPoleGeneralizationConfiguration;
+import de.emaeuer.environment.balance.onedim.elements.Cart;
+import de.emaeuer.environment.balance.onedim.elements.builder.CartPoleBuilder;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.math.Vector2D;
 
@@ -26,23 +23,20 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
 
     private GeneralCartPoleData cartPoleData;
 
+    private final ConfigurationHandler<CartPoleConfiguration> configuration;
     private final ConfigurationHandler<CartPoleGeneralizationConfiguration> generalizationConfig;
 
     public CartPoleEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         super(null, configuration);
+
+        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, CartPoleConfiguration.class, EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION);
+        this.cartPoleData = new GeneralCartPoleData(this.configuration);
 
         if (configuration.getValue(EnvironmentConfiguration.TEST_GENERALIZATION, Boolean.class)) {
             this.generalizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(configuration, CartPoleGeneralizationConfiguration.class, EnvironmentConfiguration.GENERALIZATION_IMPLEMENTATION);
         } else {
             this.generalizationConfig = null;
         }
-    }
-
-    @Override
-    protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
-        super.initialize(configuration);
-        ConfigurationHandler<CartPoleConfiguration> cartConfiguration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, CartPoleConfiguration.class, EnvironmentConfiguration.ENVIRONMENT_IMPLEMENTATION);
-        this.cartPoleData = new GeneralCartPoleData(cartConfiguration);
     }
 
     @Override
@@ -82,11 +76,14 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
                 .peek(Cart::incrementTimeStep)
                 .peek(this::checkReachedMaxStepNumber)
                 .filter(Cart::isDead)
+                .peek(Cart::calculateFitness)
+                .peek(this::normalizeFitness)
                 .forEach(deadCarts::add);
 
         getAgentsToDraw().removeAll(deadCarts);
         this.areAllCartsDead = getAgentsToDraw().isEmpty();
     }
+
 
     @Override
     protected GeneralizationHandler<CartPoleGeneralizationConfiguration> getNewGeneralizationHandler() {
@@ -130,13 +127,21 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
         } else if (isTestingGeneralization() && cart.getStep() >= getMaxGeneralizationStepNumber()) {
-            System.out.println(cart.getStep());
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
 
             AgentController origin = getOriginControllers().get(cart.getController());
             origin.setGeneralizationCapability(origin.getGeneralizationCapability() + (1.0 / getGeneralizationHandler().getNumberOfGeneralizationIterations()));
             setCurrentGeneralizationCapability(Math.max(getCurrentGeneralizationProgress(), origin.getGeneralizationCapability()));
+        }
+    }
+
+    private void normalizeFitness(Cart cart) {
+        if (this.configuration.getValue(CartPoleConfiguration.PENALIZE_OSCILLATION, Boolean.class)) {
+            // 10000 because of scaling in oscillation fitness function
+            cart.getController().setScore(cart.getController().getScore() / getMaxStepNumber() * 10000);
+        } else {
+            cart.getController().setScore(cart.getController().getScore() / getMaxStepNumber());
         }
     }
 

@@ -1,4 +1,4 @@
-package de.emaeuer.environment.balance.configuration;
+package de.emaeuer.environment.balance.onedim.configuration;
 
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
@@ -9,9 +9,11 @@ public enum CartPoleConfiguration implements DefaultConfiguration<CartPoleConfig
     GRAVITY("Gravity", new DoubleConfigurationValue(-9.8)),
     CART_MASS("Cart mass", new DoubleConfigurationValue(1)),
     FORCE_MAGNITUDE("Force magnitude", new DoubleConfigurationValue(10)),
+    BINARY_FORCE("Set the network output to -1 or 1", new BooleanConfigurationValue(false)),
     TIME_DELTA("Time delta", new DoubleConfigurationValue(0.01)),
     TRACK_LENGTH("Track length", new DoubleConfigurationValue(4.8)),
     VELOCITY_INPUT("Use velocities as input", new BooleanConfigurationValue(true)),
+    POSITION_INPUT("Use position as input", new BooleanConfigurationValue(true)),
     POLE_ONE_LENGTH("Length of pole one", new DoubleConfigurationValue(0.5)),
     POLE_ONE_MASS("Mass of pole one", new DoubleConfigurationValue(0.1)),
     POLE_ONE_ANGLE("Start angle of pole one", new DoubleConfigurationValue(Math.PI / 180)),

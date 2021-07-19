@@ -26,6 +26,8 @@ public class ChromosomeSolutionMapping implements Solution {
 
     @Override
     public RealVector process(RealVector input) {
+//        return getNeuralNetwork().process(input);
+
         // add bias as input which is always one
         input = new ArrayRealVector(new double[] {1}).append(input);
         double[] result = activator.next(input.toArray());

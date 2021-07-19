@@ -4,6 +4,7 @@ import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.elements.shape.ShapeEntity;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.StrokeLineCap;
 
 public class ShapeDrawer {
 
@@ -24,6 +25,7 @@ public class ShapeDrawer {
         switch (shape.shape()) {
             case CIRCLE -> drawCircle(shape, context);
             case SQUARE, POLYGON -> drawPolygon(shape, context);
+            case LINE -> drawLine(shape, context);
         }
     }
 
@@ -40,5 +42,23 @@ public class ShapeDrawer {
     private static void drawPolygon(ShapeEntity shape, GraphicsContext context) {
         context.fillPolygon(shape.xCoords(), shape.yCoords(), shape.xCoords().length);
         context.strokePolygon(shape.xCoords(), shape.yCoords(), shape.xCoords().length);
+    }
+
+    private static void drawLine(ShapeEntity shape, GraphicsContext context) {
+        context.setStroke(Color.RED);
+        context.setLineWidth(5);
+        context.setLineCap(StrokeLineCap.ROUND);
+        context.beginPath();
+
+        for (int i = 0; i < shape.xCoords().length; i++) {
+            if (i == 0) {
+                context.moveTo(shape.xCoords()[i], shape.yCoords()[i]);
+            } else {
+                context.lineTo(shape.xCoords()[i], shape.yCoords()[i]);
+            }
+        }
+
+        context.closePath();
+        context.stroke();
     }
 }

@@ -19,12 +19,10 @@ public enum EvaluationConfiguration implements DefaultConfiguration<EvaluationCo
                 optimizationConfig.setValue(OptimizationConfiguration.SEED, v.getStringRepresentation());
                 environmentConfig.setValue(EnvironmentConfiguration.SEED, v.getStringRepresentation());
         }),
-    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(10000, 0, Double.MAX_VALUE),
+    MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1, 0, Double.MAX_VALUE),
             (v, h) -> {
                 ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, OptimizationConfiguration.class, OPTIMIZATION_CONFIGURATION);
-                ConfigurationHandler<EnvironmentConfiguration> environmentConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, EnvironmentConfiguration.class, ENVIRONMENT_CONFIGURATION);
                 optimizationConfig.setValue(OptimizationConfiguration.MAX_FITNESS_SCORE, v.getStringRepresentation());
-                environmentConfig.setValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, v.getStringRepresentation());
             }),
     GENERALIZATION_MAX_FITNESS_SCORE("Fitness threshold for generalization", new DoubleConfigurationValue(10000, 0, Double.MAX_VALUE),
             (v, h) -> {

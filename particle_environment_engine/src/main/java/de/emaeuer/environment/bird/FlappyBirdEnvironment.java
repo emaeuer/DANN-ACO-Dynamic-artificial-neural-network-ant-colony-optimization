@@ -114,7 +114,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
 
         updatePipes();
 
-        // increment scores and check if at least one bird lives (ignore this.bestParticle)
+        // increment scores and check if at least one bird lives
         List<FlappyBird> deadBirds = new ArrayList<>();
         getAgentsToDraw().stream()
                 .filter(FlappyBird.class::isInstance)
@@ -122,6 +122,8 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
                 .peek(FlappyBird::incrementScore)
                 .peek(this::checkBird)
                 .filter(FlappyBird::isDead)
+                .peek(b -> b.setScore(b.getScore() / getMaxStepNumber()))
+                .peek(b -> System.out.println(b.getScore()))
                 .peek(b -> getOriginControllers().remove(b.getController()))
                 .forEach(deadBirds::add);
 
@@ -131,7 +133,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
     }
 
     private void checkBird(FlappyBird bird) {
-        if (bird.getScore() >= getMaxFitnessScore()) {
+        if (bird.getScore() >= getMaxStepNumber()) {
             bird.setDead(true);
             setControllerFinishedWithoutDying(true);
 

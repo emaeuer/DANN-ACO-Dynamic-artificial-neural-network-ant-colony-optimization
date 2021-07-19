@@ -1,25 +1,18 @@
 package de.emaeuer.environment.bird.elements;
 
-import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.AgentController;
-import de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration;
 import de.emaeuer.environment.elements.Particle;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.math.Vector2D;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 public class FlappyBird extends Particle {
 
     private FlappyBirdEnvironment environment;
 
     private boolean dead = false;
-
-    private double score = 0;
 
     private AgentController controller;
 
@@ -112,16 +105,15 @@ public class FlappyBird extends Particle {
     }
 
     public double getScore() {
-        return score;
+        return this.controller.getScore();
     }
 
     public void setScore(double score) {
-        this.score = score;
+        this.controller.setScore(score);
     }
 
     public void incrementScore() {
-        this.score += 1;
-        this.controller.setScore(this.score);
+        this.controller.setScore(getScore() + 1);
     }
 
     public void setEnvironment(FlappyBirdEnvironment environment) {

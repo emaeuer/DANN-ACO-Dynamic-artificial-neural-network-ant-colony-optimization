@@ -79,7 +79,7 @@ public class XOREnvironment extends AbstractEnvironment<XORGeneralizationConfigu
     }
 
     private void checkController(AgentController controller) {
-        if (controller.getScore() >= this.getMaxFitnessScore()) {
+        if (controller.getScore() >= 1) {
             setControllerFinishedWithoutDying(true);
         }
     }
@@ -125,7 +125,7 @@ public class XOREnvironment extends AbstractEnvironment<XORGeneralizationConfigu
 
     public void testGeneralization() {
         List<AgentController> controllersToRemove = getAgents().stream()
-                .filter(c -> c.getScore() < getMaxFitnessScore())
+                .filter(c -> c.getScore() < 1)
                 .toList();
 
         getAgents().removeAll(controllersToRemove);

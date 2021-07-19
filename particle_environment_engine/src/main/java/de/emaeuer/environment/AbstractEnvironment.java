@@ -22,7 +22,6 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
 
     private final BiConsumer<AbstractElement, AbstractEnvironment<T>> borderStrategy;
 
-    private double maxFitnessScore;
     private double maxStepNumber;
     private double maxGeneralizationStepNumber;
     private double currentGeneralizationCapability;
@@ -45,7 +44,6 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
     }
 
     protected void initialize(ConfigurationHandler<EnvironmentConfiguration> configuration) {
-        this.maxFitnessScore = configuration.getValue(EnvironmentConfiguration.MAX_FITNESS_SCORE, Double.class);
         this.maxStepNumber = configuration.getValue(EnvironmentConfiguration.MAX_STEP_NUMBER, Double.class);
         this.maxGeneralizationStepNumber = configuration.getValue(EnvironmentConfiguration.GENERALIZATION_MAX_STEP_NUMBER, Double.class);
     }
@@ -63,20 +61,25 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
     }
 
     public void testGeneralization() {
-        List<AgentController> controllersToRemove = getAgents().stream()
-                .filter(c -> c.getScore() < getMaxFitnessScore())
-                .toList();
+        AgentController best = getAgents().stream()
+                .max(Comparator.comparingDouble(AgentController::getScore))
+                .orElse(null);
+        getAgents().clear();
 
-        getAgents().removeAll(controllersToRemove);
+//        List<AgentController> controllersToRemove = getAgents().stream()
+//                .filter(c -> c.getScore() < getMaxFitnessScore())
+//                .toList();
+//
+//        getAgents().removeAll(controllersToRemove);
 
-        setTestingGeneralization(true);
 
         this.generalizationHandler = getNewGeneralizationHandler();
 
-        if (this.generalizationHandler == null || getAgents().isEmpty()) {
+        if (this.generalizationHandler == null || best == null) {
             setTestingGeneralization(false);
             setFinishedGeneralization(true);
         } else {
+            getAgents().add(best);
             setTestingGeneralization(true);
             setFinishedGeneralization(false);
         }
@@ -134,10 +137,6 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
     }
 
     public abstract boolean environmentFinished();
-
-    public double getMaxFitnessScore() {
-        return this.maxFitnessScore;
-    }
 
     public double getMaxStepNumber() {
         return maxStepNumber;

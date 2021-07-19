@@ -1,9 +1,9 @@
-package de.emaeuer.environment.balance.elements.builder;
+package de.emaeuer.environment.balance.onedim.elements.builder;
 
 import de.emaeuer.environment.AgentController;
-import de.emaeuer.environment.balance.CartPoleEnvironment;
-import de.emaeuer.environment.balance.GeneralCartPoleData;
-import de.emaeuer.environment.balance.elements.Cart;
+import de.emaeuer.environment.balance.onedim.CartPoleEnvironment;
+import de.emaeuer.environment.balance.onedim.GeneralCartPoleData;
+import de.emaeuer.environment.balance.onedim.elements.Cart;
 import de.emaeuer.environment.elements.builder.ElementBuilder;
 
 public class CartPoleBuilder extends ElementBuilder<Cart, CartPoleBuilder> {

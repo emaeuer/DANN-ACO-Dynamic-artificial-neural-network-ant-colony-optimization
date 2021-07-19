@@ -4,7 +4,8 @@ import java.util.Arrays;
 
 public enum EnvironmentImplementations {
     FLAPPY_BIRD,
-    CART_POLE,
+    ONE_DIMENSIONAL_CART_POLE,
+    TWO_DIMENSIONAL_CART_POLE,
     XOR;
 
     public static String[] getNames() {

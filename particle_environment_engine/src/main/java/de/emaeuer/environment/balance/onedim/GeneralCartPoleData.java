@@ -1,9 +1,9 @@
-package de.emaeuer.environment.balance;
+package de.emaeuer.environment.balance.onedim;
 
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.environment.balance.configuration.CartPoleConfiguration;
+import de.emaeuer.environment.balance.onedim.configuration.CartPoleConfiguration;
 
-import static de.emaeuer.environment.balance.configuration.CartPoleConfiguration.*;
+import static de.emaeuer.environment.balance.onedim.configuration.CartPoleConfiguration.*;
 
 public record GeneralCartPoleData(
         double trackLength,
@@ -22,7 +22,9 @@ public record GeneralCartPoleData(
         boolean velocityInput,
         boolean randomStartAngle,
         boolean twoPoles,
-        boolean penalizeOscillation) {
+        boolean penalizeOscillation,
+        boolean positionInput,
+        boolean binaryForce) {
 
     public GeneralCartPoleData(ConfigurationHandler<CartPoleConfiguration> configuration) {
         this(
@@ -42,29 +44,9 @@ public record GeneralCartPoleData(
                 configuration.getValue(VELOCITY_INPUT, Boolean.class),
                 configuration.getValue(RANDOM_START_ANGLE, Boolean.class),
                 configuration.getValue(USE_TWO_POLES, Boolean.class),
-                configuration.getValue(PENALIZE_OSCILLATION, Boolean.class)
-        );
-    }
-
-    public GeneralCartPoleData(GeneralCartPoleData data, double poleOneStartAngle) {
-        this(
-            data.trackLength,
-            data.poleAngleThreshold,
-            data.poleOneLength,
-            data.poleOneMass,
-            poleOneStartAngle,
-            data.poleTwoLength,
-            data.poleTwoMass,
-            data.poleTwoStartAngle,
-            data.forceMagnitude,
-            data.gravity,
-            data.pivotFriction,
-            data.cartMass,
-            data.timeDelta,
-            data.velocityInput,
-            data.randomStartAngle,
-            data.twoPoles,
-            data.penalizeOscillation
+                configuration.getValue(PENALIZE_OSCILLATION, Boolean.class),
+                configuration.getValue(POSITION_INPUT, Boolean.class),
+                configuration.getValue(BINARY_FORCE, Boolean.class)
         );
     }
 }
