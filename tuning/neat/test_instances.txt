@@ -7,13 +7,8 @@
 
 # Empty lines and comments are ignored.
 # instances duplicated 10 times to test each entity 10 times with different seeds
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
-xor --configFile ..\..\configurations\neat_xor_non_recurrent_configuration.json neat
+flappy_bird --configFile ..\..\configurations\aco_flappy_bird_test_1_configuration.json neat
+flappy_bird --configFile ..\..\configurations\aco_flappy_bird_test_2_configuration.json neat
+flappy_bird --configFile ..\..\configurations\aco_flappy_bird_test_3_configuration.json neat
+flappy_bird --configFile ..\..\configurations\aco_flappy_bird_test_4_configuration.json neat
+flappy_bird --configFile ..\..\configurations\aco_flappy_bird_test_5_configuration.json neat

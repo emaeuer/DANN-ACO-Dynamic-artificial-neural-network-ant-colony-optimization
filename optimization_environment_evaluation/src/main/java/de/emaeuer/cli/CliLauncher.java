@@ -116,6 +116,7 @@ public class CliLauncher {
             Optional.ofNullable(parameters.isNeuronIsolation()).ifPresent(v -> config.setValue(PacoConfiguration.ENABLE_NEURON_ISOLATION, v));
             Optional.ofNullable(parameters.getSolutionWeightFactor()).ifPresent(v -> config.setValue(PacoConfiguration.SOLUTION_WEIGHT_FACTOR, v));
             Optional.ofNullable(parameters.isReuseSplitKnowledge()).ifPresent(v -> config.setValue(PacoConfiguration.REUSE_SPLIT_KNOWLEDGE, v));
+            Optional.ofNullable(parameters.getUpsilon()).ifPresent(v -> config.setValue(PacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, v));
         } else {
             LOG.warn("Failed to apply parameters of type {} to PacoConfiguration", parameterObj.getClass().getSimpleName());
         }
@@ -168,27 +169,27 @@ public class CliLauncher {
             return Double.POSITIVE_INFINITY;
         }
 
-        GraphStateValue.GraphData bestTopology = this.optimizationState.getValue(OptimizationState.GLOBAL_BEST_SOLUTION, GraphStateValue.GraphData.class);
-        long numberOfHiddenNodes = bestTopology.connections()
-                .stream()
-                .flatMap(c -> Stream.of(c.start(), c.target()))
-                .distinct()
-                .filter(n -> n.startsWith("1-"))
-                .count();
-
-        double runsNotFinished = 1 - ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
-        double evaluationCost = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() / this.optimization.getMaxEvaluations();
-        evaluationCost = Math.min(1, evaluationCost);
-        double topologyCost = 1;
-
-        if (runsNotFinished == 0) {
-            topologyCost = 1 - (1 / (0.5 * numberOfHiddenNodes + 1));
-        }
-
-        return topologyCost * 0.5 + evaluationCost * 0.5;
-//        // penalty for runs that didn't finish
+//        GraphStateValue.GraphData bestTopology = this.optimizationState.getValue(OptimizationState.GLOBAL_BEST_SOLUTION, GraphStateValue.GraphData.class);
+//        long numberOfHiddenNodes = bestTopology.connections()
+//                .stream()
+//                .flatMap(c -> Stream.of(c.start(), c.target()))
+//                .distinct()
+//                .filter(n -> n.startsWith("1-"))
+//                .count();
+//
 //        double runsNotFinished = 1 - ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
-//        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() + runsNotFinished * this.optimization.getMaxEvaluations();
+//        double evaluationCost = ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() / this.optimization.getMaxEvaluations();
+//        evaluationCost = Math.min(1, evaluationCost);
+//        double topologyCost = 1;
+//
+//        if (runsNotFinished == 0) {
+//            topologyCost = 1 - (1 / (0.5 * numberOfHiddenNodes + 1));
+//        }
+//
+//        return topologyCost * 0.5 + evaluationCost * 0.5;
+        // penalty for runs that didn't finish
+        double runsNotFinished = 1 - ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
+        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getMean() + runsNotFinished * this.optimization.getMaxEvaluations();
     }
 
     public long getTimeMillis() {

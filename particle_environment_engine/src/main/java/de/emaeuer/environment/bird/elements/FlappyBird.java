@@ -18,11 +18,13 @@ public class FlappyBird extends Particle {
 
     private int inputPattern = 0b1111;
 
+    private int jumpForce = -200;
+
     private void jump() {
         // disable jump if bird is already going upwards
         if (getVelocity().getY() >= 0 && !isDead()) {
             getVelocity().multiply(0);
-            applyForce(new Vector2D(0, -100));
+            applyForce(new Vector2D(0, this.jumpForce));
         }
     }
 
@@ -122,5 +124,9 @@ public class FlappyBird extends Particle {
 
     public void setInputPattern(int inputPattern) {
         this.inputPattern = inputPattern;
+    }
+
+    public void setJumpForce(int jumpForce) {
+        this.jumpForce = jumpForce;
     }
 }

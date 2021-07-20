@@ -3,12 +3,13 @@ package de.emaeuer.state.value;
 import de.emaeuer.state.value.data.DataPoint;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
 public class DataSeriesStateValue extends AbstractStateValue<Map<String, DataPoint>, Map<String, Map<Double, DataPoint>>> {
 
     private final Map<String, Map<Double, DataPoint>> seriesData = new HashMap<>();
-    private Map<String, List<DataPoint>> newData = new HashMap<>();
+    private final Map<String, List<DataPoint>> newData = new HashMap<>();
 
     @Override
     public Class<? extends Map<String, DataPoint>> getExpectedInputType() {
@@ -46,8 +47,11 @@ public class DataSeriesStateValue extends AbstractStateValue<Map<String, DataPoi
         }
 
         series.put(point.getX(), point);
-        this.newData.putIfAbsent(value.getKey(), new ArrayList<>());
-        this.newData.get(value.getKey()).add(point);
+
+        synchronized (this.newData) {
+            this.newData.putIfAbsent(value.getKey(), new ArrayList<>());
+            this.newData.get(value.getKey()).add(point);
+        }
     }
 
     @Override
@@ -70,8 +74,11 @@ public class DataSeriesStateValue extends AbstractStateValue<Map<String, DataPoi
     }
 
     public Map<String, List<DataPoint>> getChangedData() {
-        Map<String, List<DataPoint>> result = this.newData;
-        this.newData = new HashMap<>();
+        Map<String, List<DataPoint>> result;
+        synchronized (this.newData) {
+             result = new HashMap<>(this.newData);
+            this.newData.clear();
+        }
 
         return result;
     }

@@ -1,5 +1,6 @@
 package de.emaeuer.evaluation;
 
+import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.AbstractEnvironment;
@@ -8,6 +9,7 @@ import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.factory.EnvironmentFactory;
 import de.emaeuer.optimization.OptimizationMethod;
+import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.factory.OptimizationMethodFactory;
@@ -148,10 +150,24 @@ public class OptimizationEnvironmentHandler implements Runnable {
     }
 
     private void handleNextIteration() {
-        List<AgentController> solutions = this.optimization.nextIteration()
+        List<? extends Solution> neuralNetworksToEvaluate = this.optimization.nextIteration();
+
+        List<AgentController> solutions = neuralNetworksToEvaluate
                 .stream()
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
+
+        // can be removed for normal usage but protects the system from freezing during irace runs
+        int max = neuralNetworksToEvaluate.stream()
+                .map(Solution::getNeuralNetwork)
+                .mapToInt(NeuralNetwork::getNumberOfHiddenNeurons)
+                .max()
+                .orElse(0);
+
+        if (max > 20) {
+            throw new IllegalStateException("Network got to large, aborting optimization");
+        }
+
         this.environment.setControllers(solutions);
     }
 
