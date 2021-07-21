@@ -28,6 +28,8 @@ public class ConfigurationController {
 
     private final ObjectProperty<BackgroundFileWriter> writer = new SimpleObjectProperty<>();
 
+    private String lastPath = "configurations";
+
     @FXML
     public void initialize() {
         ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration.get(), OptimizationConfiguration.class, EvaluationConfiguration.OPTIMIZATION_CONFIGURATION);
@@ -62,19 +64,23 @@ public class ConfigurationController {
 
     public void saveConfig() {
         if (this.configuration.isNotNull().get()) {
+            FILE_CHOOSER.setInitialDirectory(new File(this.lastPath));
             File file = FILE_CHOOSER.showSaveDialog(panel.getScene().getWindow());
             if (file != null) {
                 ConfigurationIOHandler.exportConfiguration(file, this.configuration.get());
+                this.lastPath = file.getParent();
             }
         }
     }
 
     public void loadConfig() {
         if (this.configuration.isNotNull().get()) {
+            FILE_CHOOSER.setInitialDirectory(new File(this.lastPath));
             File file = FILE_CHOOSER.showOpenDialog(panel.getScene().getWindow());
             if (file != null && file.exists()) {
                 ConfigurationIOHandler.importConfiguration(file, configuration.get());
                 refreshPanel();
+                this.lastPath = file.getParent();
             }
         }
     }

@@ -1,0 +1,71 @@
+{"CONFIGURATION": {
+    "CONFIG_TYPE": "de.emaeuer.evaluation.EvaluationConfiguration",
+    "GENERALIZATION_CAPABILITY": "0.5",
+    "ENVIRONMENT_CONFIGURATION": {
+        "MAX_STEP_NUMBER": "100000.0",
+        "CONFIG_TYPE": "de.emaeuer.environment.configuration.EnvironmentConfiguration",
+        "SEED": "9369319",
+        "MAX_FITNESS_SCORE": "100000.0",
+        "ENVIRONMENT_IMPLEMENTATION_NAME": "FLAPPY_BIRD",
+        "ENVIRONMENT_IMPLEMENTATION": {
+            "PIPE_VELOCITY": "3",
+            "CONFIG_TYPE": "de.emaeuer.environment.bird.configuration.FlappyBirdConfiguration",
+            "JUMP_FORCE": "180",
+            "GAP_SIZE": "200",
+            "VELOCITY_INPUT": "true",
+            "DISTANCE_INPUT": "true",
+            "PIPE_DISTANCE": "400",
+            "GRAVITY": "6",
+            "PIPE_WIDTH": "200",
+            "HEIGHT_INPUT": "true",
+            "GAP_INPUT": "true"
+        },
+        "GENERALIZATION_MAX_STEP_NUMBER": "10000.0",
+        "TEST_GENERALIZATION": "false",
+        "GENERALIZATION_MAX_FITNESS_SCORE": "10000.0"
+    },
+    "SEED": "9369319",
+    "MAX_FITNESS_SCORE": "100000.0",
+    "TEST_GENERALIZATION": "false",
+    "OPTIMIZATION_CONFIGURATION": {
+        "PROGRESSION_ITERATIONS": "200",
+        "CONFIG_TYPE": "de.emaeuer.optimization.configuration.OptimizationConfiguration",
+        "SEED": "9369319",
+        "MAX_FITNESS_SCORE": "100000.0",
+        "NUMBER_OF_RUNS": "1",
+        "IMPLEMENTATION_CONFIGURATION": {
+            "TOPOLOGY_PHEROMONE": "0.75(n/k)^2+0.1",
+            "REUSE_SPLIT_KNOWLEDGE": "false",
+            "ANTS_PER_ITERATION": "10",
+            "DEVIATION_FUNCTION": "(s+z)/(k - 1)",
+            "UPDATE_STRATEGY": "AGE",
+            "SPLIT_PROBABILITY": "max(min((c*t)/d, 1), 0)",
+            "SOLUTION_WEIGHT_FACTOR": "0.1",
+            "ENABLE_NEURON_ISOLATION": "false",
+            "CONNECTION_PHEROMONE": "0.75(n/k)+0.1",
+            "CONFIG_TYPE": "de.emaeuer.optimization.paco.configuration.PacoConfiguration",
+            "TOPOLOGY_SIMILARITY_THRESHOLD": "0.7",
+            "ELITISM": "false",
+            "UPDATES_PER_ITERATION": "1",
+            "NUMBER_OF_VALUES_PENALTY": "(k-n)/(n+1)",
+            "POPULATION_SIZE": "20"
+        },
+        "METHOD_NAME": "PACO",
+        "PROGRESSION_THRESHOLD": "0.0",
+        "GENERALIZATION_CAPABILITY_THRESHOLD": "0.5",
+        "TEST_GENERALIZATION": "false",
+        "NEURAL_NETWORK_CONFIGURATION": {
+            "OUTPUT_ACTIVATION_FUNCTION": "TANH",
+            "CONFIG_TYPE": "de.emaeuer.ann.configuration.NeuralNetworkConfiguration",
+            "OUTPUT_LAYER_SIZE": "1",
+            "INPUT_ACTIVATION_FUNCTION": "IDENTITY",
+            "INPUT_LAYER_SIZE": "4",
+            "WEIGHT_MIN": "-10.0",
+            "WEIGHT_MAX": "10.0",
+            "HIDDEN_ACTIVATION_FUNCTION": "TANH",
+            "DISABLE_RECURRENT_CONNECTIONS": "false"
+        },
+        "MAX_NUMBER_OF_EVALUATIONS": "20000"
+    },
+    "GENERALIZATION_MAX_FITNESS_SCORE": "10000.0"
+}}

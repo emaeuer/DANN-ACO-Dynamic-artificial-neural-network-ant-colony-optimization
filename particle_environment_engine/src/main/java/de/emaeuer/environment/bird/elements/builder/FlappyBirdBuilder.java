@@ -41,6 +41,11 @@ public class FlappyBirdBuilder extends ElementBuilder<FlappyBird, FlappyBirdBuil
         return getThis();
     }
 
+    public FlappyBirdBuilder jumpForce(int jumpForce) {
+        getElement().setJumpForce(jumpForce);
+        return getThis();
+    }
+
     public FlappyBirdBuilder applyConfiguration(ConfigurationHandler<FlappyBirdConfiguration> configuration) {
         int inputPattern = 0;
 

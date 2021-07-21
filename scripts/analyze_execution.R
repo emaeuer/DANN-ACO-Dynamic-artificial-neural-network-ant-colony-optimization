@@ -7,7 +7,7 @@ library(stringr)
 
 setClass("Configuration", slots=list(runNumber="numeric", maxFitness="numeric", name="character"))
 
-extractIterationData <- function(filepath) {
+extractIterationData <- function(filepath, name) {
   df <- data.frame()
   con <- file(filepath, "r")
 
@@ -22,7 +22,11 @@ extractIterationData <- function(filepath) {
     }
 
     if (grepl("^CONFIGURATION\\.OPTIMIZATION_CONFIGURATION\\.METHOD_NAME", line)) {
-      configuration@name <- str_split(line, "=", 2)[[1]][2]
+      if (!missing(name)) {
+        configuration@name <- name
+      } else {
+        configuration@name <- str_split(line, "=", 2)[[1]][2]
+      }
     } else if (grepl("^CONFIGURATION\\.ENVIRONMENT_CONFIGURATION\\.MAX_FITNESS_SCORE", line)) {
       configuration@maxFitness <- as.numeric(str_split(line, "=", 2)[[1]][2])
     } else if (grepl("^CONFIGURATION\\.OPTIMIZATION_CONFIGURATION\\.NUMBER_OF_RUNS", line)) {
@@ -168,8 +172,8 @@ trendOfWeights <- function(...) {
           axis.text = element_text(size = 18, family = "LM Roman 10"))
 }
 
-dannacoResult <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\important_runs\\aco_xor_non_recurrent.txt")
-neatResult <- extractIterationData("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\important_runs\\neat_xor_non_recurrent.txt")
+dannacoResult <- extractIterationData("C:/Users/emaeu/IdeaProjects/ParticleEnvironment/temp/config_455.txt", "CONFIG_455")
+neatResult <- extractIterationData("C:/Users/emaeu/IdeaProjects/ParticleEnvironment/temp/config_918.txt", "CONFIG_918")
 
 #drawRunSummary("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\temp\\important_runs\\aco_xor_non_recurrent.txt", 5)
 

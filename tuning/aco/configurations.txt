@@ -11,6 +11,6 @@
 ## parameter conditions (NA should be used for those parameters that
 ## are not enabled for a given configuration) and, if given, the
 ## constraints that describe forbidden configurations.
-populationSize  updatesPerIteration antsPerIteration    updateStrategy              elitism         neuronIsolation     reuseSplitKnowledge     solutionWeightFactor    alphaT  betaT   gammaT  alphaC  betaC   gammaC  eta     zeta    delta   epsilon     theta
-20              2                   10                  "AGE"                       "--elitism "    ""                  ""                      0.1                     0.75    2       0.1     0.75    1       0.1     1       1       1       1           1
-8	            2	                9	                "INNOVATION_PROTECTING"		""	            ""                  ""                      0.229600	            0.201	9.6276	0.7147	0.0052	0.4838	0.884	0.0763	0.8783	0.7984	0.467	    0.4186
+populationSize  updatesPerIteration antsPerIteration    updateStrategy              elitism         neuronIsolation     reuseSplitKnowledge     solutionWeightFactor    alphaT  betaT   gammaT  alphaC  betaC   gammaC  eta     zeta    delta   epsilon     theta     upsilon
+20              2                   10                  "AGE"                       "--elitism "    ""                  ""                      0.1                     0.75    2       0.1     0.75    1       0.1     1       1       1       1           1         ""
+8	            2	                9	                "INNOVATION_PROTECTING"	    ""	            ""                  ""                      0.229600	            0.201	9.6276  0.7147  0.0052  0.4838  0.884	0.0763  0.8783  0.7984  0.467	    0.4186    0.7
