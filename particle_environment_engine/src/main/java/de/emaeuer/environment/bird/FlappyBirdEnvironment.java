@@ -38,6 +38,9 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
     private int gapSize;
     private int pipeWidth;
     private int pipeDistance;
+    private int pipeVelocity;
+    private int jumpForce;
+    private int gravity;
 
     private final List<Pipe> pipes = new ArrayList<>();
 
@@ -75,8 +78,9 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
                 .size(BIRD_SIZE)
                 .environment(this)
                 .setStartPosition(BIRD_X, initialHeight)
-                .maxVelocity(15)
-                .addPermanentForce(ForceHelper.createBasicForce(new Vector2D(0, 2)));
+                .maxVelocity(30)
+                .jumpForce(this.jumpForce)
+                .addPermanentForce(ForceHelper.createBasicForce(new Vector2D(0, this.gravity)));
 
         return builder.build();
     }
@@ -94,6 +98,9 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
         this.gapSize = this.configuration.getValue(FlappyBirdConfiguration.GAP_SIZE, Integer.class);
         this.pipeWidth = this.configuration.getValue(FlappyBirdConfiguration.PIPE_WIDTH, Integer.class);
         this.pipeDistance = this.configuration.getValue(FlappyBirdConfiguration.PIPE_DISTANCE, Integer.class);
+        this.pipeVelocity = -1 * this.configuration.getValue(FlappyBirdConfiguration.PIPE_VELOCITY, Integer.class);
+        this.gravity = this.configuration.getValue(FlappyBirdConfiguration.GRAVITY, Integer.class);
+        this.jumpForce = -1 * this.configuration.getValue(FlappyBirdConfiguration.JUMP_FORCE, Integer.class);
 
         if (isTestingGeneralization()) {
             getRNG().reset((int) getGeneralizationHandler().getNextValue(FlappyBirdGeneralizationConfiguration.NUMBER_OF_SEEDS));
@@ -202,7 +209,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
         return new PipeBuilder()
                 .setStartPosition(getWidth(), 0)
                 .size(new Vector2D(this.pipeWidth, getHeight()))
-                .initialImpulse(p -> p.applyForce(new Vector2D(-1, 0)))
+                .initialImpulse(p -> p.applyForce(new Vector2D(this.pipeVelocity, 0)))
                 .gapPosition(getRNG().nextDouble() * (getHeight() - 60 - this.gapSize) + 30)
                 .gapSize(this.gapSize)
                 .build();

@@ -68,6 +68,9 @@ public class PacoCliParameter {
     @CommandLine.Option(names = "-t")
     private Double theta;
 
+    @CommandLine.Option(names = "-u")
+    private Double upsilon;
+
     public Boolean isElitism() {
         return elitism;
     }
@@ -145,5 +148,9 @@ public class PacoCliParameter {
 
     public Double getSolutionWeightFactor() {
         return solutionWeightFactor;
+    }
+
+    public Double getUpsilon() {
+        return upsilon;
     }
 }
