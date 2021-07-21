@@ -1,14 +1,17 @@
 package de.emaeuer.environment.bird.elements;
 
 import de.emaeuer.environment.AgentController;
+import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.elements.Particle;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
+import de.emaeuer.environment.elements.shape.*;
 import de.emaeuer.environment.math.Vector2D;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class FlappyBird extends Particle {
+public class FlappyBird extends AbstractElement {
 
     private FlappyBirdEnvironment environment;
 
@@ -17,6 +20,10 @@ public class FlappyBird extends Particle {
     private AgentController controller;
 
     private int inputPattern = 0b1111;
+
+    public FlappyBird() {
+        super(new FlappyBirdShape());
+    }
 
     private void jump() {
         // disable jump if bird is already going upwards
@@ -122,5 +129,14 @@ public class FlappyBird extends Particle {
 
     public void setInputPattern(int inputPattern) {
         this.inputPattern = inputPattern;
+    }
+
+    public double getRadius() {
+        return Math.max(getSize().getX(), getSize().getY()) / 2;
+    }
+
+    @Override
+    public List<ShapeEntity> getShapesOfElement() {
+        return ((FlappyBirdShape) this.getShape()).getShapesForElement(this);
     }
 }

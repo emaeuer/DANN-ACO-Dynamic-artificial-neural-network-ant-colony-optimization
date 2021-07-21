@@ -5,43 +5,20 @@ import de.emaeuer.environment.force.Force;
 import de.emaeuer.environment.math.Vector2D;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.function.Consumer;
 
 public abstract class ElementBuilder<T extends AbstractElement, S extends ElementBuilder<T, S>> {
-
-    private static final String COLOR_PATTERN = "rgba(%d,%d,%d,%.2f)";
 
     private final T element;
 
     public ElementBuilder() {
         this.element = getElementImplementation();
-        color(0, 0, 0);
         mass(1);
         maxVelocity(20);
-        borderColor(0, 0, 0);
     }
 
     protected abstract T getElementImplementation();
     protected abstract S getThis();
-
-    public S color(int red, int green, int blue) {
-        return color(red, green, blue, 1);
-    }
-
-    public S color(int red, int green, int blue, double alpha) {
-        this.element.setColor(String.format(Locale.ROOT, COLOR_PATTERN, red, green, blue, alpha));
-        return getThis();
-    }
-
-    public S borderColor(int red, int green, int blue) {
-        return borderColor(red, green, blue, 1);
-    }
-
-    public S borderColor(int red, int green, int blue, double alpha) {
-        this.element.setBorderColor(String.format(Locale.ROOT, COLOR_PATTERN, red, green, blue, alpha));
-        return getThis();
-    }
 
     public S mass(double mass) {
         this.element.setMass(mass);

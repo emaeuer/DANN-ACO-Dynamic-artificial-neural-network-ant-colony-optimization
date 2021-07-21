@@ -11,7 +11,6 @@ public class TwoDimensionalCartPoleBuilder extends ElementBuilder<TwoDimensional
     public TwoDimensionalCartPoleBuilder() {
         super();
         getElement().setMass(1);
-        borderColor(0, 0, 0);
     }
 
     public TwoDimensionalCartPoleBuilder configuration(GeneralTwoDimensionalCartPoleData cartPoleData) {

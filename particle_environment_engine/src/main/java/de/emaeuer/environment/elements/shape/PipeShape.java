@@ -6,6 +6,8 @@ import java.util.List;
 
 public class PipeShape implements Shape<Pipe> {
 
+    private static final int PIPE_LENGTH = 1545;
+
     @Override
     public List<ShapeEntity> getShapesForElement(Pipe element) {
         ShapeEntity topHalf = createShapeForTop(element);
@@ -17,24 +19,24 @@ public class PipeShape implements Shape<Pipe> {
     private ShapeEntity createShapeForTop(Pipe element) {
         double gapPosition = element.getGapPosition();
 
-        double[] yCoords = new double[] {0, gapPosition, gapPosition, 0};
+        double[] yCoords = new double[] {gapPosition - PIPE_LENGTH, PIPE_LENGTH};
 
-        return new ShapeEntity(BasicShape.SQUARE, getXCoordinates(element), yCoords);
+        ImageShape imageShape = new ImageShape(getClass().getResource("/flappy_bird/pipe_down.png").toExternalForm());
+
+        return new ShapeEntity(Shapes.IMAGE, imageShape, getXCoordinates(element), yCoords, "rgba(0,209,42,1.0)");
     }
 
     private ShapeEntity createShapeForBottom(Pipe element) {
         double upperY = element.getGapPosition() + element.getGapSize();
-        double lowerY = element.getSize().getY() + upperY;
 
-        double[] yCoords = new double[] {upperY, lowerY, lowerY, upperY};
+        double[] yCoords = new double[] {upperY, PIPE_LENGTH};
 
-        return new ShapeEntity(BasicShape.SQUARE, getXCoordinates(element), yCoords);
+        ImageShape imageShape = new ImageShape(getClass().getResource("/flappy_bird/pipe_up.png").toExternalForm());
+
+        return new ShapeEntity(Shapes.IMAGE, imageShape, getXCoordinates(element), yCoords, "rgba(0,209,42,1.0)");
     }
 
     private double[] getXCoordinates(Pipe element) {
-        double xPosition = element.getPosition().getX();
-        double width = element.getWidth();
-
-        return new double[] {xPosition, xPosition, xPosition + width, xPosition + width};
+        return new double[] {element.getPosition().getX(), element.getWidth()};
     }
 }

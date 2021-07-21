@@ -32,14 +32,14 @@ public class CartShape implements Shape<Cart> {
         double[] xCoords = new double[] {x, x , x + width, x + width};
         double[] yCoords = new double[] {y, y + height, y + height, y};
 
-        return new ShapeEntity(BasicShape.SQUARE, xCoords, yCoords);
+        return new ShapeEntity(Shapes.SQUARE, element.getShape(), xCoords, yCoords);
     }
 
     private ShapeEntity getShapeForJoint(Cart element) {
         double x = element.getPosition().getX();
         double y = element.getPosition().getY() - (element.getSize().getY() / 2);
 
-        return new ShapeEntity(BasicShape.CIRCLE, new double[] {x - 5, 10}, new double[] {y - 5, 10});
+        return new ShapeEntity(Shapes.CIRCLE, element.getShape(), new double[] {x - 5, 10}, new double[] {y - 5, 10});
     }
 
     private ShapeEntity getShapeForPole(Cart element, double poleLength, double poleAngle) {
@@ -62,7 +62,7 @@ public class CartShape implements Shape<Cart> {
                 .mapToDouble(i -> y + xPrototype[i] * width * rotationSin + yPrototype[i] * length * rotationCos)
                 .toArray();
 
-        return new ShapeEntity(BasicShape.SQUARE, xCoords, yCoords);
+        return new ShapeEntity(Shapes.SQUARE, element.getShape(), xCoords, yCoords);
     }
 
 }

@@ -20,9 +20,6 @@ public abstract class AbstractElement {
     private final Vector2D velocity = new Vector2D();
     private final Vector2D position = new Vector2D();
 
-    private String color;
-    private String borderColor;
-
     private final List<Force> permanentForces = new ArrayList<>();
 
     protected AbstractElement(Shape<? extends AbstractElement> shape) {
@@ -78,23 +75,7 @@ public abstract class AbstractElement {
         return position;
     }
 
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public String getBorderColor() {
-        return this.borderColor;
-    }
-
-    public void setBorderColor(String color) {
-        this.borderColor = color;
-    }
-
-    protected Shape<? extends AbstractElement> getShape() {
+    public Shape<? extends AbstractElement> getShape() {
         return this.shape;
     }
 

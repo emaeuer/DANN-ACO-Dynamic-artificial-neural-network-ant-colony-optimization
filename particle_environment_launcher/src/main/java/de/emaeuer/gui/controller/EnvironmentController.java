@@ -139,15 +139,15 @@ public class EnvironmentController {
     private void drawContent() {
         getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
 
+        synchronized (this.handler.getAdditionalEnvironmentElements()) {
+            this.handler.getAdditionalEnvironmentElements()
+                    .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
+        }
+
         synchronized (this.handler.getAgents()) {
             this.handler.getAgents()
                     .stream()
                     .limit(this.singleEntityMode.get() ? 1 : Long.MAX_VALUE)
-                    .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
-        }
-
-        synchronized (this.handler.getAdditionalEnvironmentElements()) {
-            this.handler.getAdditionalEnvironmentElements()
                     .forEach(e -> ShapeDrawer.drawElement(e, getGraphicsContext()));
         }
     }

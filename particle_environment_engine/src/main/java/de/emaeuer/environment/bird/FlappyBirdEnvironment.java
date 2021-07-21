@@ -13,6 +13,7 @@ import de.emaeuer.environment.bird.elements.FlappyBird;
 import de.emaeuer.environment.bird.elements.Pipe;
 import de.emaeuer.environment.bird.elements.builder.FlappyBirdBuilder;
 import de.emaeuer.environment.bird.elements.builder.PipeBuilder;
+import de.emaeuer.environment.elements.BackGround;
 import de.emaeuer.environment.math.Vector2D;
 import de.emaeuer.environment.util.ForceHelper;
 
@@ -22,7 +23,7 @@ import java.util.function.BiConsumer;
 public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneralizationConfiguration> {
 
     private static final int BIRD_X = 80;
-    private static final int BIRD_SIZE = 20;
+    private static final int BIRD_SIZE = 40;
 
     private static final BiConsumer<AbstractElement, AbstractEnvironment<FlappyBirdGeneralizationConfiguration>> DIE_ON_BORDER = (particle, env) -> {
         if (particle instanceof FlappyBird bird && !bird.isDead()) {
@@ -71,19 +72,13 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
         FlappyBirdBuilder builder = new FlappyBirdBuilder()
                 .applyConfiguration(this.configuration)
                 .controller(controller)
-                .radius(BIRD_SIZE)
+                .size(BIRD_SIZE)
                 .environment(this)
                 .setStartPosition(BIRD_X, initialHeight)
                 .maxVelocity(15)
                 .addPermanentForce(ForceHelper.createBasicForce(new Vector2D(0, 2)));
 
-        assignColor(builder);
-
         return builder.build();
-    }
-
-    private void assignColor(FlappyBirdBuilder builder) {
-       builder.color(0,0,0,0.5);
     }
 
     @Override
@@ -123,7 +118,6 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
                 .peek(this::checkBird)
                 .filter(FlappyBird::isDead)
                 .peek(b -> b.setScore(b.getScore() / getMaxStepNumber()))
-                .peek(b -> System.out.println(b.getScore()))
                 .peek(b -> getOriginControllers().remove(b.getController()))
                 .forEach(deadBirds::add);
 
@@ -168,7 +162,7 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
     }
 
     public double getDistanceToNextPipeEnd() {
-        return getNextPipe().getPosition().getX() + this.pipeWidth + BIRD_SIZE - BIRD_X;
+        return getNextPipe().getPosition().getX() + this.pipeWidth + BIRD_SIZE / 2.0 - BIRD_X;
     }
 
     public double getHeightOfNextGap() {
@@ -185,16 +179,16 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
         double gapSize = nextPipe.getGapSize();
 
         // particle reached the pipe
-        boolean collision = BIRD_X + BIRD_SIZE > pipeX && BIRD_X - BIRD_SIZE < pipeX + pipeWidth;
+        boolean collision = BIRD_X + BIRD_SIZE / 2.0 > pipeX && BIRD_X - BIRD_SIZE / 2.0 < pipeX + pipeWidth;
         // particle is not in the gap
-        collision &= particleY - BIRD_SIZE < gapY || particleY + BIRD_SIZE > gapY + gapSize;
+        collision &= particleY - BIRD_SIZE / 2.0 < gapY || particleY + BIRD_SIZE / 2.0 > gapY + gapSize;
 
         return collision;
     }
 
     private Pipe getNextPipe() {
         for (Pipe pipe: this.pipes) {
-            if (BIRD_X - BIRD_SIZE < pipe.getPosition().getX() + pipeWidth) {
+            if (BIRD_X - BIRD_SIZE / 2.0 < pipe.getPosition().getX() + pipeWidth) {
                 return pipe;
             }
         }
@@ -211,7 +205,6 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
                 .initialImpulse(p -> p.applyForce(new Vector2D(-1, 0)))
                 .gapPosition(getRNG().nextDouble() * (getHeight() - 60 - this.gapSize) + 30)
                 .gapSize(this.gapSize)
-                .color(0, 255,0)
                 .build();
     }
 
@@ -246,9 +239,12 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
         }
     }
 
+    private final BackGround backGround = new BackGround(getClass().getResource("/flappy_bird/background.png").toExternalForm(), this);
+
     @Override
     public List<AbstractElement> getAdditionalEnvironmentElements() {
         List<AbstractElement> elements = super.getAdditionalEnvironmentElements();
+        elements.add(backGround);
         elements.addAll(getPipes());
         return elements;
     }
@@ -257,7 +253,6 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
     public boolean environmentFinished() {
         return this.finished;
     }
-
     public List<Pipe> getPipes() {
         return pipes;
     }

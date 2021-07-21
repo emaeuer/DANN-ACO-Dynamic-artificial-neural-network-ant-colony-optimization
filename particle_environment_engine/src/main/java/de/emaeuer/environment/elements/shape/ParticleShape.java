@@ -16,7 +16,7 @@ public class ParticleShape implements Shape<Particle> {
         double[] xCoords = getAdjustedXCoordsForParticle(element);
         double[] yCoords = getAdjustedYCoordsForParticle(element);
 
-        return List.of(new ShapeEntity(BasicShape.POLYGON, xCoords, yCoords));
+        return List.of(new ShapeEntity(Shapes.POLYGON, element.getShape(), xCoords, yCoords));
     }
 
     private double[] getAdjustedXCoordsForParticle(Particle p) {

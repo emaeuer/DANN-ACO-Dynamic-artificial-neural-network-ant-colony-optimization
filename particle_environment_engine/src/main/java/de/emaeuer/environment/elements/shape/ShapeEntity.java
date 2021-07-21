@@ -1,19 +1,30 @@
 package de.emaeuer.environment.elements.shape;
 
-public record ShapeEntity(BasicShape shape, double[] xCoords, double[] yCoords) {
+public record ShapeEntity(Shapes shapeType, Shape<?> shape, double[] xCoords, double[] yCoords, String color) {
 
-    public ShapeEntity {
-        validateInput(shape, xCoords, yCoords);
+    private static final String DEFAULT_COLOR = "rgba(0,0,0,1.0)";
+
+    public ShapeEntity(Shapes shapeType, Shape<?> shape, double[] xCoords, double[] yCoords, String color) {
+        this.shapeType = shapeType;
+        this.shape = shape;
+        this.xCoords = xCoords;
+        this.yCoords = yCoords;
+        this.color = color;
+        validateInput();
     }
 
-    private void validateInput(BasicShape shape, double[] xCoords, double[] yCoords) {
-        if (xCoords.length != yCoords.length) {
+    public ShapeEntity(Shapes shapeType, Shape<?> shape, double[] xCoords, double[] yCoords) {
+        this(shapeType, shape, xCoords, yCoords, DEFAULT_COLOR);
+    }
+
+    private void validateInput() {
+        if (this.xCoords.length != this.yCoords.length) {
             throw new IllegalArgumentException("The number of x coordinates doesn't match the number of y coordinates");
         }
 
-        if (xCoords.length != 2 && this.shape == BasicShape.CIRCLE) {
+        if (this.xCoords.length != 2 && this.shapeType == Shapes.CIRCLE) {
             throw new IllegalArgumentException("To define a circle two coordinates are needed (center and one on the circle)");
-        } else if (xCoords.length != 4 && this.shape == BasicShape.SQUARE) {
+        } else if (this.xCoords.length != 4 && this.shapeType == Shapes.SQUARE) {
             throw new IllegalArgumentException("To define a rectangle four coordinates are needed (4 vertices)");
         }
     }
