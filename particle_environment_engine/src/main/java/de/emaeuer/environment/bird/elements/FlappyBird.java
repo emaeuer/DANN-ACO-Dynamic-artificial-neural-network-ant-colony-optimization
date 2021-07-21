@@ -9,7 +9,7 @@ import de.emaeuer.environment.math.Vector2D;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlappyBird extends Particle {
+public class FlappyBird extends AbstractElement {
 
     private FlappyBirdEnvironment environment;
 
