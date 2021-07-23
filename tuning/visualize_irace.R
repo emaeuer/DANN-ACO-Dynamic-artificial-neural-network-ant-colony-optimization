@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_flappy_bird_full.Rdata"
+fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_cart_pole_complete.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 

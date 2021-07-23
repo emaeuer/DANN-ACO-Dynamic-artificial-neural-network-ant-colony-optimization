@@ -66,13 +66,6 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
                 .orElse(null);
         getAgents().clear();
 
-//        List<AgentController> controllersToRemove = getAgents().stream()
-//                .filter(c -> c.getScore() < getMaxFitnessScore())
-//                .toList();
-//
-//        getAgents().removeAll(controllersToRemove);
-
-
         this.generalizationHandler = getNewGeneralizationHandler();
 
         if (this.generalizationHandler == null || best == null) {

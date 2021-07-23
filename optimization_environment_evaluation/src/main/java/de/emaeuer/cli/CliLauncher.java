@@ -2,7 +2,7 @@ package de.emaeuer.cli;
 
 import de.emaeuer.cli.parameter.CliParameter;
 import de.emaeuer.cli.parameter.NeatCliParameter;
-import de.emaeuer.cli.parameter.PacoCliParameter;
+import de.emaeuer.cli.parameter.DannacoCliParameter;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
@@ -103,7 +103,7 @@ public class CliLauncher {
     }
 
     private void applyParametersToPacoConfig(ConfigurationHandler<PacoConfiguration> config, Object parameterObj) {
-        if (parameterObj instanceof PacoCliParameter parameters) {
+        if (parameterObj instanceof DannacoCliParameter parameters) {
             Optional.ofNullable(parameters.getPopulationSize()).ifPresent(v -> config.setValue(PacoConfiguration.POPULATION_SIZE, v));
             Optional.ofNullable(parameters.getUpdatesPerIteration()).ifPresent(v -> config.setValue(PacoConfiguration.UPDATES_PER_ITERATION, v));
             Optional.ofNullable(parameters.getAntsPerIteration()).ifPresent(v -> config.setValue(PacoConfiguration.ANTS_PER_ITERATION, v));
@@ -194,5 +194,17 @@ public class CliLauncher {
 
     public long getTimeMillis() {
         return this.timeMillis;
+    }
+
+    public double getNumberOfHiddenNodes() {
+        return ((DistributionStateValue) this.optimizationState.getCurrentState().get(OptimizationState.HIDDEN_NODES_DISTRIBUTION)).getMean();
+    }
+
+    public double getNumberOfConnections() {
+        return ((DistributionStateValue) this.optimizationState.getCurrentState().get(OptimizationState.CONNECTIONS_DISTRIBUTION)).getMean();
+    }
+
+    public double getSuccessRate() {
+        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
     }
 }
