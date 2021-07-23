@@ -11,11 +11,13 @@ import de.emaeuer.state.value.data.DataPoint;
 import de.emaeuer.state.value.GraphStateValue.Connection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.chart.*;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +29,8 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class StateValueOutputMapper {
 
@@ -71,6 +75,8 @@ public class StateValueOutputMapper {
             refreshScatteredDataState(stateType, scatteredValue, suffix);
         } else if (stateValue instanceof CollectionDistributionStateValue collectionValue) {
             refreshCollectionDistributionState(stateType, collectionValue, suffix);
+        } else if (stateValue instanceof DataQuantityStateValue quantityValue) {
+            refreshPieChartForQuantity(stateType, quantityValue, suffix);
         }
     }
 
@@ -439,6 +445,63 @@ public class StateValueOutputMapper {
         Arrays.stream(xValues)
                 .map(x -> new XYChart.Data<Number, Number>(x, yValue))
                 .forEach(d -> series.getData().add(d));
+    }
+
+    // **************************************************
+    // Methods for handling quantity values
+    // **************************************************
+
+    private void refreshPieChartForQuantity(StateParameter<?> stateType, DataQuantityStateValue quantityValue, String suffix) {
+        String mapIdentifier = createMapIdentifier(stateType, suffix);
+
+        if (!this.visualRepresentations.containsKey(mapIdentifier)) {
+            createPieChart(quantityValue, stateType, suffix);
+        }
+
+        PieChart chart = (PieChart) this.visualRepresentations.get(mapIdentifier);
+        updatePieChart(quantityValue, chart.getData());
+    }
+
+    private void createPieChart(DataQuantityStateValue quantityValue, StateParameter<?> stateType, String suffix) {
+        ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
+
+        PieChart chart = new PieChart(pieChartData);
+        chart.getStyleClass().add("output_plot");
+        chart.setAnimated(false);
+
+        this.visualRepresentations.put(createMapIdentifier(stateType, suffix), chart);
+
+        VBox box = createCard(stateType, chart);
+        box.getStyleClass().add("output_plot_background");
+
+        this.newContent.add(box);
+    }
+
+    private void updatePieChart(DataQuantityStateValue quantityValue, ObservableList<PieChart.Data> property) {
+        Map<String, Long> newData = new HashMap<>();
+
+        // executed by state for automatic handling of locking
+        this.state.execute(s -> newData.putAll(quantityValue.getValue()));
+
+        List<PieChart.Data> dataToRemove = new ArrayList<>();
+
+        for (PieChart.Data pieData : property) {
+            Long data = newData.remove(pieData.getName());
+
+            if (data == null) {
+                dataToRemove.add(pieData);
+            } else {
+                pieData.setPieValue(data);
+            }
+        }
+
+        property.removeAll(dataToRemove);
+
+        newData.entrySet()
+                .stream()
+                .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
+                .forEach(property::add);
+
     }
 
     // **************************************************

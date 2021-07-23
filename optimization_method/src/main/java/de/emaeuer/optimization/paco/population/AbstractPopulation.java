@@ -2,16 +2,15 @@ package de.emaeuer.optimization.paco.population;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.pheromone.PacoPheromone;
+import de.emaeuer.optimization.paco.state.PacoRunState;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.state.StateHandler;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.ANTS_PER_ITERATION;
@@ -136,11 +135,15 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
         return pheromone;
     }
 
-    public void exportPheromoneMatrixState(int evaluationCounter, StateHandler<PacoState> state) {
+    public void exportPheromoneMatrixState(int evaluationCounter, StateHandler<PacoRunState> state) {
         this.pheromone.exportPheromoneMatrixState(evaluationCounter, state);
     }
 
-    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoState> state) {
+    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoRunState> state) {
         this.pheromone.exportCurrentGroups(evaluationNumber, state);
+    }
+
+    public void exportModificationCounts(StateHandler<PacoState> state) {
+        this.pheromone.exportModificationCounts(state);
     }
 }

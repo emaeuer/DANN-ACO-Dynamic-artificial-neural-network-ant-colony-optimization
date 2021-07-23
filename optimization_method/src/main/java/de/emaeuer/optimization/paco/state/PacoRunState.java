@@ -2,15 +2,17 @@ package de.emaeuer.optimization.paco.state;
 
 import de.emaeuer.state.StateParameter;
 import de.emaeuer.state.value.AbstractStateValue;
-import de.emaeuer.state.value.DataQuantityStateValue;
+import de.emaeuer.state.value.CumulatedDataSeriesStateValue;
+import de.emaeuer.state.value.MapOfStateValue;
 
-public enum PacoState  implements StateParameter<PacoState> {
-    MODIFICATION_DISTRIBUTION("Modification distribution", DataQuantityStateValue.class);
+public enum PacoRunState implements StateParameter<PacoRunState> {
+    CONNECTION_WEIGHTS_SCATTERED("Weight distribution in population", MapOfStateValue.class),
+    USED_GROUPS("Groups of population", CumulatedDataSeriesStateValue.class);
 
     private final String name;
     private final Class<? extends AbstractStateValue<?, ?>> type;
 
-    PacoState(String name, Class<? extends AbstractStateValue<?,?>> type) {
+    PacoRunState(String name, Class<? extends AbstractStateValue<?,?>> type) {
         this.name = name;
         this.type = type;
     }

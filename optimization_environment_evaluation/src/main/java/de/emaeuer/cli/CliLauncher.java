@@ -207,4 +207,8 @@ public class CliLauncher {
     public double getSuccessRate() {
         return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getMean();
     }
+
+    public StateHandler<OptimizationState> getOptimizationState() {
+        return optimizationState;
+    }
 }

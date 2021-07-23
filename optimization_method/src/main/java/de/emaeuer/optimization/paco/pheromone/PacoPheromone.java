@@ -13,6 +13,7 @@ import de.emaeuer.optimization.TopologyData;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoParameter;
+import de.emaeuer.optimization.paco.state.PacoRunState;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.state.StateHandler;
@@ -36,7 +37,8 @@ public class PacoPheromone {
     private enum DecisionType {
         ADD,
         REMOVE,
-        SPLIT
+        SPLIT,
+        NOTHING
     }
 
     private static record Decision(Connection connection, DecisionType type, double pheromoneValue) {}
@@ -66,6 +68,8 @@ public class PacoPheromone {
     private final Map<Long, Multiset<Double>> weightPheromone = new HashMap<>();
 
     private final RandomUtil rng;
+
+    private final Map<String, Long> modificationCounts = new HashMap<>(4);
 
     //############################################################
     //################ Methods for initialization ################
@@ -249,11 +253,15 @@ public class PacoPheromone {
                 return;
             }
 
+            this.modificationCounts.compute(dynamicElement.type.name(), (k, v) -> Objects.requireNonNullElse(v, 0L) + 1);
+
             switch (dynamicElement.type()) {
                 case ADD -> addConnection(topology, dynamicElement.connection());
                 case SPLIT -> splitConnection(topology, dynamicElement.connection());
                 case REMOVE -> removeConnection(topology, dynamicElement.connection());
             }
+        } else {
+            this.modificationCounts.compute(DecisionType.NOTHING.name(), (k, v) -> Objects.requireNonNullElse(v, 0L) + 1);
         }
     }
 
@@ -587,10 +595,10 @@ public class PacoPheromone {
                 end.getLayerIndex(), end.getNeuronIndex());
     }
 
-    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoState> state) {
+    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoRunState> state) {
         state.execute(s -> {
             //noinspection unchecked safe cast for generic not possible
-            Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) s.getValue(PacoState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
+            Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) s.getValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
             for (Map.Entry<Long, Multiset<Double>> connection : this.weightPheromone.entrySet()) {
                 currentState.putIfAbsent(connection.getKey().toString(), new ScatteredDataStateValue());
@@ -602,11 +610,11 @@ public class PacoPheromone {
                                 .toArray(Double[]::new)));
             }
 
-            s.export(PacoState.CONNECTION_WEIGHTS_SCATTERED);
+            s.export(PacoRunState.CONNECTION_WEIGHTS_SCATTERED);
         });
     }
 
-    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoState> state) {
+    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoRunState> state) {
         Map<String, DataPoint> value = new HashMap<>();
 
         for (Integer groupID : this.topologyPheromone.rowKeySet()) {
@@ -619,7 +627,12 @@ public class PacoPheromone {
             value.put(Integer.toString(groupID), new DataPoint(evaluationNumber, groupUsage));
         }
 
-        state.execute(s -> s.addNewValue(PacoState.USED_GROUPS, value));
+        state.execute(s -> s.addNewValue(PacoRunState.USED_GROUPS, value));
+    }
+
+    public void exportModificationCounts(StateHandler<PacoState> state) {
+        state.execute(s -> s.addNewValue(PacoState.MODIFICATION_DISTRIBUTION, this.modificationCounts));
+        this.modificationCounts.clear();
     }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, int groupID) {
