@@ -146,7 +146,7 @@ public class CliLauncher {
             // use nanos for file name to have unique file names
             long nanos = System.nanoTime();
             config.setValue(NeatConfiguration.ID_FILE, String.format("neat/id_%d.xml", nanos));
-            config.setValue(NeatConfiguration.NEAT_ID_FILE, String.format("neat/id_%d.xml", nanos));
+            config.setValue(NeatConfiguration.NEAT_ID_FILE, String.format("neat/neat_id_%d.xml", nanos));
         } else {
             LOG.warn("Failed to apply parameters of type {} to NeatConfiguration", parameterObj.getClass().getSimpleName());
         }

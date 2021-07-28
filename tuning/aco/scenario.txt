@@ -20,7 +20,7 @@ logFile = "../execDir/irace_data/irace.Rdata"
 ## Previously saved log file to recover the execution of irace, either
 ## absolute path or relative to the current directory.  If empty or NULL,
 ## recovery is not performed.
-#recoveryFile = "../execDir/irace_data/recovery.txt"
+recoveryFile = "../execDir/irace_data/irace_backup.Rdata"
 
 ## Directory where training instances are located; either absolute path or
 ## relative to current directory. If no trainInstancesFiles is provided,
@@ -63,7 +63,7 @@ targetRunner = "../target-runner.bat"
 ## Maximum number of runs (invocations of targetRunner) that will be
 ## performed. It determines the maximum budget of experiments for the
 ## tuning.
-maxExperiments = 5000
+maxExperiments = 10000
 
 ## Maximum total execution time in seconds for the executions of
 ## targetRunner. targetRunner must return two values: cost and time.
@@ -129,7 +129,7 @@ maxExperiments = 5000
 
 ## Number of calls to targetRunner to execute in parallel. Values 0 or 1
 ## mean no parallelization.
-parallel = 12
+parallel = 1
 
 ## Enable/disable load-balancing when executing experiments in parallel.
 ## Load-balancing makes better use of computing resources, but increases

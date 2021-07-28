@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_xor_recurrent.Rdata"
+fileName <- "tuning/execDir/irace_data/irace.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 
@@ -23,11 +23,11 @@ parameterFrequency(iraceResults$allConfigurations, iraceResults$parameters)
 # Get last iteration number
 last <- length(iraceResults$iterationElites)
 # Get configurations in the last two iterations
-# conf <- getConfigurationByIteration(iraceResults = iraceResults,
-# iterations = c(last - 1, last))
-# parallelCoordinatesPlot (conf, iraceResults$parameters,
-# param_names = c("betaC", "gammaC", "eta", "zeta", "delta", "epsilon", "theta"),
-# hierarchy = FALSE)
+conf <- getConfigurationByIteration(iraceResults = iraceResults,
+iterations = c(last - 1, last))
+parallelCoordinatesPlot (conf, iraceResults$parameters,
+param_names = c("betaC", "gammaC", "eta", "zeta", "delta", "epsilon", "theta"),
+hierarchy = FALSE)
 
 ########################################
 #Show box plots
@@ -49,6 +49,7 @@ elites <- as.character(iraceResults$iterationElites)
 values <- colMeans(iraceResults$testing$experiments[, elites])
 plot(fes, values, type = "s",
      xlab = "Number of runs of the target algorithm",
-     ylab = "Mean value over testing set")
+     ylab = "Mean value over testing set",
+     ylim = 20000.0)
 points(fes, values)
 text(fes, values, elites, pos = 1)

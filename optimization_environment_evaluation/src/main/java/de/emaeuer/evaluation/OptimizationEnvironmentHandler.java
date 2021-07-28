@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -210,10 +211,15 @@ public class OptimizationEnvironmentHandler implements Runnable {
     @Override
     public void run() {
         try {
+            double startTime = System.currentTimeMillis();
             while (!this.terminateThread.get() && !this.pauseThread.get()) {
                 this.updateLock.lock();
                 try {
                     update();
+
+                    if (System.currentTimeMillis() - startTime > 300000) {
+                        throw new TimeoutException("Optimization took to long");
+                    }
                 } finally {
                     this.updateLock.unlock();
                 }
