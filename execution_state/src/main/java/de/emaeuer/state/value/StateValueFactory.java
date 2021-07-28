@@ -23,6 +23,8 @@ public class StateValueFactory {
             return new CollectionDistributionStateValue();
         } else if (CumulatedDataSeriesStateValue.class.equals(className)) {
             return new CumulatedDataSeriesStateValue();
+        } else if (DataQuantityStateValue.class.equals(className)) {
+            return new DataQuantityStateValue();
         }
 
         throw new IllegalArgumentException("Factory doesn't support values of type " + className.getSimpleName());

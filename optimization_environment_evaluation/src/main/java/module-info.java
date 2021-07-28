@@ -14,4 +14,6 @@ module OptimizationEnvironmentEvaluation {
     opens de.emaeuer.cli to info.picocli;
     exports de.emaeuer.cli.parameter;
     opens de.emaeuer.cli.parameter to info.picocli;
+    exports de.emaeuer.variation;
+    opens de.emaeuer.variation to info.picocli;
 }

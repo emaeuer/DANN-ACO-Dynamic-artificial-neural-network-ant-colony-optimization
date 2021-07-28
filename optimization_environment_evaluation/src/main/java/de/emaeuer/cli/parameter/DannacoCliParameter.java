@@ -5,7 +5,7 @@ import picocli.CommandLine;
 import java.io.File;
 
 @CommandLine.Command(name = "dannaco")
-public class PacoCliParameter {
+public class DannacoCliParameter {
 
     private static final String STANDARD_DEVIATION_TEMPLATE = "(<delta>s)/(k - 1)+<epsilon>z";
     private static final String PHEROMONE_TEMPLATE = "<alpha>(n/k)^<beta>+<gamma>";

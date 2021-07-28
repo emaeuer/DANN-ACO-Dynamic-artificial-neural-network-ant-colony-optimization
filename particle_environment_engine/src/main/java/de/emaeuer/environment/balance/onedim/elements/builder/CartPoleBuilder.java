@@ -11,7 +11,6 @@ public class CartPoleBuilder extends ElementBuilder<Cart, CartPoleBuilder> {
     public CartPoleBuilder() {
         super();
         getElement().setMass(1);
-        borderColor(0, 0, 0);
     }
 
     public CartPoleBuilder configuration(GeneralCartPoleData cartPoleData) {

@@ -11,9 +11,8 @@ public class FlappyBirdBuilder extends ElementBuilder<FlappyBird, FlappyBirdBuil
 
     public FlappyBirdBuilder() {
         super();
-        getElement().setRadius(20);
-        getElement().setMass(20);
-        borderColor(0, 0, 0);
+        size(20);
+        mass(20);
     }
 
     @Override
@@ -26,8 +25,9 @@ public class FlappyBirdBuilder extends ElementBuilder<FlappyBird, FlappyBirdBuil
         return this;
     }
 
-    public FlappyBirdBuilder radius(double radius) {
-        getElement().setRadius(radius);
+    public FlappyBirdBuilder size(double size) {
+        getElement().getSize().setX(size);
+        getElement().getSize().setY(size);
         return getThis();
     }
 

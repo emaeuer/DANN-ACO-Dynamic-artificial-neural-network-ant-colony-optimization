@@ -35,7 +35,7 @@ public class TwoDimensionalCartShape implements Shape<TwoDimensionalCart> {
         double[] xCoords = new double[] {x, width};
         double[] yCoords = new double[] {y, height};
 
-        return new ShapeEntity(BasicShape.CIRCLE, xCoords, yCoords);
+        return new ShapeEntity(Shapes.CIRCLE, element.getShape(), xCoords, yCoords);
     }
 
     private ShapeEntity getShapeForPole(TwoDimensionalCart element, double scale) {
@@ -48,7 +48,7 @@ public class TwoDimensionalCartShape implements Shape<TwoDimensionalCart> {
         double[] xCoords = new double[] {startX, endX};
         double[] yCoords = new double[] {startY, endY};
 
-        return new ShapeEntity(BasicShape.LINE, xCoords, yCoords);
+        return new ShapeEntity(Shapes.LINE, element.getShape(), xCoords, yCoords);
     }
 
     private double getAdjustedX(TwoDimensionalCart element, double scale) {

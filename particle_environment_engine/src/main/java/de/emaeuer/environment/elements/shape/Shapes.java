@@ -1,8 +1,9 @@
 package de.emaeuer.environment.elements.shape;
 
-public enum BasicShape {
+public enum Shapes {
     SQUARE,
     CIRCLE,
     POLYGON,
-    LINE
+    LINE,
+    IMAGE
 }

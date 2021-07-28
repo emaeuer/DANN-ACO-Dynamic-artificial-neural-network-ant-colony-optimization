@@ -13,6 +13,7 @@ import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.paco.population.AbstractPopulation;
 import de.emaeuer.optimization.paco.population.PopulationFactory;
+import de.emaeuer.optimization.paco.state.PacoRunState;
 import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.state.StateHandler;
 
@@ -23,21 +24,26 @@ public class PacoHandler extends OptimizationMethod {
     private AbstractPopulation<?> population;
 
     private final ConfigurationHandler<PacoConfiguration> configuration;
+    private final StateHandler<PacoRunState> runState;
     private final StateHandler<PacoState> state;
 
     public PacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
         this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
-        //noinspection unchecked
-        StateHandler<OptimizationRunState> runState = generalState.getValue(OptimizationState.STATE_OF_CURRENT_RUN, StateHandler.class);
-        this.state = new StateHandler<>(PacoState.class, runState);
-        this.state.setName("PACO");
-
         this.configuration.logConfiguration();
 
+        //noinspection unchecked
+        StateHandler<OptimizationRunState> runState = generalState.getValue(OptimizationState.STATE_OF_CURRENT_RUN, StateHandler.class);
+        this.runState = new StateHandler<>(PacoRunState.class, runState);
+        this.runState.setName("PACO_RUN");
+
+        this.state = new StateHandler<>(PacoState.class, generalState);
+        this.state.setName("PACO");
+
         // register own state in optimization state
-        runState.execute(s -> s.addNewValue(OptimizationRunState.IMPLEMENTATION_RUN_STATE, this.state));
+        runState.execute(s -> s.addNewValue(OptimizationRunState.IMPLEMENTATION_RUN_STATE, this.runState));
+        generalState.execute(s -> s.addNewValue(OptimizationState.IMPLEMENTATION_STATE, this.state));
 
         initialize();
     }
@@ -58,7 +64,7 @@ public class PacoHandler extends OptimizationMethod {
     public void resetAndRestart() {
         super.resetAndRestart();
 
-        this.state.execute(t -> t.resetValue(PacoState.CONNECTION_WEIGHTS_SCATTERED));
+        this.runState.execute(t -> t.resetValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED));
 
         initialize();
     }
@@ -78,8 +84,9 @@ public class PacoHandler extends OptimizationMethod {
                         .thenComparingDouble(PacoAnt::getFitness))
                 .orElse(null);
 
-        this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.state);
-        this.population.exportCurrentGroups(getEvaluationCounter(), this.state);
+        this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.runState);
+        this.population.exportCurrentGroups(getEvaluationCounter(), this.runState);
+        this.population.exportModificationCounts(this.state);
 
         if (bestOfThisIteration != null) {
             // copy best to prevent further modification because of references in pheromone matrix
@@ -94,9 +101,9 @@ public class PacoHandler extends OptimizationMethod {
 
     @Override
     protected void updateImplementationState() {
-        this.state.execute(s -> {
-            s.resetValue(PacoState.CONNECTION_WEIGHTS_SCATTERED);
-            s.resetValue(PacoState.USED_GROUPS);
+        this.runState.execute(s -> {
+            s.resetValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED);
+            s.resetValue(PacoRunState.USED_GROUPS);
         });
     }
 

@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "tuning/execDir/irace_data/irace.Rdata"
+fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_xor_recurrent.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 
@@ -49,7 +49,6 @@ elites <- as.character(iraceResults$iterationElites)
 values <- colMeans(iraceResults$testing$experiments[, elites])
 plot(fes, values, type = "s",
      xlab = "Number of runs of the target algorithm",
-     ylab = "Mean value over testing set",
-     ylim = 20000.0)
+     ylab = "Mean value over testing set")
 points(fes, values)
 text(fes, values, elites, pos = 1)

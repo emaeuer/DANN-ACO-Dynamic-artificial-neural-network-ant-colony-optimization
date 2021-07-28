@@ -31,7 +31,7 @@
         "CONFIG_TYPE": "de.emaeuer.optimization.configuration.OptimizationConfiguration",
         "SEED": "9369319",
         "MAX_FITNESS_SCORE": "1.0",
-        "NUMBER_OF_RUNS": "1",
+        "NUMBER_OF_RUNS": "50",
         "IMPLEMENTATION_CONFIGURATION": {
             "TOPOLOGY_PHEROMONE": "0.75(n/k)^2+0.1",
             "REUSE_SPLIT_KNOWLEDGE": "false",
