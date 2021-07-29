@@ -1,8 +1,10 @@
 package de.emaeuer.optimization.paco;
 
 import de.emaeuer.ann.NeuralNetwork;
+import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
+import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationHelper;
 import de.emaeuer.optimization.OptimizationMethod;
@@ -18,6 +20,9 @@ import de.emaeuer.optimization.paco.state.PacoState;
 import de.emaeuer.state.StateHandler;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PacoHandler extends OptimizationMethod {
 
@@ -49,15 +54,76 @@ public class PacoHandler extends OptimizationMethod {
     }
 
     private void initialize() {
+        // set true for ablation study
+        if (false) {
+            List<NeuralNetwork> baseNetworks = IntStream.range(0, this.configuration.getValue(PacoConfiguration.ANTS_PER_ITERATION, Integer.class))
+                    .mapToObj(i -> this.createRandomBaseNetwork())
+                    .toList();
+
+            this.population = PopulationFactory.create(configuration, baseNetworks, getRNG());
+            return;
+        }
+
         // build basic neural network with just the necessary network neurons and connections
         NeuralNetwork baseNetwork = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(ConfigurationHelper.extractEmbeddedConfiguration(getOptimizationConfiguration(), NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
                 .implicitBias()
                 .inputLayer()
                 .fullyConnectToNextLayer()
+                // TODO uncomment for ablation study with fixed topology
+//                .hiddenLayer(10)
+//                .fullyConnectToNextLayer()
                 .outputLayer()
                 .finish();
 
         this.population = PopulationFactory.create(configuration, baseNetwork, getRNG());
+    }
+
+    private NeuralNetwork createRandomBaseNetwork() {
+        int numberOfHiddenNodes = getRNG().getNextInt(0, 10);
+
+        NeuralNetwork nn;
+        if (numberOfHiddenNodes == 0) {
+            nn = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(ConfigurationHelper.extractEmbeddedConfiguration(getOptimizationConfiguration(), NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
+                    .implicitBias()
+                    .inputLayer()
+                    .outputLayer()
+                    .finish();
+        } else {
+            nn = NeuronBasedNeuralNetworkBuilder.buildWithConfiguration(ConfigurationHelper.extractEmbeddedConfiguration(getOptimizationConfiguration(), NeuralNetworkConfiguration.class, OptimizationConfiguration.NEURAL_NETWORK_CONFIGURATION))
+                    .implicitBias()
+                    .inputLayer()
+                    .hiddenLayer(numberOfHiddenNodes)
+                    .outputLayer()
+                    .finish();
+        }
+
+        List<NeuronID> possibleSources = IntStream.range(0, nn.getDepth())
+                .mapToObj(nn::getNeuronsOfLayer)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        // input neurons can be sources but not targets
+        List<NeuronID> possibleTargets = possibleSources.stream()
+                .filter(Predicate.not(nn::isInputNeuron))
+                .collect(Collectors.toList());
+
+        double connectionCountMean = 1 + (possibleTargets.size() - 1) * 0.2;
+        double connectionCountDeviation = possibleTargets.size() * 0.4;
+
+        for (NeuronID possibleSource : possibleSources) {
+            int connectionCount = (int) Math.round(getRNG().getNormalDistributedValue(connectionCountMean, connectionCountDeviation));
+            connectionCount = Math.max(connectionCount, 0);
+            getRNG().shuffleCollection(possibleTargets);
+            for (NeuronID possibleTarget : possibleTargets) {
+                if (connectionCount-- <= 0) {
+                    break;
+                }
+                nn.modify().addConnection(possibleSource, possibleTarget, 0);
+                connectionCount--;
+            }
+        }
+
+        return nn;
     }
 
     @Override

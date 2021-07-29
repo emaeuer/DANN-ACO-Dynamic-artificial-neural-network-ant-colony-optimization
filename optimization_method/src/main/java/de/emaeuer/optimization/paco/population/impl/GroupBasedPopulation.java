@@ -15,6 +15,10 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
         super(configuration, baseNetwork, rng);
     }
 
+    public GroupBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        super(configuration, baseNetwork, rng);
+    }
+
     @Override
     public void updatePheromone() {
         if (getSize() < getMaxSize()) {

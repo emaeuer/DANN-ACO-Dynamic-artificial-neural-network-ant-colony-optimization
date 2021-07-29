@@ -18,6 +18,10 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
         super(configuration, new ArrayList<>(), baseNetwork, rng);
     }
 
+    public ProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        super(configuration, new ArrayList<>(), baseNetwork, rng);
+    }
+
     public void updatePheromone() {
         getCurrentAnts().stream()
                 .sorted(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)

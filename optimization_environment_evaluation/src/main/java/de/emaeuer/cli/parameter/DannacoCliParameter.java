@@ -71,6 +71,18 @@ public class DannacoCliParameter {
     @CommandLine.Option(names = "-u")
     private Double upsilon;
 
+    @CommandLine.Option(names = "-acr")
+    private Double addConnectionRate;
+
+    @CommandLine.Option(names = "-rcr")
+    private Double removeConnectionRate;
+
+    @CommandLine.Option(names = "-anr")
+    private Double addNeuronRate;
+
+    @CommandLine.Option(names = "-ssd")
+    private Double staticStandardDeviation;
+
     public Boolean isElitism() {
         return elitism;
     }
@@ -152,5 +164,21 @@ public class DannacoCliParameter {
 
     public Double getUpsilon() {
         return upsilon;
+    }
+
+    public Double getAddConnectionRate() {
+        return addConnectionRate;
+    }
+
+    public Double getRemoveConnectionRate() {
+        return removeConnectionRate;
+    }
+
+    public Double getAddNeuronRate() {
+        return addNeuronRate;
+    }
+
+    public Double getStaticStandardDeviation() {
+        return staticStandardDeviation;
     }
 }

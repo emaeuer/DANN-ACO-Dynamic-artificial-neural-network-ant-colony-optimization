@@ -49,7 +49,8 @@ public class PacoPheromone {
 
     private final int maximalPopulationSize;
 
-    private final NeuralNetwork baseNetwork;
+    private final List<NeuralNetwork> baseNetwork;
+    private int baseNetworkIndex = 0;
 
     private final List<PacoAnt> solutions = new ArrayList<>();
 
@@ -78,22 +79,32 @@ public class PacoPheromone {
     public PacoPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         this.configuration = configuration;
         this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
-        this.baseNetwork = baseNetwork;
+        this.baseNetwork = Collections.singletonList(baseNetwork);
         this.rng = rng;
 
-        initializeMapping();
+        this.baseNetwork.forEach(this::initializeMapping);
         initializeSolutionWeights();
     }
 
-    private void initializeMapping() {
-        List<NeuronID> possibleSources = IntStream.range(0, this.baseNetwork.getDepth())
-                .mapToObj(this.baseNetwork::getNeuronsOfLayer)
+    public PacoPheromone(ConfigurationHandler<PacoConfiguration> configuration, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        this.configuration = configuration;
+        this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
+        this.baseNetwork = baseNetwork;
+        this.rng = rng;
+
+        this.baseNetwork.forEach(this::initializeMapping);
+        initializeSolutionWeights();
+    }
+
+    private void initializeMapping(NeuralNetwork nn) {
+        List<NeuronID> possibleSources = IntStream.range(0, nn.getDepth())
+                .mapToObj(nn::getNeuronsOfLayer)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
         // input neurons can be sources but not targets
         List<NeuronID> possibleTargets = possibleSources.stream()
-                .filter(Predicate.not(this.baseNetwork::isInputNeuron))
+                .filter(Predicate.not(nn::isInputNeuron))
                 .collect(Collectors.toList());
 
         int groupID = this.topologyGroupCounter.getAndIncrement();
@@ -101,7 +112,7 @@ public class PacoPheromone {
         for (NeuronID possibleSource : possibleSources) {
             for (NeuronID possibleTarget : possibleTargets) {
                 Connection connection = new Connection(possibleSource, possibleTarget, 0);
-                if (checkConnectionRecurrence(connection, this.baseNetwork)) {
+                if (checkConnectionRecurrence(connection, nn)) {
                     String connectionKey = createConnectionKey(connection);
                     this.connectionMapping.put(groupID, connectionKey, this.connectionMappingCounter.getAndIncrement());
                 }
@@ -214,8 +225,12 @@ public class PacoPheromone {
 
     protected PacoAnt selectTemplate() {
         if (this.solutions.isEmpty()) {
-            return new PacoAnt(this.baseNetwork.copy(), 0);
+            int index = this.baseNetworkIndex;
+            NeuralNetwork baseNN = this.baseNetwork.get(this.baseNetworkIndex);
+            this.baseNetworkIndex = (this.baseNetworkIndex + 1) % this.baseNetwork.size();
+            return new PacoAnt(baseNN.copy(), index);
         }
+
 
         double[] weights = this.solutionWeights;
         if (this.solutions.size() < this.maximalPopulationSize) {
@@ -236,7 +251,10 @@ public class PacoPheromone {
             return templateAnt;
         } else {
             LOG.warn("Failed to select template");
-            return new PacoAnt(this.baseNetwork.copy(), 0);
+            int index = this.baseNetworkIndex;
+            NeuralNetwork baseNN = this.baseNetwork.get(this.baseNetworkIndex);
+            this.baseNetworkIndex = (this.baseNetworkIndex + 1) % this.baseNetwork.size();
+            return new PacoAnt(baseNN.copy(), index);
         }
     }
 
@@ -266,6 +284,7 @@ public class PacoPheromone {
     }
 
     private boolean templateIsDynamic(TopologyData topology) {
+//        return 0.5 > this.rng.getNextDouble(0, 1); // TODO uncomment for ablation test
         return calculateTopologyPheromone(topology) > this.rng.getNextDouble(0, 1);
     }
 
@@ -335,13 +354,16 @@ public class PacoPheromone {
         if (!isValidDecision(connection, template, isSplit)) {
             pheromone = 0;
         } else if (template.neuronHasConnectionTo(connection.start(), connection.end()) && isSplit) {
-            pheromone = 1 - pheromone;
+            pheromone = this.configuration.getValue(ADD_NEURON_MUTATION_RATE, Double.class); // TODO uncomment for ablation test
+//            pheromone = 1 - pheromone;
             type = DecisionType.SPLIT;
         } else if (template.neuronHasConnectionTo(connection.start(), connection.end())) {
             // if the connection exists the pheromone for removing is 1 - pheromone value --> connections with a high pheromone value are less likely to be removed
-            pheromone = 1 - pheromone;
+            pheromone = this.configuration.getValue(REMOVE_CONNECTION_MUTATION_RATE, Double.class); // TODO uncomment for ablation test
+//            pheromone = 1 - pheromone;
             type = DecisionType.REMOVE;
         } else {
+            pheromone = this.configuration.getValue(ADD_CONNECTION_MUTATION_RATE, Double.class); // TODO uncomment for ablation test
             // the connection doesn't exist and the pheromone value is the value for adding it
             type = DecisionType.ADD;
         }
@@ -409,6 +431,12 @@ public class PacoPheromone {
         // register newGroup as successor of old group
         this.topologyGroupSuccessors.put(oldGroupID, changedConnectionKey, topology.getTopologyGroupID());
 
+        // TODO set to true only for ablation study
+        if (false) {
+            createCompletelyNewMapping(topology);
+            return;
+        }
+
         // create copy because the row is only a view and modifications would alter the mapping of the parent group
         Map<String, Long> newMapping = new HashMap<>(this.connectionMapping.row(oldGroupID));
 
@@ -422,6 +450,28 @@ public class PacoPheromone {
         }
 
         newMapping.forEach((k, v) -> this.connectionMapping.put(topology.getTopologyGroupID(), k, v));
+    }
+
+    private void createCompletelyNewMapping(TopologyData template) {
+        List<NeuronID> possibleSources = IntStream.range(0, template.getInstance().getDepth())
+                .mapToObj(template.getInstance()::getNeuronsOfLayer)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        // input neurons can be sources but not targets
+        List<NeuronID> possibleTargets = possibleSources.stream()
+                .filter(Predicate.not(template.getInstance()::isInputNeuron))
+                .collect(Collectors.toList());
+
+        for (NeuronID possibleSource : possibleSources) {
+            for (NeuronID possibleTarget : possibleTargets) {
+                Connection connection = new Connection(possibleSource, possibleTarget, 0);
+                if (checkConnectionRecurrence(connection, template.getInstance())) {
+                    String connectionKey = createConnectionKey(connection);
+                    this.connectionMapping.put(template.getTopologyGroupID(), connectionKey, this.connectionMappingCounter.getAndIncrement());
+                }
+            }
+        }
     }
 
     private void createMappingsForNewConnections(NeuralNetwork template, Map<String, Long> newMapping, NeuronID splitResult) {
@@ -467,7 +517,7 @@ public class PacoPheromone {
         NeuronID start = connection.start();
         NeuronID end = connection.end();
 
-        if (start.equals(end)) {
+        if (start.equals(end) || this.configuration.getValue(ENABLE_NEURON_ISOLATION, Boolean.class)) {
             // self recurrent connections can always be removed
             return true;
         }
@@ -519,13 +569,14 @@ public class PacoPheromone {
     private double calculateNewValueDependingOnPopulationKnowledge(double srcValue, Collection<Double> populationValues) {
         double value;
 
-        double maxValue = this.baseNetwork.getMaxWeightValue();
-        double minValue = this.baseNetwork.getMinWeightValue();
+        double maxValue = this.baseNetwork.get(0).getMaxWeightValue();
+        double minValue = this.baseNetwork.get(0).getMinWeightValue();
 
         if (populationValues == null || populationValues.isEmpty()) {
             // choose value randomly because no knowledge exists
             value = this.rng.getNextDouble(minValue, maxValue);
         } else {
+//            double deviation = this.configuration.getValue(STATIC_STANDARD_DEVIATION, Double.class); // TODO uncomment for ablation test
             double deviation = calculateDeviation(populationValues, srcValue);
             // select new value if it is out of bounds
             do {

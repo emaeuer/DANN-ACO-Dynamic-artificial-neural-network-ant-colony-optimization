@@ -15,6 +15,10 @@ public class FitnessBasedPopulation extends AbstractPopulation<PriorityQueue<Pac
         super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability).thenComparingDouble(PacoAnt::getFitness)), baseNetwork, rng);
     }
 
+    public FitnessBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        super(configuration, new PriorityQueue<>(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability).thenComparingDouble(PacoAnt::getFitness)), baseNetwork, rng);
+    }
+
     @Override
     public Optional<PacoAnt> addAnt(PacoAnt ant) {
         checkAndSetIfGlobalBest(ant);

@@ -15,6 +15,10 @@ public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> 
         super(configuration, new LinkedList<>(), baseNetwork, rng);
     }
 
+    public AgeBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        super(configuration, new LinkedList<>(), baseNetwork, rng);
+    }
+
     @Override
     public Optional<PacoAnt> addAnt(PacoAnt ant) {
         checkAndSetIfGlobalBest(ant);

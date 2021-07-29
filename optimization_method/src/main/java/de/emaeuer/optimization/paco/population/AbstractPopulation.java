@@ -44,6 +44,17 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
         this.pheromone = new PacoPheromone(this.configuration, baseNetwork, rng);
     }
 
+    protected AbstractPopulation(ConfigurationHandler<PacoConfiguration> configuration, T emptyPopulation, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        this.configuration = configuration;
+        this.maxSize = configuration.getValue(PacoConfiguration.POPULATION_SIZE, Integer.class);
+        this.useElitism = configuration.getValue(PacoConfiguration.ELITISM, Boolean.class);
+        this.updatesPerIteration = configuration.getValue(PacoConfiguration.UPDATES_PER_ITERATION, Integer.class);
+        this.population = emptyPopulation;
+        this.rng = rng;
+
+        this.pheromone = new PacoPheromone(this.configuration, baseNetwork, rng);
+    }
+
     public List<PacoAnt> nextGeneration()  {
         this.currentAnts.clear();
 

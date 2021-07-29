@@ -22,6 +22,11 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
         this.similarityThreshold = configuration.getValue(PacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, Double.class);
     }
 
+    public InnovationProtectingPopulation(ConfigurationHandler<PacoConfiguration> configuration, List<NeuralNetwork> baseNetwork, RandomUtil rng) {
+        super(configuration, baseNetwork, rng);
+        this.similarityThreshold = configuration.getValue(PacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, Double.class);
+    }
+
     @Override
     public void updatePheromone() {
         addedTopologies.clear();
