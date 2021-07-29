@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class VariationLauncher {
 
@@ -19,18 +22,27 @@ public class VariationLauncher {
         System.setProperty("logFilename", "variation" + System.currentTimeMillis());
 
         MultiVariationParameterIterator iter = new MultiVariationParameterIterator();
-        iter.addParameter(new IntegerVariationValue("-m", 10, 50, 20));
-//        iter.addParameter(new IntegerVariationValue("-k", 10, 22, 4));
+//        iter.addParameter(new IntegerVariationValue("-m", 3, 21, 3));
+//        iter.addParameter(new IntegerVariationValue("-k", 4, 15, 1));
+//        iter.addParameter(new IntegerVariationValue("-o", 1, 3, 1));
+//        iter.addParameter(new DoubleVariationParameter("-q", 0.01, 0.3, 50));
+        iter.addParameter(new DoubleVariationParameter("-ac", 0.001, 0.9, 50));
+//        iter.addParameter(new DoubleVariationParameter("-bT", 0.5, 5, 20));
+        iter.addParameter(new DoubleVariationParameter("-cc", 0.001, 0.9, 50));
 
-        String configFile = "configurations/variation/flappy_bird_configuration.json";
+        String configFile = "configurations/variation/xor.json";
 
         List<String> defaultArgs = new ArrayList<>();
         defaultArgs.add("--configFile");
         defaultArgs.add(configFile);
+        defaultArgs.add("--maxTime");
+        defaultArgs.add("300000");
         defaultArgs.add("dannaco");
+        defaultArgs.add("-bc");
+        defaultArgs.add("0.9503");
 
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
-        executor.setMaximumPoolSize(1000);
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(20);
+        executor.setMaximumPoolSize(10000);
 
         System.out.println("┌──────────────────────────────────────────┬──────────┬────────┬──────────────┬──────────────┬─────────────┬────────────────────────────────────────────────────────────────────────────────────────────┐");
         System.out.printf("│ %40s │ %8s │ %6s │ %12s │ %12s │ %11s │ %90s │%n", "Konfiguration", "Kosten", "Zeit", "Neurone", "Verbindungen", "Erfolgsrate", "Modifikationen");
@@ -40,12 +52,22 @@ public class VariationLauncher {
             executor.execute(() -> {
                 StringBuilder configSummary = new StringBuilder();
 
+                AtomicReference<Double> sum = new AtomicReference<>(0.0);
                 List<String> cliParameters = new ArrayList<>(defaultArgs);
                 staticParameters.forEach(p -> {
                     configSummary.append(String.format("[%s = %s]", p.name(), p.value()));
+
+                    if ("-ac".equals(p.name()) || "-cc".equals(p.name())) {
+                        sum.getAndUpdate(d -> d + Double.parseDouble(p.value().toString()));
+                    }
+
                     cliParameters.add(p.name());
                     cliParameters.add(p.value().toString());
                 });
+
+                if (sum.get() > 1) {
+                    return;
+                }
 
                 CliLauncher launcher = new CliLauncher(cliParameters.toArray(new String[0]));
                 launcher.run();

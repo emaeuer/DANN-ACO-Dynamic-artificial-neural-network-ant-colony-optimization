@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_cart_pole_complete.Rdata"
+fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_xor_recurrent.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 
@@ -23,11 +23,11 @@ parameterFrequency(iraceResults$allConfigurations, iraceResults$parameters)
 # Get last iteration number
 last <- length(iraceResults$iterationElites)
 # Get configurations in the last two iterations
-# conf <- getConfigurationByIteration(iraceResults = iraceResults,
-# iterations = c(last - 1, last))
-# parallelCoordinatesPlot (conf, iraceResults$parameters,
-# param_names = c("betaC", "gammaC", "eta", "zeta", "delta", "epsilon", "theta"),
-# hierarchy = FALSE)
+conf <- getConfigurationByIteration(iraceResults = iraceResults,
+iterations = c(last - 1, last))
+parallelCoordinatesPlot (conf, iraceResults$parameters,
+param_names = c("betaC", "gammaC", "eta", "zeta", "delta", "epsilon", "theta"),
+hierarchy = FALSE)
 
 ########################################
 #Show box plots

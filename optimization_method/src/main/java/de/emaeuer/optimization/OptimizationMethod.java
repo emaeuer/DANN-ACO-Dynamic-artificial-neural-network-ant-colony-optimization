@@ -203,12 +203,15 @@ public abstract class OptimizationMethod {
     }
 
     public boolean checkCurrentRunFinished() {
-        boolean generalizationFinished = this.configuration.getValue(OptimizationConfiguration.TEST_GENERALIZATION, Boolean.class)
-                && getBestGeneralizationCapability() >= this.configuration.getValue(OptimizationConfiguration.GENERALIZATION_CAPABILITY_THRESHOLD, Double.class);
+        boolean generalizationFinished = getBestGeneralizationCapability() >= this.configuration.getValue(OptimizationConfiguration.GENERALIZATION_CAPABILITY_THRESHOLD, Double.class);
         boolean maxFitnessReached = getBestFitness() >= this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
         boolean maxEvaluationsReached = this.evaluationCounter >= this.configuration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
 
-        return generalizationFinished || maxFitnessReached || maxEvaluationsReached;
+        if (this.configuration.getValue(OptimizationConfiguration.TEST_GENERALIZATION, Boolean.class)) {
+            return (generalizationFinished && maxFitnessReached) || maxEvaluationsReached;
+        } else {
+            return maxFitnessReached || maxEvaluationsReached;
+        }
     }
 
     protected void handleProgressionStagnation() {

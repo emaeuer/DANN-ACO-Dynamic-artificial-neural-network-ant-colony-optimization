@@ -24,7 +24,7 @@ public class StringConfigurationValue extends AbstractConfigurationValue<String>
         if (possibleValues == null || possibleValues.isEmpty() || possibleValues.contains(value)) {
             this.value = value;
         } else {
-            throw new IllegalArgumentException("Value is not one of the possible values");
+            throw new IllegalArgumentException(String.format("Value \"%s\" is not one of the possible values %s", value, this.possibleValues));
         }
     }
 

@@ -50,9 +50,9 @@ public class CliLauncher {
         CommandLine.ParseResult result = new CommandLine(parameters).parseArgs(args);
 
         if (result.hasSubcommand()) {
-            initConfigurations(parameters.getConfigFile(), result.subcommand().commandSpec().userObject());
+            initConfigurations(parameters, result.subcommand().commandSpec().userObject());
         } else {
-            initConfigurations(parameters.getConfigFile(), null);
+            initConfigurations(parameters, null);
         }
     }
 
@@ -63,26 +63,26 @@ public class CliLauncher {
         CommandLine.ParseResult result = new CommandLine(parameters).parseArgs(args);
 
         if (result.hasSubcommand()) {
-            initConfigurations(parameters.getConfigFile(), result.subcommand().commandSpec().userObject());
+            initConfigurations(parameters, result.subcommand().commandSpec().userObject());
         } else {
-            initConfigurations(parameters.getConfigFile(), null);
+            initConfigurations(parameters, null);
         }
 
-        // seed of the environment should not be changed to have the same difficulty
-//        this.environmentConfiguration.setValue(EnvironmentConfiguration.SEED, seed);
         this.configuration.setValue(EvaluationConfiguration.SEED, seed);
     }
 
-    private void initConfigurations(File file, Object parameters) {
+    private void initConfigurations(CliParameter basicParameters, Object parameters) {
         ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration, OptimizationConfiguration.class, EvaluationConfiguration.OPTIMIZATION_CONFIGURATION);
         ConfigurationHandler<EnvironmentConfiguration> environmentConfig = ConfigurationHelper.extractEmbeddedConfiguration(this.configuration, EnvironmentConfiguration.class, EvaluationConfiguration.ENVIRONMENT_CONFIGURATION);
         optimizationConfig.setName("OPTIMIZATION_CONFIGURATION");
         environmentConfig.setName("ENVIRONMENT_CONFIGURATION");
         this.configuration.setName("CONFIGURATION");
 
-        if (file != null && file.exists()) {
-            ConfigurationIOHandler.importConfiguration(file, this.configuration);
+        if (basicParameters.getConfigFile() != null && basicParameters.getConfigFile().exists()) {
+            ConfigurationIOHandler.importConfiguration(basicParameters.getConfigFile(), this.configuration);
         }
+
+        this.configuration.setValue(EvaluationConfiguration.MAX_TIME, basicParameters.getMaxTime());
 
         if (parameters == null) {
             return;
@@ -151,7 +151,7 @@ public class CliLauncher {
             // use nanos for file name to have unique file names
             long nanos = System.nanoTime();
             config.setValue(NeatConfiguration.ID_FILE, String.format("neat/id_%d.xml", nanos));
-            config.setValue(NeatConfiguration.NEAT_ID_FILE, String.format("neat/id_%d.xml", nanos));
+            config.setValue(NeatConfiguration.NEAT_ID_FILE, String.format("neat/neat_id_%d.xml", nanos));
         } else {
             LOG.warn("Failed to apply parameters of type {} to NeatConfiguration", parameterObj.getClass().getSimpleName());
         }
