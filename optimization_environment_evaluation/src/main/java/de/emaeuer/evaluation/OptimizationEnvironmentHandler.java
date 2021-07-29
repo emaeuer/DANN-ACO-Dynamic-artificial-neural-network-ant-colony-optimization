@@ -31,6 +31,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
 
     private int maxEvaluations = 1;
     private int maxRuns = 1;
+    private int maxTime = 0;
     private double maxFitness = 1;
 
     private int evaluationCounter = 0;
@@ -58,6 +59,8 @@ public class OptimizationEnvironmentHandler implements Runnable {
     private Thread updateThread;
 
     public void initialize() {
+        this.maxTime = this.configuration.getValue(EvaluationConfiguration.MAX_TIME, Integer.class);
+
         if (this.configuration != null) {
             createEnvironment();
         } else {
@@ -217,7 +220,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 try {
                     update();
 
-                    if (System.currentTimeMillis() - startTime > 300000) {
+                    if (this.maxTime > 0 && System.currentTimeMillis() - startTime > this.maxTime) {
                         throw new TimeoutException("Optimization took to long");
                     }
                 } finally {

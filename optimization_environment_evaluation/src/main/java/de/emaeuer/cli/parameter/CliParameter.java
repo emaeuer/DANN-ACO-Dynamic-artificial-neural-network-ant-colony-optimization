@@ -9,7 +9,14 @@ public class CliParameter {
     @CommandLine.Option(names = "--configFile")
     private File configFile;
 
+    @CommandLine.Option(names = "--maxTime")
+    private int maxTime;
+
     public File getConfigFile() {
         return configFile;
+    }
+
+    public int getMaxTime() {
+        return maxTime;
     }
 }

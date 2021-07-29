@@ -10,6 +10,7 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import java.util.function.BiConsumer;
 
 public enum EvaluationConfiguration implements DefaultConfiguration<EvaluationConfiguration> {
+    MAX_TIME("Maximum optimization time in seconds", new IntegerConfigurationValue(0, 0, Integer.MAX_VALUE)),
     OPTIMIZATION_CONFIGURATION("Optimization configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(OptimizationConfiguration.class))),
     ENVIRONMENT_CONFIGURATION("Environment configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(EnvironmentConfiguration.class))),
     SEED("Seed of the evaluation", new IntegerConfigurationValue(9369319),

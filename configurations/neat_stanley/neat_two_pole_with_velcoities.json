@@ -6,7 +6,7 @@
         "CONFIG_TYPE": "de.emaeuer.environment.configuration.EnvironmentConfiguration",
         "SEED": "9369319",
         "MAX_FITNESS_SCORE": "1.0",
-        "ENVIRONMENT_IMPLEMENTATION_NAME": "CART_POLE",
+        "ENVIRONMENT_IMPLEMENTATION_NAME": "ONE_DIMENSIONAL_CART_POLE",
         "ENVIRONMENT_IMPLEMENTATION": {
             "ANGLE_THRESHOLD": "0.6283185307179586",
             "POLE_TWO_ANGLE": "0.0",
@@ -21,7 +21,7 @@
             "FORCE_MAGNITUDE": "10.0",
             "PIVOT_FRICTION": "2.0E-6",
             "PENALIZE_OSCILLATION": "false",
-            "CONFIG_TYPE": "de.emaeuer.environment.balance.configuration.CartPoleConfiguration",
+            "CONFIG_TYPE": "de.emaeuer.environment.balance.onedim.configuration.CartPoleConfiguration",
             "CART_MASS": "1.0",
             "TRACK_LENGTH": "4.8",
             "VELOCITY_INPUT": "true",
