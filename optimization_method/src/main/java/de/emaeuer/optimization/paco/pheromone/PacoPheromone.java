@@ -467,7 +467,7 @@ public class PacoPheromone {
         NeuronID start = connection.start();
         NeuronID end = connection.end();
 
-        if (start.equals(end) || this.configuration.getValue(ENABLE_NEURON_ISOLATION, Boolean.class)) {
+        if (start.equals(end)) {
             // self recurrent connections can always be removed
             return true;
         }
