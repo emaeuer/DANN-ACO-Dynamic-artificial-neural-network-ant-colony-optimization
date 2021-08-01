@@ -118,10 +118,12 @@ public class CliLauncher {
             Optional.ofNullable(parameters.isReuseSplitKnowledge()).ifPresent(v -> config.setValue(PacoConfiguration.REUSE_SPLIT_KNOWLEDGE, v));
             Optional.ofNullable(parameters.getUpsilon()).ifPresent(v -> config.setValue(PacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, v));
 
+            Optional.ofNullable(parameters.getModificationRate()).ifPresent(v -> config.setValue(PacoConfiguration.MODIFICATION_RATE, v));
             Optional.ofNullable(parameters.getAddConnectionRate()).ifPresent(v -> config.setValue(PacoConfiguration.ADD_CONNECTION_MUTATION_RATE, v));
             Optional.ofNullable(parameters.getRemoveConnectionRate()).ifPresent(v -> config.setValue(PacoConfiguration.REMOVE_CONNECTION_MUTATION_RATE, v));
             Optional.ofNullable(parameters.getAddNeuronRate()).ifPresent(v -> config.setValue(PacoConfiguration.ADD_NEURON_MUTATION_RATE, v));
             Optional.ofNullable(parameters.getStaticStandardDeviation()).ifPresent(v -> config.setValue(PacoConfiguration.STATIC_STANDARD_DEVIATION, v));
+            Optional.ofNullable(parameters.getSplitRate()).ifPresent(v -> config.setValue(PacoConfiguration.SPLIT_RATE, v));
         } else {
             LOG.warn("Failed to apply parameters of type {} to PacoConfiguration", parameterObj.getClass().getSimpleName());
         }

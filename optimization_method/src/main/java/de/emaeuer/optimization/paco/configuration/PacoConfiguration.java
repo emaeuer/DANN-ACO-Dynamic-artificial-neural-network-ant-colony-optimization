@@ -28,9 +28,11 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     REUSE_SPLIT_KNOWLEDGE("Link the first connection of a split to the knowledge of the old connection", new BooleanConfigurationValue(false)),
     // TODO remove just for ablation test
     STATIC_STANDARD_DEVIATION("Static standard deviation", new DoubleConfigurationValue(0.2, 0.0001, 10)),
-    ADD_CONNECTION_MUTATION_RATE("Static add connection mutation rate", new DoubleConfigurationValue(0.2, 0, 1)),
-    REMOVE_CONNECTION_MUTATION_RATE("Static remove connection mutation rate", new DoubleConfigurationValue(0.2, 0, 1)),
-    ADD_NEURON_MUTATION_RATE("Static add neuron mutation rate", new DoubleConfigurationValue(0.2, 0, 1));
+    ADD_CONNECTION_MUTATION_RATE("Static add connection modification rate", new DoubleConfigurationValue(0.2, 0, 1)),
+    REMOVE_CONNECTION_MUTATION_RATE("Static remove connection modification rate", new DoubleConfigurationValue(0.2, 0, 1)),
+    ADD_NEURON_MUTATION_RATE("Static add neuron modification rate", new DoubleConfigurationValue(0.2, 0, 1)),
+    MODIFICATION_RATE("Static modification rate", new DoubleConfigurationValue(0.2, 0, 1)),
+    SPLIT_RATE("Static split rate", new DoubleConfigurationValue(0.2, 0, 1));
 
 
     private final String name;

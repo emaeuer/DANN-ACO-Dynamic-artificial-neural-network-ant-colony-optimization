@@ -284,8 +284,8 @@ public class PacoPheromone {
     }
 
     private boolean templateIsDynamic(TopologyData topology) {
-//        return 0.5 > this.rng.getNextDouble(0, 1); // TODO uncomment for ablation test
-        return calculateTopologyPheromone(topology) > this.rng.getNextDouble(0, 1);
+        return this.configuration.getValue(MODIFICATION_RATE, Double.class) > this.rng.getNextDouble(0, 1); // TODO uncomment for ablation test
+//        return calculateTopologyPheromone(topology) > this.rng.getNextDouble(0, 1);
     }
 
     private void removeConnection(TopologyData topology, Connection dynamicElement) {
@@ -380,6 +380,11 @@ public class PacoPheromone {
     }
 
     private boolean isSplitInsteadOfRemove(Connection connection, TopologyData topology) {
+        // TODO set to true for ablation
+        if (true) {
+            return this.configuration.getValue(SPLIT_RATE, Double.class) > this.rng.nextDouble();
+        }
+
         int groupID = topology.getTopologyGroupID();
 
         double topologyPheromone = calculateTopologyPheromone(topology);

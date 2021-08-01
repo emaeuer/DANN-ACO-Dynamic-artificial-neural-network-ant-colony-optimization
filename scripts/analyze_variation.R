@@ -64,11 +64,12 @@ parseTableToDataFrame <- function(filepath) {
     }
     row_data <- str_split(line, "\\s*│\\s*")[[1]]
     row <- c(row, extractConfiguration(row_data[2]))
-    row <- c(row, evaluations = extractNumber(row_data[3]))
-    row <- c(row, neurons = extractNumber(row_data[5]))
-    row <- c(row, connections = extractNumber(row_data[6]))
-    row <- c(row, successRate = extractNumber(row_data[7]))
-    row <- c(row, extractModifications(row_data[8]))
+    row <- c(row, problem = row_data[3])
+    row <- c(row, evaluations = extractNumber(row_data[4]))
+    row <- c(row, neurons = extractNumber(row_data[6]))
+    row <- c(row, connections = extractNumber(row_data[7]))
+    row <- c(row, successRate = extractNumber(row_data[8]))
+    row <- c(row, extractModifications(row_data[9]))
 
     result <- rbind(result, row)
   }

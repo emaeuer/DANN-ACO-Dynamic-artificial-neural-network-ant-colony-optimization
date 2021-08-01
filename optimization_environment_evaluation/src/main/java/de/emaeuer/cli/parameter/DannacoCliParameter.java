@@ -71,6 +71,9 @@ public class DannacoCliParameter {
     @CommandLine.Option(names = "-u")
     private Double upsilon;
 
+    @CommandLine.Option(names = "-mr")
+    private Double modificationRate;
+
     @CommandLine.Option(names = "-acr")
     private Double addConnectionRate;
 
@@ -79,6 +82,9 @@ public class DannacoCliParameter {
 
     @CommandLine.Option(names = "-anr")
     private Double addNeuronRate;
+
+    @CommandLine.Option(names = "-sr")
+    private Double splitRate;
 
     @CommandLine.Option(names = "-ssd")
     private Double staticStandardDeviation;
@@ -180,5 +186,13 @@ public class DannacoCliParameter {
 
     public Double getStaticStandardDeviation() {
         return staticStandardDeviation;
+    }
+
+    public Double getModificationRate() {
+        return modificationRate;
+    }
+
+    public Double getSplitRate() {
+        return splitRate;
     }
 }
