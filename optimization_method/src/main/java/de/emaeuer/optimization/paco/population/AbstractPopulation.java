@@ -157,4 +157,8 @@ public abstract class AbstractPopulation<T extends Collection<PacoAnt>> {
     public void exportModificationCounts(StateHandler<PacoState> state) {
         this.pheromone.exportModificationCounts(state);
     }
+
+    public void exportDeviation(StateHandler<PacoState> state) {
+        this.pheromone.exportDeviation(state);
+    }
 }

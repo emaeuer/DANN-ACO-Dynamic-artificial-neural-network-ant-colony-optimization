@@ -14,7 +14,11 @@ extractConfiguration <- function (configuration_str) {
   for (component in configuration_components) {
     component_parts <- str_split(component, "=")[[1]]
     name <- component_parts[1]
-    value <- as.numeric(component_parts[2])
+    value <- component_parts[2]
+
+    if (!is.na(as.numeric(value))) {
+      value <- as.numeric(value)
+    }
 
     map[[name]] <- value
 
@@ -29,7 +33,7 @@ extractNumber <- function (number_str) {
 }
 
 extractModifications <- function (modification_str) {
-  map <- list()
+  map <- list(ADD = 0, REMOVE = 0, NOTHING = 0, SPLIT = 0)
 
   # ADD:5516 (0,03), REMOVE:6477 (0,03), NOTHING:92605 (0,48), SPLIT:89875 (0,46)
 
@@ -43,7 +47,9 @@ extractModifications <- function (modification_str) {
     name <- component_parts[1]
     value <- as.numeric(component_parts[2])
 
-    map[[name]] <- value
+    if (name != "") {
+      map[[name]] <- value
+    }
   }
 
   return(map)
@@ -51,8 +57,6 @@ extractModifications <- function (modification_str) {
 
 parseTableToDataFrame <- function(filepath) {
   result <- data.frame()
-
-  filepath <- "C:/Users/emaeu/Desktop/connection_variation_result.txt"
   file <- file(filepath, "r")
 
   while (TRUE) {
@@ -78,17 +82,45 @@ parseTableToDataFrame <- function(filepath) {
   return(result)
 }
 
-data <- parseTableToDataFrame(filepath <- "C:/Users/emaeu/Desktop/variation_result.txt")
+data <- parseTableToDataFrame("temp/variation_solutions_per_iteration.result")
 
 filteredData <- data %>%
   rowwise() %>%
-  filter(is.finite(evaluations))
+  mutate(iterations = evaluations / solutionsPerIteration)
 
-ggplot(filteredData, aes(x = alphaC, y = gammaC, fill = connections)) +
+ggplot(filteredData, aes(x = solutionsPerIteration, color = problem)) +
+  geom_smooth(aes(y = evaluations, linetype = "Evaluationen"), method = lm, formula = y ~ log(x, 2)) +
+  geom_smooth(aes(y = iterations * 50, linetype = "Iterationen"), method = lm, formula = y ~ log(x, 2)) +
+  scale_y_continuous(name = "Evaluationen", sec.axis = sec_axis(~./50, name = "Iterationen")) +
+  theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
+        axis.title.y=element_text(size = 18, family = "LM Roman 10"),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
+        axis.text = element_text(size = 18, family = "LM Roman 10"),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12, family = "LM Roman 10"))
+
+
+# filteredData <- data %>%
+#   rowwise() %>%
+#   group_by(populationSize, updateStrategy, updatesPerIteration) %>%
+#   slice(which.min(evaluations))
+
+ggplot(data, aes(x = populationSize, y = updatesPerIteration, fill = evaluations)) +
   geom_tile() +
+  geom_text(aes(label = elitism)) +
   scale_fill_viridis(discrete=FALSE, direction = -1) +
+  facet_wrap(problem ~ .)
   theme(axis.title.x=element_text(size = 18, family = "LM Roman 10"),
         axis.title.y=element_text(size = 18, family = "LM Roman 10"),
         panel.border = element_rect(colour = "black", fill=NA, size=1),
         plot.title = element_text(family = "LM Roman 10", hjust = 0.5, size=24, margin=margin(0,0,15,0)),
         axis.text = element_text(size = 18, family = "LM Roman 10"))
+
+# data <- parseTableToDataFrame(filepath <- "temp/variation.result")
+#
+# filteredData <- data %>%
+#   group_by(problem) %>%
+#   mutate(rank = rank(evaluations, ties.method = "first")) %>%
+#   group_by(deviation) %>%
+#   summarise(rank_sum = sum(rank), evaluations = mean(evaluations), neurons = mean(neurons), connections = mean(connections), successRate = mean(successRate))

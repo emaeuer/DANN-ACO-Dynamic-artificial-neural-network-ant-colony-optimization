@@ -1,9 +1,8 @@
 package de.emaeuer.optimization.paco.state;
 
+import de.emaeuer.configuration.value.DoubleConfigurationValue;
 import de.emaeuer.state.StateParameter;
-import de.emaeuer.state.value.AbstractStateValue;
-import de.emaeuer.state.value.CumulatedDataSeriesStateValue;
-import de.emaeuer.state.value.MapOfStateValue;
+import de.emaeuer.state.value.*;
 
 public enum PacoRunState implements StateParameter<PacoRunState> {
     CONNECTION_WEIGHTS_SCATTERED("Weight distribution in population", MapOfStateValue.class),

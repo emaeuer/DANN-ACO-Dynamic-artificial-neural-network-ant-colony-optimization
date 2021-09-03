@@ -11,6 +11,7 @@ import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
 import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.CollectionDistributionStateValue;
 import de.emaeuer.state.value.GraphStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,7 +128,7 @@ public abstract class OptimizationMethod {
     }
 
     private void updateGeneralState() {
-        boolean finishedPremature = getBestFitness() >= this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
+        boolean finishedPremature = checkCurrentRunFinished() && this.evaluationCounter < this.configuration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
 
         this.generalState.execute(t -> {
             t.addNewValue(OptimizationState.EVALUATION_DISTRIBUTION, Integer.valueOf(this.evaluationCounter).doubleValue());
@@ -148,7 +149,7 @@ public abstract class OptimizationMethod {
     }
 
     private void updateRunState() {
-        boolean finishedPremature = getBestFitness() >= this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class);
+        boolean finishedPremature = checkCurrentRunFinished() && this.evaluationCounter < this.configuration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class);
 
         this.runState.execute(t -> {
             t.export(OptimizationRunState.CURRENT_BEST_SOLUTION);

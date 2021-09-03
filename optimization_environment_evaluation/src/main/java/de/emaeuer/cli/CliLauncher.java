@@ -10,21 +10,21 @@ import de.emaeuer.evaluation.EvaluationConfiguration;
 import de.emaeuer.evaluation.OptimizationEnvironmentHandler;
 import de.emaeuer.optimization.OptimizationMethodNames;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
+import de.emaeuer.optimization.configuration.OptimizationRunState;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.neat.configuration.NeatConfiguration;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.persistence.ConfigurationIOHandler;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.value.DistributionStateValue;
-import de.emaeuer.state.value.GraphStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
-import java.io.File;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class CliLauncher {
 
@@ -218,4 +218,18 @@ public class CliLauncher {
     public StateHandler<OptimizationState> getOptimizationState() {
         return optimizationState;
     }
+
+    public String getAllEvaluations() {
+        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION))
+                .getValue()
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(","));
+    }
+
+    public double getEvaluations() {
+        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION))
+                .getMean();
+    }
+
 }

@@ -17,14 +17,24 @@ import java.util.List;
 
 public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizationConfiguration> {
 
+    private enum Phases {
+        NORMAL,
+        GENERALIZATION_LONG_TEST,
+        GENERALIZATION_VARIATION_TEST
+    }
+
     private static final double CART_Y = 600;
 
     private boolean areAllCartsDead = false;
 
-    private GeneralCartPoleData cartPoleData;
+    private final GeneralCartPoleData cartPoleData;
 
     private final ConfigurationHandler<CartPoleConfiguration> configuration;
     private final ConfigurationHandler<CartPoleGeneralizationConfiguration> generalizationConfig;
+
+    private Phases currentPhase = Phases.NORMAL;
+
+    private boolean currentPhaseSuccess = false;
 
     public CartPoleEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         super(null, configuration);
@@ -62,6 +72,8 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
     public void restart() {
         super.restart();
         this.areAllCartsDead = false;
+        this.currentPhase = Phases.NORMAL;
+        this.currentPhaseSuccess = false;
     }
 
     @Override
@@ -91,13 +103,42 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
     }
 
     @Override
+    public void testGeneralization() {
+        super.testGeneralization();
+    }
+
+    @Override
     public void nextGeneralizationIteration() {
         super.nextGeneralizationIteration();
+
+        if (this.currentPhase == Phases.GENERALIZATION_LONG_TEST && !this.currentPhaseSuccess) {
+            setFinishedGeneralization(true);
+            setTestingGeneralization(false);
+        }
 
         if (finishedGeneralization()) {
             return;
         }
 
+        if (this.currentPhase == Phases.NORMAL) {
+            initLongTest();
+        } else if (this.currentPhase == Phases.GENERALIZATION_LONG_TEST) {
+            initVariationTest();
+        }
+    }
+
+    private void initLongTest() {
+        this.currentPhase = Phases.GENERALIZATION_LONG_TEST;
+        this.currentPhaseSuccess = false;
+        getAgents().stream()
+                .map(AgentController::copy)
+                .map(this::buildCartPole)
+                .forEach(cart -> getAgentsToDraw().add(cart));
+    }
+
+    private void initVariationTest() {
+        this.currentPhase = Phases.GENERALIZATION_VARIATION_TEST;
+        this.currentPhaseSuccess = false;
         while (!this.getGeneralizationHandler().reachedEnd()) {
             for (AgentController agent : getAgents()) {
                 AgentController copy = agent.copy();
@@ -123,12 +164,18 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
     }
 
     private void checkReachedMaxStepNumber(Cart cart) {
-        if (!isTestingGeneralization() && cart.getStep() >= getMaxStepNumber()) {
+        if (this.currentPhase == Phases.NORMAL && cart.getStep() >= getMaxStepNumber()) {
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
-        } else if (isTestingGeneralization() && cart.getStep() >= getMaxGeneralizationStepNumber()) {
+            this.currentPhaseSuccess = true;
+        } else if (this.currentPhase == Phases.GENERALIZATION_LONG_TEST && cart.getStep() >= 100000) { // TODO extract long test step number to configuration
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
+            this.currentPhaseSuccess = true;
+        } else if (this.currentPhase == Phases.GENERALIZATION_VARIATION_TEST && cart.getStep() >= getMaxGeneralizationStepNumber()) {
+            cart.setDead(true);
+            setControllerFinishedWithoutDying(true);
+            this.currentPhaseSuccess = true;
 
             AgentController origin = getOriginControllers().get(cart.getController());
             origin.setGeneralizationCapability(origin.getGeneralizationCapability() + (1.0 / getGeneralizationHandler().getNumberOfGeneralizationIterations()));

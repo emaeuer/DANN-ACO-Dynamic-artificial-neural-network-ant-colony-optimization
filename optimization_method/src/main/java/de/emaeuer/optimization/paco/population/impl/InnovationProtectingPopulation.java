@@ -64,8 +64,6 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
         if (getSize() < getMaxSize()) {
             addedTopologies.add(topology);
             return super.addAnt(ant);
-        } else if (this.addedTopologies.contains(topology)) {
-            return Optional.empty();
         } else if (addedTopologies.isEmpty()) {
             // first ant of iteration is always added regardless of fitness
             addedTopologies.add(topology);

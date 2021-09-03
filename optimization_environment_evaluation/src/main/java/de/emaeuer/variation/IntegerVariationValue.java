@@ -43,6 +43,6 @@ public class IntegerVariationValue extends VariationParameter<Integer> {
 
     @Override
     public String toString() {
-        return getName() + " = " + this.currentValue;
+        return String.format("[%s = %d]", getName(), currentValue);
     }
 }

@@ -597,6 +597,9 @@ public class PacoPheromone {
     //#################### Util Methods ##########################
     //############################################################
 
+    private double sum = 0;
+    private long number = 0;
+
     private double calculateDeviation(Collection<Double> populationValues, double mean) {
         double sumOfDifferences = populationValues.stream()
                 .mapToDouble(d -> d)
@@ -612,7 +615,12 @@ public class PacoPheromone {
 
         builder.with(PacoParameter.NUMBER_OF_VALUES_PENALTY, penalty);
 
-        return this.configuration.getValue(DEVIATION_FUNCTION, Double.class, builder.getVariables());
+        double deviation = this.configuration.getValue(DEVIATION_FUNCTION, Double.class, builder.getVariables());
+
+        this.sum += deviation;
+        this.number++;
+
+        return deviation;
     }
 
     private double calculateTopologyPheromone(TopologyData topology) {
@@ -689,6 +697,10 @@ public class PacoPheromone {
     public void exportModificationCounts(StateHandler<PacoState> state) {
         state.execute(s -> s.addNewValue(PacoState.MODIFICATION_DISTRIBUTION, this.modificationCounts));
         this.modificationCounts.clear();
+    }
+
+    public void exportDeviation(StateHandler<PacoState> runState) {
+        runState.execute(s -> s.addNewValue(PacoState.AVERAGE_STANDARD_DEVIATION, this.sum / this.number));
     }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, int groupID) {
