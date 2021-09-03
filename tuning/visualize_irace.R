@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_xor_recurrent.Rdata"
+fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_cart_two_dim.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 
@@ -14,20 +14,20 @@ getFinalElites(logFile = fileName, n = 0)
 # show parameter frequencies
 ########################################
 
-parameterFrequency(iraceResults$allConfigurations, iraceResults$parameters)
+# parameterFrequency(iraceResults$allConfigurations, iraceResults$parameters)
 
 ########################################
 #Show parallel coordinates
 ########################################
 
-# Get last iteration number
-last <- length(iraceResults$iterationElites)
-# Get configurations in the last two iterations
-conf <- getConfigurationByIteration(iraceResults = iraceResults,
-iterations = c(last - 1, last))
-parallelCoordinatesPlot (conf, iraceResults$parameters,
-param_names = c("betaC", "gammaC", "eta", "zeta", "delta", "epsilon", "theta"),
-hierarchy = FALSE)
+# # Get last iteration number
+# last <- length(iraceResults$iterationElites)
+# # Get configurations in the last two iterations
+# conf <- getConfigurationByIteration(iraceResults = iraceResults,
+# iterations = c(last - 1, last))
+# parallelCoordinatesPlot (conf, iraceResults$parameters,
+# param_names = c("betaC", "gammaC", "eta", "zeta", "delta", "epsilon", "theta"),
+# hierarchy = FALSE)
 
 ########################################
 #Show box plots

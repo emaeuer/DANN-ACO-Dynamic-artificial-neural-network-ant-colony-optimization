@@ -1,11 +1,11 @@
 {"CONFIGURATION": {
+    "MAX_TIME": "0",
     "CONFIG_TYPE": "de.emaeuer.evaluation.EvaluationConfiguration",
     "GENERALIZATION_CAPABILITY": "0.5",
     "ENVIRONMENT_CONFIGURATION": {
         "MAX_STEP_NUMBER": "100000.0",
         "CONFIG_TYPE": "de.emaeuer.environment.configuration.EnvironmentConfiguration",
         "SEED": "9369319",
-        "MAX_FITNESS_SCORE": "100000.0",
         "ENVIRONMENT_IMPLEMENTATION_NAME": "FLAPPY_BIRD",
         "ENVIRONMENT_IMPLEMENTATION": {
             "PIPE_VELOCITY": "4",
@@ -25,13 +25,13 @@
         "GENERALIZATION_MAX_FITNESS_SCORE": "10000.0"
     },
     "SEED": "9369319",
-    "MAX_FITNESS_SCORE": "100000.0",
+    "MAX_FITNESS_SCORE": "1.0",
     "TEST_GENERALIZATION": "false",
     "OPTIMIZATION_CONFIGURATION": {
         "PROGRESSION_ITERATIONS": "200",
         "CONFIG_TYPE": "de.emaeuer.optimization.configuration.OptimizationConfiguration",
         "SEED": "9369319",
-        "MAX_FITNESS_SCORE": "100000.0",
+        "MAX_FITNESS_SCORE": "1.0",
         "NUMBER_OF_RUNS": "1",
         "IMPLEMENTATION_CONFIGURATION": {
             "PRUNE_MUTATION_RATE": "1.0",

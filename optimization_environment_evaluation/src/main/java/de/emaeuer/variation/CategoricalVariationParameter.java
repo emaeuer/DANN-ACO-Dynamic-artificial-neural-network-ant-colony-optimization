@@ -37,6 +37,6 @@ public class CategoricalVariationParameter extends VariationParameter<String> {
 
     @Override
     public String toString() {
-        return getName() + " = " + this.currentValue;
+        return String.format("[%s = %s]", getName(), currentValue);
     }
 }

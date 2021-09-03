@@ -30,7 +30,7 @@ public class DoubleVariationParameter extends VariationParameter<Double> {
 
     @Override
     public StaticParameter<Double> next() {
-        double result = this.currentValue;
+        double result = Math.round(this.currentValue * 100.0) / 100.0;;
         this.currentValue += this.stepSize;
         return new StaticParameter<>(getName(), result);
     }
@@ -43,6 +43,6 @@ public class DoubleVariationParameter extends VariationParameter<Double> {
 
     @Override
     public String toString() {
-        return getName() + " = " + this.currentValue;
+        return String.format("[%s = %.4f]", getName(), currentValue);
     }
 }

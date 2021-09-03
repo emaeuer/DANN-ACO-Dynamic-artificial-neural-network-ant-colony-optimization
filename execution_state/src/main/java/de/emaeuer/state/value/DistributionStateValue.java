@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class DistributionStateValue  extends AbstractStateValue<Double, List<Double>> {
 
-    private List<Double> values = new ArrayList<>();
+    private final List<Double> values = new ArrayList<>();
 
     private double sum = 0;
     private double sumOfSquares = 0;

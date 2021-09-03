@@ -6,7 +6,7 @@ library("irace")
 #Test installation
 #system.file(package = "irace")
 
-optimizationMethod <- "aco"
+optimizationMethod <- "neat"
 
 if (optimizationMethod == "neat") {
   scenario <- readScenario(filename = "tuning/neat/scenario.txt",
@@ -24,7 +24,7 @@ if (optimizationMethod == "neat") {
 #checkIraceScenario(scenario = scenario)
 
 # run scenario
-#irace.main(scenario = scenario)
+irace.main(scenario = scenario)
 
 # manual testing
-testing.main(logFile = "tuning/execDir/irace_data/irace.Rdata")
+# testing.main(logFile = "tuning/execDir/irace_data/irace.Rdata")
