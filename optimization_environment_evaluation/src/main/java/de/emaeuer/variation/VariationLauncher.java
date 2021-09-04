@@ -49,15 +49,21 @@ public class VariationLauncher {
 //        iter.addParameter(new DoubleVariationParameter("-d", 0, 5, 25));
 //        iter.addParameter(new DoubleVariationParameter("-e", 0, 5, 25));
 
-        iter.addParameter(new DoubleVariationParameter("-z", 0, 5, 15));
-        iter.addParameter(new DoubleVariationParameter("-eta", 0, 5, 15));
-        iter.addParameter(new DoubleVariationParameter("-t", 0, 5, 15));
+//        iter.addParameter(new DoubleVariationParameter("-z", 0, 5, 15));
+//        iter.addParameter(new DoubleVariationParameter("-eta", 0, 5, 15));
+//        iter.addParameter(new DoubleVariationParameter("-t", 0, 5, 15));
+
+        iter.addParameter(new DoubleVariationParameter("-sr", 0.1, 1, 5));
+        iter.addParameter(new DoubleVariationParameter("-mr", 0.1, 1, 5));
+        iter.addParameter(new DoubleVariationParameter("-anr", 0.1, 1, 5));
+        iter.addParameter(new DoubleVariationParameter("-rcr", 0.1, 1, 5));
+        iter.addParameter(new DoubleVariationParameter("-acr", 0.1, 1, 5));
 
 //        iter.addParameter(new CategoricalVariationParameter("--updateStrategy", Arrays.asList(PopulationUpdateStrategies.getNames())));
 //        iter.addParameter(new CategoricalVariationParameter("", Arrays.asList("--elitism", "")));
 
         List<String> configFiles = new ArrayList<>();
-        configFiles.add("configurations/variation/cart_pole_without_standard.json");
+        configFiles.add("configurations/variation/xor_recurrent.json");
 //        configFiles.add("configurations/variation/cart_pole_without_standard2.json");
 //        configFiles.add("configurations/variation/cart_pole_without_standard3.json");
 //        configFiles.add("configurations/variation/cart_pole_without_standard4.json");
@@ -66,14 +72,14 @@ public class VariationLauncher {
 //        configFiles.add("configurations/variation/xor3.json");
 //        configFiles.add("configurations/variation/xor4.json");
 //        configFiles.add("configurations/variation/flappy_bird_configuration.json");
-        configFiles.add("configurations/variation/xor.json");
+//        configFiles.add("configurations/variation/xor.json");
 
 
         List<String> defaultArgs = new ArrayList<>();
         defaultArgs.add("--configFile");
         defaultArgs.add("");
         defaultArgs.add("--maxTime");
-        defaultArgs.add("600000");
+        defaultArgs.add("120000");
         defaultArgs.add("dannaco");
 
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(20);
