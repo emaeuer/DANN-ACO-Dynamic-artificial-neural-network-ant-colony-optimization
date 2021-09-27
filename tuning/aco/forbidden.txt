@@ -19,7 +19,7 @@ antsPerIteration < updatesPerIteration
 updateStrategy == "FITNESS" & updatesPerIteration > 3
 
 #forbidden because it is equal to AGE with numberOfUpdates = 1
-updateStrategy == "INNOVATION_PROTECTING" & updatesPerIteration == 1
+updateStrategy == "SIMILARITY" & updatesPerIteration == 1
 updateStrategy == "GROUP_BASED" & updatesPerIteration == 1
 
 # forbidden because of the definition of the constants

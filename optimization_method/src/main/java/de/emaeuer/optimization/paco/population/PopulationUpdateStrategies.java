@@ -7,7 +7,7 @@ public enum PopulationUpdateStrategies {
     FITNESS,
     PROBABILITY,
     AGE_PROBABILITY,
-    INNOVATION_PROTECTING,
+    SIMILARITY,
     GROUP_BASED;
 
     public static String[] getNames() {

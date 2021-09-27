@@ -31,7 +31,7 @@
             "REUSE_SPLIT_KNOWLEDGE": "true",
             "ANTS_PER_ITERATION": "48",
             "DEVIATION_FUNCTION": "(0.7865s)/(k - 1)+0.6714z",
-            "UPDATE_STRATEGY": "INNOVATION_PROTECTING",
+            "UPDATE_STRATEGY": "SIMILARITY",
             "SPLIT_PROBABILITY": "max((c^0.7058*t^1.8043)/(5.1645d+1), 0)",
             "SOLUTION_WEIGHT_FACTOR": "0.3673",
             "ENABLE_NEURON_ISOLATION": "true",

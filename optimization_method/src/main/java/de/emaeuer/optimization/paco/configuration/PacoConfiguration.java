@@ -20,7 +20,7 @@ public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration>
     TOPOLOGY_SIMILARITY_THRESHOLD("Topology similarity threshold for innovation protecting update", new DoubleConfigurationValue(0.7, 0, 1)),
     UPDATE_STRATEGY("Population update strategy", new StringConfigurationValue(PopulationUpdateStrategies.AGE.name(), PopulationUpdateStrategies.getNames()),
             (v, h) -> {
-                boolean isInnovationProtecting = PopulationUpdateStrategies.INNOVATION_PROTECTING.name().equals(v.getStringRepresentation());
+                boolean isInnovationProtecting = PopulationUpdateStrategies.SIMILARITY.name().equals(v.getStringRepresentation());
                 h.disableConfiguration(TOPOLOGY_SIMILARITY_THRESHOLD, !isInnovationProtecting);
             }),
     ELITISM("Use elitism", new BooleanConfigurationValue(false)),
