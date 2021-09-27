@@ -228,8 +228,12 @@ public class CliLauncher {
     }
 
     public double getEvaluations() {
-        return ((DistributionStateValue ) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION))
+        return ((DistributionStateValue) this.optimizationState.getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION))
                 .getMean();
     }
 
+    public double getGeneralizationCapability() {
+        return ((DistributionStateValue) this.optimizationState.getCurrentState().get(OptimizationState.AVERAGE_GENERALIZATION_CAPABILITY))
+                .getMean();
+    }
 }

@@ -1,6 +1,6 @@
 library("irace")
 
-fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/neat_cart_two_dim.Rdata"
+fileName <- "C:/Users/emaeu/OneDrive/Dokumente_Eric/Uni/Masterarbeit/rdata/dannaco_static_modification_rates.Rdata"
 load(fileName)
 results <- iraceResults$testing$experiments
 
@@ -49,6 +49,7 @@ elites <- as.character(iraceResults$iterationElites)
 values <- colMeans(iraceResults$testing$experiments[, elites])
 plot(fes, values, type = "s",
      xlab = "Number of runs of the target algorithm",
-     ylab = "Mean value over testing set")
+     ylab = "Mean value over testing set",
+      na.exclude = T)
 points(fes, values)
 text(fes, values, elites, pos = 1)
