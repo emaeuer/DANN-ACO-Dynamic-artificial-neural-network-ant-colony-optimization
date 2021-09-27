@@ -101,6 +101,7 @@ public class PacoHandler extends OptimizationMethod {
 
     @Override
     protected void updateImplementationState() {
+        this.population.exportDeviation(this.state);
         this.runState.execute(s -> {
             s.resetValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED);
             s.resetValue(PacoRunState.USED_GROUPS);

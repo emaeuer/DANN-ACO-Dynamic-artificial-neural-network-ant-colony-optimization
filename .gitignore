@@ -81,3 +81,5 @@ fabric.properties
 *.jar
 *.Rhistory
 /tuning/execDir/
+/neat/
+

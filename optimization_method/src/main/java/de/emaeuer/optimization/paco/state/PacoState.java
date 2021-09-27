@@ -3,9 +3,12 @@ package de.emaeuer.optimization.paco.state;
 import de.emaeuer.state.StateParameter;
 import de.emaeuer.state.value.AbstractStateValue;
 import de.emaeuer.state.value.DataQuantityStateValue;
+import de.emaeuer.state.value.DistributionStateValue;
+import de.emaeuer.state.value.NumberStateValue;
 
 public enum PacoState  implements StateParameter<PacoState> {
-    MODIFICATION_DISTRIBUTION("Modification distribution", DataQuantityStateValue.class);
+    MODIFICATION_DISTRIBUTION("Modification distribution", DataQuantityStateValue.class),
+    AVERAGE_STANDARD_DEVIATION("Average standard deviation", DistributionStateValue.class);
 
     private final String name;
     private final Class<? extends AbstractStateValue<?, ?>> type;

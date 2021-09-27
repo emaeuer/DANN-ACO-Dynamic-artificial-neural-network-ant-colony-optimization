@@ -11,6 +11,7 @@ import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
 import de.emaeuer.state.StateHandler;
+import de.emaeuer.state.value.CollectionDistributionStateValue;
 import de.emaeuer.state.value.GraphStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

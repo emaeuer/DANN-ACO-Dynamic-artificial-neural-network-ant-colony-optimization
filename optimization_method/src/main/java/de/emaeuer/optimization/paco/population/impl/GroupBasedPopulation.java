@@ -1,16 +1,12 @@
 package de.emaeuer.optimization.paco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
-import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.optimization.paco.PacoAnt;
 import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class GroupBasedPopulation extends AgeBasedPopulation {
@@ -60,5 +56,4 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
 
         return Optional.empty();
     }
-
 }

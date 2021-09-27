@@ -161,13 +161,13 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
 
-//        // can be removed for normal usage but protects the system from freezing during irace runs
-//        int max = neuralNetworksToEvaluate.stream()
-//                .map(Solution::getNeuralNetwork)
-//                .mapToInt(NeuralNetwork::getNumberOfHiddenNeurons)
-//                .max()
-//                .orElse(0);
-//
+        // can be removed for normal usage but protects the system from freezing during irace runs
+        int max = neuralNetworksToEvaluate.stream()
+                .map(Solution::getNeuralNetwork)
+                .mapToInt(NeuralNetwork::getNumberOfHiddenNeurons)
+                .max()
+                .orElse(0);
+
 //        if (max > 20) {
 //            throw new IllegalStateException("Network got to large, aborting optimization");
 //        }
@@ -221,7 +221,13 @@ public class OptimizationEnvironmentHandler implements Runnable {
                     update();
 
                     if (this.maxTime > 0 && System.currentTimeMillis() - startTime > this.maxTime) {
-                        throw new TimeoutException("Optimization took to long");
+                        // if the max time was surpassed by one hour the process was presumably put to sleep and should proceed
+                        // an iteration that takes over one hour is not expected
+                        if (System.currentTimeMillis() - startTime > this.maxTime + 3600000) {
+                            startTime = System.currentTimeMillis();
+                        } else {
+                            throw new TimeoutException("Optimization took to long");
+                        }
                     }
                 } finally {
                     this.updateLock.unlock();

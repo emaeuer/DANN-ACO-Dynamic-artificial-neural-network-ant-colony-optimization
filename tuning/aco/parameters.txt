@@ -26,9 +26,9 @@
 ##    condition is satisfied, FALSE otherwise.
 
 # 1:                    2:                          3:  4:                                                                                              5:
-populationSize          "-k "                       i   (5, 50)
+populationSize          "-k "                       i   (5, 100)
 updatesPerIteration     "-o "                       i   (1, 4)
-antsPerIteration        "-m "                       i   (5, 100)
+antsPerIteration        "-m "                       i   (5, 150)
 updateStrategy          "--updateStrategy "         c   ("AGE", "FITNESS", "PROBABILITY", "AGE_PROBABILITY", "INNOVATION_PROTECTING", "GROUP_BASED")
 elitism                 ""                          c   ("", "--elitism ")                                                                              | updateStrategy != "FITNESS"
 neuronIsolation         ""                          c   ("", "--neuronIsolation ")
