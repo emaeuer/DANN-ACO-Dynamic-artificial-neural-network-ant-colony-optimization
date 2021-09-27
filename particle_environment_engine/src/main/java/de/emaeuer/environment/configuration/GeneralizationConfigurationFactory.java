@@ -4,6 +4,7 @@ import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.environment.balance.onedim.configuration.CartPoleGeneralizationConfiguration;
 import de.emaeuer.environment.balance.twodim.configuration.TwoDimensionalCartPoleGeneralizationConfiguration;
 import de.emaeuer.environment.bird.configuration.FlappyBirdGeneralizationConfiguration;
+import de.emaeuer.environment.pong.configuration.PongGeneralizationConfiguration;
 import de.emaeuer.environment.xor.XORGeneralizationConfiguration;
 
 public class GeneralizationConfigurationFactory {
@@ -17,6 +18,7 @@ public class GeneralizationConfigurationFactory {
             case XOR -> new ConfigurationHandler<>(XORGeneralizationConfiguration.class, "XOR_GENERALIZATION");
             case ONE_DIMENSIONAL_CART_POLE -> new ConfigurationHandler<>(CartPoleGeneralizationConfiguration.class, "ONE_D_CART_POLE_GENERALIZATION");
             case TWO_DIMENSIONAL_CART_POLE -> new ConfigurationHandler<>(TwoDimensionalCartPoleGeneralizationConfiguration.class, "TWO_D_CART_POLE_GENERALIZATION");
+            case PONG -> new ConfigurationHandler<>(PongGeneralizationConfiguration.class, "PONG_GENERALIZATION");
         };
     }
 }

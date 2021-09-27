@@ -6,7 +6,8 @@ public enum EnvironmentImplementations {
     FLAPPY_BIRD,
     ONE_DIMENSIONAL_CART_POLE,
     TWO_DIMENSIONAL_CART_POLE,
-    XOR;
+    XOR,
+    PONG;
 
     public static String[] getNames() {
         return Arrays.stream(EnvironmentImplementations.values())

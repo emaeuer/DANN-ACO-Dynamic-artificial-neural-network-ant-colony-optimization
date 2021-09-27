@@ -161,16 +161,16 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 .map(NeuralNetworkAgentController::new)
                 .collect(Collectors.toList());
 
-        // can be removed for normal usage but protects the system from freezing during irace runs
-        int max = neuralNetworksToEvaluate.stream()
-                .map(Solution::getNeuralNetwork)
-                .mapToInt(NeuralNetwork::getNumberOfHiddenNeurons)
-                .max()
-                .orElse(0);
-
-        if (max > 20) {
-            throw new IllegalStateException("Network got to large, aborting optimization");
-        }
+//        // can be removed for normal usage but protects the system from freezing during irace runs
+//        int max = neuralNetworksToEvaluate.stream()
+//                .map(Solution::getNeuralNetwork)
+//                .mapToInt(NeuralNetwork::getNumberOfHiddenNeurons)
+//                .max()
+//                .orElse(0);
+//
+//        if (max > 20) {
+//            throw new IllegalStateException("Network got to large, aborting optimization");
+//        }
 
         this.environment.setControllers(solutions);
     }

@@ -138,6 +138,7 @@ public class EnvironmentController {
 
     private void drawContent() {
         getGraphicsContext().clearRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
+        getGraphicsContext().strokeRect(0, 0, getGraphicsContext().getCanvas().getWidth(), getGraphicsContext().getCanvas().getHeight());
 
         synchronized (this.handler.getAdditionalEnvironmentElements()) {
             this.handler.getAdditionalEnvironmentElements()

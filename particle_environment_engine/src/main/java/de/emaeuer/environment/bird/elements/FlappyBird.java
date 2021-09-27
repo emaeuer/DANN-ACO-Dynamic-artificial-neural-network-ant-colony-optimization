@@ -1,6 +1,7 @@
 package de.emaeuer.environment.bird.elements;
 
 import de.emaeuer.environment.AgentController;
+import de.emaeuer.environment.bird.elements.shape.FlappyBirdShape;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.elements.shape.*;

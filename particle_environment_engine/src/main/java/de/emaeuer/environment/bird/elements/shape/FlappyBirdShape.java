@@ -1,5 +1,6 @@
-package de.emaeuer.environment.bird.elements;
+package de.emaeuer.environment.bird.elements.shape;
 
+import de.emaeuer.environment.bird.elements.FlappyBird;
 import de.emaeuer.environment.elements.shape.ImageShape;
 import de.emaeuer.environment.elements.shape.Shape;
 import de.emaeuer.environment.elements.shape.ShapeEntity;

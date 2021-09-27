@@ -47,6 +47,8 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
     private final ConfigurationHandler<FlappyBirdConfiguration> configuration;
     private final ConfigurationHandler<FlappyBirdGeneralizationConfiguration> generalizationConfig;
 
+    private final BackGround backGround = new BackGround(getClass().getResource("/flappy_bird/background.png").toExternalForm(), this);
+
     public FlappyBirdEnvironment(ConfigurationHandler<EnvironmentConfiguration> configuration) {
         super(DIE_ON_BORDER, configuration);
 
@@ -245,8 +247,6 @@ public class FlappyBirdEnvironment extends AbstractEnvironment<FlappyBirdGeneral
             initializeParticles(copyControllers, getHeight() * height);
         }
     }
-
-    private final BackGround backGround = new BackGround(getClass().getResource("/flappy_bird/background.png").toExternalForm(), this);
 
     @Override
     public List<AbstractElement> getAdditionalEnvironmentElements() {

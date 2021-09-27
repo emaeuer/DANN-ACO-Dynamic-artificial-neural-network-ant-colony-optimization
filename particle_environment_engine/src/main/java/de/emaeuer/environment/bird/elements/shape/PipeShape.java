@@ -1,6 +1,10 @@
-package de.emaeuer.environment.elements.shape;
+package de.emaeuer.environment.bird.elements.shape;
 
 import de.emaeuer.environment.bird.elements.Pipe;
+import de.emaeuer.environment.elements.shape.ImageShape;
+import de.emaeuer.environment.elements.shape.Shape;
+import de.emaeuer.environment.elements.shape.ShapeEntity;
+import de.emaeuer.environment.elements.shape.Shapes;
 
 import java.util.List;
 

@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 public enum PacoConfiguration implements DefaultConfiguration<PacoConfiguration> {
     POPULATION_SIZE("Solution population size", new IntegerConfigurationValue(20, 1, 100)),
     UPDATES_PER_ITERATION("Number ants that update each iteration", new IntegerConfigurationValue(1, 1, 10)),
-    ANTS_PER_ITERATION("Number of ants per iteration", new IntegerConfigurationValue(10, 1, 100)),
+    ANTS_PER_ITERATION("Number of ants per iteration", new IntegerConfigurationValue(10, 1, 150)),
     TOPOLOGY_PHEROMONE("Pheromone value of a topology", new ExpressionConfigurationValue("0.75(n/k)^2+0.1", PacoParameter.class)),
     CONNECTION_PHEROMONE("Pheromone value of a connection", new ExpressionConfigurationValue("0.75(n/k)+0.1", PacoParameter.class)),
     NUMBER_OF_VALUES_PENALTY("Penalty for too few values", new ExpressionConfigurationValue("(k-n)/(n+1)", PacoParameter.class)),

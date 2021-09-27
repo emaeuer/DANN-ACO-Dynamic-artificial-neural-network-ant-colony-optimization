@@ -19,6 +19,11 @@ public class Vector2D {
         this.y = other.y;
     }
 
+    public Vector2D(double radians) {
+        this.x = Math.cos(radians);
+        this.y = Math.sin(radians);
+    }
+
     public Vector2D() {
         this.x = 0;
         this.y = 0;
@@ -54,6 +59,13 @@ public class Vector2D {
         this.x *= value;
         this.y *= value;
         return this;
+    }
+
+    public static Vector2D multiply(Vector2D v, double value) {
+        Vector2D result = new Vector2D(v);
+        result.x *= value;
+        result.y *= value;
+        return result;
     }
 
     public static Vector2D multiply(Vector2D v1, Vector2D v2) {
@@ -104,6 +116,13 @@ public class Vector2D {
         return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
 
+    public static double distance(Vector2D a, Vector2D b) {
+        double distance = Math.pow(a.x - b.x, 2);
+        distance += Math.pow(a.y - b.y, 2);
+
+        return Math.sqrt(distance);
+    }
+
     public Vector2D normalize() {
         double magnitude = magnitude();
         if (magnitude > 0) {
@@ -121,16 +140,25 @@ public class Vector2D {
         return this;
     }
 
+    public static Vector2D limit(Vector2D v, double limit) {
+        Vector2D result = new Vector2D(v);
+        if (result.magnitude() > limit) {
+            result.normalize();
+            result.multiply(limit);
+        }
+        return result;
+    }
+
     public double angle() {
         return Math.atan2(this.y, this.x);
     }
 
     public double angle(Vector2D other) {
         other = checkNull(other);
-        return Math.acos(dot_product(other) / (magnitude() * other.magnitude()));
+        return Math.acos(dotProduct(other) / (magnitude() * other.magnitude()));
     }
 
-    private double dot_product(Vector2D other) {
+    public double dotProduct(Vector2D other) {
         return this.x * other.x + this.y * other.y;
     }
 

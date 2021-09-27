@@ -1,11 +1,11 @@
 {"CONFIGURATION": {
+    "MAX_TIME": "0",
     "CONFIG_TYPE": "de.emaeuer.evaluation.EvaluationConfiguration",
     "GENERALIZATION_CAPABILITY": "0.5",
     "ENVIRONMENT_CONFIGURATION": {
         "MAX_STEP_NUMBER": "10000.0",
         "CONFIG_TYPE": "de.emaeuer.environment.configuration.EnvironmentConfiguration",
         "SEED": "9369319",
-        "MAX_FITNESS_SCORE": "1.0",
         "ENVIRONMENT_IMPLEMENTATION_NAME": "XOR",
         "ENVIRONMENT_IMPLEMENTATION": {
             "CONFIG_TYPE": "de.emaeuer.environment.xor.XORConfiguration",
@@ -29,7 +29,7 @@
         "IMPLEMENTATION_CONFIGURATION": {
             "PRUNE_MUTATION_RATE": "1.0",
             "ADD_NEURON_MUTATION_RATE": "0.062",
-            "REMOVE_CONNECTION_STRATEGY": "skewed",
+            "REMOVE_CONNECTION_STRATEGY": "small",
             "CHROM_COMPAT_EXCESS_COEFF": "0.7606",
             "ID_FILE": "temp/id.xml",
             "CHROM_COMPAT_COMMON_COEFF": "0.948",
@@ -39,12 +39,12 @@
             "WEIGHT_MUTATION_RATE": "0.4783",
             "CONFIG_TYPE": "de.emaeuer.optimization.neat.configuration.NeatConfiguration",
             "ELITISM_MIN_SPECIE_SIZE": "9",
-            "REMOVE_CONNECTION_MUTATION_RATE": "0.0",
+            "REMOVE_CONNECTION_MUTATION_RATE": "0.2279",
             "TOPOLOGY_MUTATION_CLASSIC": "true",
             "SPECIATION_THRESHOLD": "0.7188",
             "ADD_CONNECTION_MUTATION_RATE": "0.8585",
             "ELITISM": "false",
-            "REMOVE_CONNECTION_MAX_WEIGHT": "1.0",
+            "REMOVE_CONNECTION_MAX_WEIGHT": "1.5646",
             "WEIGHTED_SELECTOR": "false",
             "POPULATION_SIZE": "5",
             "WEIGHT_MUTATION_DEVIATION": "5.5023"

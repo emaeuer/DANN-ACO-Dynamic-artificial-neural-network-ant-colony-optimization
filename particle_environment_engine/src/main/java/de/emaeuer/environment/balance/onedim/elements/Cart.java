@@ -6,7 +6,7 @@ import de.emaeuer.environment.AgentController;
 import de.emaeuer.environment.balance.onedim.CartPoleEnvironment;
 import de.emaeuer.environment.balance.onedim.GeneralCartPoleData;
 import de.emaeuer.environment.elements.AbstractElement;
-import de.emaeuer.environment.elements.shape.CartShape;
+import de.emaeuer.environment.balance.onedim.elements.shape.CartShape;
 import de.emaeuer.environment.elements.shape.ShapeEntity;
 import org.apache.commons.math3.distribution.NormalDistribution;
 

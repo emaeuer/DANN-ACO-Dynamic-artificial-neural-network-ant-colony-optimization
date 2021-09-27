@@ -7,6 +7,7 @@ import de.emaeuer.environment.bird.FlappyBirdEnvironment;
 import de.emaeuer.environment.balance.onedim.CartPoleEnvironment;
 import de.emaeuer.environment.configuration.EnvironmentConfiguration;
 import de.emaeuer.environment.configuration.EnvironmentImplementations;
+import de.emaeuer.environment.pong.PongEnvironment;
 import de.emaeuer.environment.xor.XOREnvironment;
 
 public class EnvironmentFactory {
@@ -21,6 +22,7 @@ public class EnvironmentFactory {
             case FLAPPY_BIRD -> new FlappyBirdEnvironment(configuration);
             case XOR -> new XOREnvironment(configuration);
             case TWO_DIMENSIONAL_CART_POLE -> new TwoDimensionalCartPoleEnvironment(configuration);
+            case PONG -> new PongEnvironment(configuration);
         };
     }
 

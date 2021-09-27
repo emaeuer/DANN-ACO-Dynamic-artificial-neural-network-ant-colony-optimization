@@ -1,7 +1,7 @@
 package de.emaeuer.environment.bird.elements;
 
 import de.emaeuer.environment.elements.AbstractElement;
-import de.emaeuer.environment.elements.shape.PipeShape;
+import de.emaeuer.environment.bird.elements.shape.PipeShape;
 import de.emaeuer.environment.elements.shape.ShapeEntity;
 
 import java.util.List;

@@ -6,7 +6,7 @@ import de.emaeuer.environment.balance.twodim.GeneralTwoDimensionalCartPoleData;
 import de.emaeuer.environment.balance.twodim.TwoDimensionalCartPoleEnvironment;
 import de.emaeuer.environment.elements.AbstractElement;
 import de.emaeuer.environment.elements.shape.ShapeEntity;
-import de.emaeuer.environment.elements.shape.TwoDimensionalCartShape;
+import de.emaeuer.environment.balance.twodim.element.shape.TwoDimensionalCartShape;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,9 @@
-package de.emaeuer.environment.elements.shape;
+package de.emaeuer.environment.balance.onedim.elements.shape;
 
 import de.emaeuer.environment.balance.onedim.elements.Cart;
+import de.emaeuer.environment.elements.shape.Shape;
+import de.emaeuer.environment.elements.shape.ShapeEntity;
+import de.emaeuer.environment.elements.shape.Shapes;
 
 import java.util.List;
 import java.util.stream.IntStream;

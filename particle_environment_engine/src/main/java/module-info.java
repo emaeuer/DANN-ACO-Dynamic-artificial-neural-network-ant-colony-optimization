@@ -18,4 +18,7 @@ module particle.environment.engine {
     exports de.emaeuer.environment.bird.configuration;
     exports de.emaeuer.environment.balance.onedim;
     exports de.emaeuer.environment.balance.twodim;
+    exports de.emaeuer.environment.bird.elements.shape;
+    exports de.emaeuer.environment.balance.onedim.elements.shape;
+    exports de.emaeuer.environment.balance.twodim.element.shape;
 }

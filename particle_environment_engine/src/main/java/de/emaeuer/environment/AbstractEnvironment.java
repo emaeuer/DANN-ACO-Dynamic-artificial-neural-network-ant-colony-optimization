@@ -103,7 +103,7 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
         this.agentControllers.clear();
     }
 
-    private void checkBorderCase(AbstractElement particle) {
+    protected void checkBorderCase(AbstractElement particle) {
         if (this.borderStrategy != null) {
             this.borderStrategy.accept(particle, this);
         }
