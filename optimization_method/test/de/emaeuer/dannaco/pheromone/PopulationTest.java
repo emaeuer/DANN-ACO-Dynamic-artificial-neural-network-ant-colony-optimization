@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PopulationTest {
 
-    private PacoAnt createAnt(double fitness) {
-        PacoAnt ant = new PacoAnt(createBaseNetwork(), 0);
+    private Ant createAnt(double fitness) {
+        Ant ant = new Ant(createBaseNetwork(), 0);
         ant.setFitness(fitness);
         return ant;
     }
@@ -48,11 +48,11 @@ public class PopulationTest {
     public void testAgeBasedWithoutElitism() {
         AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, false), createBaseNetwork(), null);
 
-        List<PacoAnt> ants = new ArrayList<>();
+        List<Ant> ants = new ArrayList<>();
 
         // add 5 ants (nothing should be removed)
         for (int i = 0; i < 5; i++) {
-            PacoAnt ant = createAnt(5 - i);
+            Ant ant = createAnt(5 - i);
             ants.add(ant);
             assertSame(ant, population.addAnt(ant).orElse(null));
             assertEquals(i + 1, population.getSize());
@@ -61,9 +61,9 @@ public class PopulationTest {
 
         // add additional 5 ants (every step the oldest ant should be removed)
         for (int i = 0; i < 5; i++) {
-            PacoAnt ant = createAnt(5 - i);
+            Ant ant = createAnt(5 - i);
             assertSame(ant, population.addAnt(ant).orElse(null));
-            PacoAnt removed = population.removeAnt().get();
+            Ant removed = population.removeAnt().get();
             assertSame(removed, ants.remove(0));
             assertEquals(5, population.getSize());
         }
@@ -75,26 +75,26 @@ public class PopulationTest {
     public void testAgeBasedWithElitism() {
         AgeBasedPopulation population = new AgeBasedPopulation(createConfiguration(5, true), createBaseNetwork(), null);
 
-        List<PacoAnt> ants = new ArrayList<>();
+        List<Ant> ants = new ArrayList<>();
 
         // add 4 ants (nothing should be removed)
         for (int i = 0; i < 4; i++) {
-            PacoAnt ant = createAnt(i);
+            Ant ant = createAnt(i);
             ants.add(ant);
             assertSame(ant, population.addAnt(ant).orElse(null));
             assertEquals(i + 1, population.getSize());
             assertFalse(population.removeAnt().isPresent(), "Failed in iteration " + i);
         }
 
-        PacoAnt globalBest = createAnt(10);
+        Ant globalBest = createAnt(10);
         population.addAnt(globalBest);
 
         // add additional 5 ants (every step the oldest ant should be removed)
         for (int i = 0; i < 5; i++) {
-            PacoAnt ant = createAnt(5 - i);
+            Ant ant = createAnt(5 - i);
             ants.add(ant);
             assertSame(ant, population.addAnt(ant).orElse(null));
-            PacoAnt removed = population.removeAnt().get();
+            Ant removed = population.removeAnt().get();
             assertSame(removed, ants.remove(0));
             assertEquals(5, population.getSize());
         }
@@ -108,11 +108,11 @@ public class PopulationTest {
     public void testFitnessBased() {
         FitnessBasedPopulation population = new FitnessBasedPopulation(createConfiguration(5, false), createBaseNetwork(), null);
 
-        List<PacoAnt> ants = new ArrayList<>();
+        List<Ant> ants = new ArrayList<>();
 
         // add 5 ants (nothing should be removed)
         for (int i = 0; i < 5; i++) {
-            PacoAnt ant = createAnt(Math.pow(i + 1, 2) % 10 + 2);
+            Ant ant = createAnt(Math.pow(i + 1, 2) % 10 + 2);
             ants.add(ant);
             assertSame(ant, population.addAnt(ant).orElse(null));
             assertEquals(i + 1, population.getSize());
@@ -120,17 +120,17 @@ public class PopulationTest {
         }
 
         // check that ant is not added if the score is too low
-        PacoAnt worstAnt = createAnt(1);
+        Ant worstAnt = createAnt(1);
         assertFalse(population.addAnt(worstAnt).isPresent());
         assertFalse(population.removeAnt().isPresent());
 
-        ants.sort(Comparator.comparingDouble(PacoAnt::getFitness));
+        ants.sort(Comparator.comparingDouble(Ant::getFitness));
 
         // add additional 5 ants which are better than the best 5 (every step the worst ant should be removed)
         for (int i = 0; i < 5; i++) {
-            PacoAnt ant = createAnt(12 + i);
+            Ant ant = createAnt(12 + i);
             assertSame(ant, population.addAnt(ant).orElse(null));
-            PacoAnt removed = population.removeAnt().get();
+            Ant removed = population.removeAnt().get();
             assertSame(removed, ants.remove(0));
             assertEquals(5, population.getSize());
         }

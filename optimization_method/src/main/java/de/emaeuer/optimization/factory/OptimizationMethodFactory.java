@@ -26,7 +26,7 @@ public class OptimizationMethodFactory {
         return new NeatHandler(config, state);
     }
 
-    private static OptimizationMethod createPACO(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
-        return new PacoHandler(config, state);
+    private static OptimizationMethod createDANNACO(ConfigurationHandler<OptimizationConfiguration> config, StateHandler<OptimizationState> state) {
+        return new DannacoHandler(config, state);
     }
 }

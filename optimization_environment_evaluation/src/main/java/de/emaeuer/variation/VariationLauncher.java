@@ -1,6 +1,8 @@
 package de.emaeuer.variation;
 
 import de.emaeuer.cli.CliLauncher;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -17,7 +19,10 @@ public class VariationLauncher {
     static {
         System.setProperty("logFilename", "variation" + System.currentTimeMillis());
         Locale.setDefault(Locale.US);
+        LOG = LogManager.getLogger(CliLauncher.class);
     }
+
+    private static final Logger LOG;
 
     private static BufferedWriter writer;
 
@@ -105,19 +110,17 @@ public class VariationLauncher {
 
                     cliParameters.set(1, configFile);
 
-                    CliLauncher launcher = new CliLauncher(cliParameters.toArray(new String[0]));
+                    CliLauncher launcher = CliLauncher.startFromArgs(cliParameters.toArray(String[]::new));
                     launcher.run();
 
-                    //noinspection unchecked
-                    StateHandler<PacoState> state = launcher.getOptimizationState().getValue(OptimizationState.IMPLEMENTATION_STATE, StateHandler.class);
-                    String modificationQuantities = state.getCurrentState().get(PacoState.MODIFICATION_DISTRIBUTION).getExportValue();
-                    double deviation = ((DistributionStateValue) state.getCurrentState().get(PacoState.AVERAGE_STANDARD_DEVIATION)).getMean();
+                    String modificationQuantities = launcher.getModificationString();
+                    double deviation = launcher.getDeviations();
                     try {
                         writeLine(String.format("│ %80s │ %70s │ %8.1f │ %6.2f │ %12.2f │ %12.2f │ %11.4f │ %90s │ %90s │ %3.6f |", configSummary, configFile, launcher.getCost(),
                                 launcher.getTimeMillis() / 1000.0, launcher.getNumberOfHiddenNodes(), launcher.getNumberOfConnections(),
                                 launcher.getSuccessRate(), modificationQuantities, launcher.getAllEvaluations(), deviation));
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        LOG.warn(String.format("Unexpected exception for parameter configuration %s", configSummary), e);
                     }
                 });
             }

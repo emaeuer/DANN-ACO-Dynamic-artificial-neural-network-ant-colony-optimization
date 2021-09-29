@@ -7,7 +7,7 @@ import de.emaeuer.configuration.value.StringConfigurationValue;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "neat")
-public class NeatCliParameter {
+public class NeatCliParameter implements AlgorithmCliParameter {
 
     @CommandLine.Option(names = "-sr")
     private Double survivalRate;
