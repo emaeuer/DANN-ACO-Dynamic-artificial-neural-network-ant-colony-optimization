@@ -27,7 +27,7 @@ public class ProgressionHandler {
     }
 
     /**
-     * Prevents a stagnation detection for the next numberOfIterationsToCheck iterations
+     * Prevents a stagnation detection for the next numberOfIterationsToCheck evaluations
      */
     public void resetProgression() {
         iterationWithLastIncrease = currentIteration;

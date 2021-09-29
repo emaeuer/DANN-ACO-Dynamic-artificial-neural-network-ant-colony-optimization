@@ -11,7 +11,6 @@ import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
 import de.emaeuer.state.StateHandler;
-import de.emaeuer.state.value.CollectionDistributionStateValue;
 import de.emaeuer.state.value.GraphStateValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +47,7 @@ public abstract class OptimizationMethod {
         this.generalState.execute(t -> t.addNewValue(OptimizationState.STATE_OF_CURRENT_RUN, this.runState));
         this.rng = new RandomUtil(configuration.getValue(OptimizationConfiguration.SEED, Integer.class));
 
-        this.averageHandler = new RunDataHandler(this.generalState, this.configuration.getValue(OptimizationConfiguration.MAX_FITNESS_SCORE, Double.class));
+        this.averageHandler = new RunDataHandler(this.generalState, this.configuration.getValue(OptimizationConfiguration.MAX_NUMBER_OF_EVALUATIONS, Integer.class));
 
         this.configuration.logConfiguration();
 

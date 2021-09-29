@@ -168,7 +168,7 @@ public class CartPoleEnvironment extends AbstractEnvironment<CartPoleGeneralizat
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
             this.currentPhaseSuccess = true;
-        } else if (this.currentPhase == Phases.GENERALIZATION_LONG_TEST && cart.getStep() >= 100000) { // TODO extract long test step number to configuration
+        } else if (this.currentPhase == Phases.GENERALIZATION_LONG_TEST && cart.getStep() >= this.generalizationConfig.getValue(CartPoleGeneralizationConfiguration.LONG_TEST_NUMBER_OF_STEPS, Integer.class)) {
             cart.setDead(true);
             setControllerFinishedWithoutDying(true);
             this.currentPhaseSuccess = true;
