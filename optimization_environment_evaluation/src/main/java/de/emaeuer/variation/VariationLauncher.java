@@ -1,34 +1,27 @@
 package de.emaeuer.variation;
 
 import de.emaeuer.cli.CliLauncher;
-import de.emaeuer.optimization.configuration.OptimizationRunState;
-import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.optimization.paco.population.PopulationUpdateStrategies;
-import de.emaeuer.optimization.paco.state.PacoState;
-import de.emaeuer.state.StateHandler;
-import de.emaeuer.state.value.DistributionStateValue;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class VariationLauncher {
 
+    static {
+        System.setProperty("logFilename", "variation" + System.currentTimeMillis());
+        Locale.setDefault(Locale.US);
+    }
+
     private static BufferedWriter writer;
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        System.setProperty("logFilename", "variation" + System.currentTimeMillis());
-        Locale.setDefault(Locale.US);
-
         writer = new BufferedWriter(new FileWriter("temp/variation.result", StandardCharsets.UTF_8, false));
 
         MultiVariationParameterIterator iter = new MultiVariationParameterIterator();
@@ -57,7 +50,7 @@ public class VariationLauncher {
 //        iter.addParameter(new CategoricalVariationParameter("", Arrays.asList("--elitism", "")));
 
         List<String> configFiles = new ArrayList<>();
-        configFiles.add("configurations/variation/cart_pole_without_standard.json");
+//        configFiles.add("configurations/variation/cart_pole_without_standard.json");
 //        configFiles.add("configurations/variation/cart_pole_without_standard2.json");
 //        configFiles.add("configurations/variation/cart_pole_without_standard3.json");
 //        configFiles.add("configurations/variation/cart_pole_without_standard4.json");
@@ -76,7 +69,7 @@ public class VariationLauncher {
         defaultArgs.add("600000");
         defaultArgs.add("dannaco");
 
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(20);
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         executor.setMaximumPoolSize(10000);
 
         writeLine("┌──────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┬──────────┬────────┬──────────────┬──────────────┬─────────────┬────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────┬────────────┐");

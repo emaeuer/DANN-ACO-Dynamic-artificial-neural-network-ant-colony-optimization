@@ -1,14 +1,13 @@
-package de.emaeuer.optimization.paco.population.impl;
+package de.emaeuer.optimization.dannaco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.util.NeuralNetworkUtil;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class InnovationProtectingPopulation extends AgeBasedPopulation {
@@ -17,25 +16,25 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
 
     private final double similarityThreshold;
 
-    public InnovationProtectingPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+    public InnovationProtectingPopulation(ConfigurationHandler<DannacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, baseNetwork, rng);
-        this.similarityThreshold = configuration.getValue(PacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, Double.class);
+        this.similarityThreshold = configuration.getValue(DannacoConfiguration.TOPOLOGY_SIMILARITY_THRESHOLD, Double.class);
     }
 
     @Override
     public void updatePheromone() {
         addedTopologies.clear();
 
-        getCurrentAnts().sort(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
-                .thenComparingDouble(PacoAnt::getFitness)
+        getCurrentAnts().sort(Comparator.comparingDouble(Ant::getGeneralizationCapability)
+                .thenComparingDouble(Ant::getFitness)
                 .reversed());
         int remainingAntUpdates = calculateNumberOfAntsToAdd();
-        for (PacoAnt ant : getCurrentAnts()) {
+        for (Ant ant : getCurrentAnts()) {
             if (remainingAntUpdates <= 0) {
                 break;
             }
 
-            Optional<PacoAnt> addResult = addAnt(ant);
+            Optional<Ant> addResult = addAnt(ant);
 
             if (addResult.isPresent()) {
                 getPheromone().addAnt(ant);
@@ -51,7 +50,7 @@ public class InnovationProtectingPopulation extends AgeBasedPopulation {
     }
 
     @Override
-    public Optional<PacoAnt> addAnt(PacoAnt ant) {
+    public Optional<Ant> addAnt(Ant ant) {
         Set<String> topology = new HashSet<>();
         NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork())
                 .forEachRemaining(c -> topology.add(c.start() + "" + c.end()));

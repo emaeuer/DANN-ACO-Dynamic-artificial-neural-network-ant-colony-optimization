@@ -1,27 +1,26 @@
-package de.emaeuer.optimization.paco.population.impl;
+package de.emaeuer.optimization.dannaco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.population.AbstractPopulation;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
+import de.emaeuer.optimization.dannaco.population.AbstractPopulation;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
-public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>> {
+public class ProbabilityBasedPopulation extends AbstractPopulation<List<Ant>> {
 
-    private final List<PacoAnt> removedAnts = new ArrayList<>();
+    private final List<Ant> removedAnts = new ArrayList<>();
 
-    public ProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+    public ProbabilityBasedPopulation(ConfigurationHandler<DannacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, new ArrayList<>(), baseNetwork, rng);
     }
 
     public void updatePheromone() {
         getCurrentAnts().stream()
-                .sorted(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
-                        .thenComparingDouble(PacoAnt::getFitness)
+                .sorted(Comparator.comparingDouble(Ant::getGeneralizationCapability)
+                        .thenComparingDouble(Ant::getFitness)
                         .reversed())
                 .limit(calculateNumberOfAntsToAdd())
                 .map(this::addAnt)
@@ -34,13 +33,13 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
     }
 
     @Override
-    public Optional<PacoAnt> addAnt(PacoAnt ant) {
+    public Optional<Ant> addAnt(Ant ant) {
         checkAndSetIfGlobalBest(ant);
         getPopulation().add(ant);
 
         // because the new ant could already get removed calculate the next ant to get removed here
         // --> necessary to return nothing if the ant wasn't really added
-        PacoAnt removedAnt = null;
+        Ant removedAnt = null;
         if (getPopulation().size() > getMaxSize()) {
             removedAnt = determineAntToRemove();
         }
@@ -53,16 +52,16 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
         }
     }
 
-    protected void addAntToRemove(PacoAnt ant) {
+    protected void addAntToRemove(Ant ant) {
         if (ant != null) {
             this.removedAnts.add(ant);
         }
     }
 
-    protected PacoAnt determineAntToRemove() {
+    protected Ant determineAntToRemove() {
         double[] removeProbabilities = calculateRemoveProbabilities();
         int indexToRemove = getRNG().selectRandomElementFromVector(removeProbabilities, true);
-        PacoAnt antToRemove = getPopulation().get(indexToRemove);
+        Ant antToRemove = getPopulation().get(indexToRemove);
 
         // if elitism is used select new ant to remove if the global best ant should be removed
         while (usesElitism() && antToRemove == getGlobalBest()) {
@@ -75,12 +74,12 @@ public class ProbabilityBasedPopulation extends AbstractPopulation<List<PacoAnt>
 
     private double[] calculateRemoveProbabilities() {
         return getPopulation().stream()
-                .mapToDouble(PacoAnt::getFitness)
+                .mapToDouble(Ant::getFitness)
                 .toArray();
     }
 
     @Override
-    public Optional<PacoAnt> removeAnt() {
+    public Optional<Ant> removeAnt() {
         // was already handled by the add method
         return Optional.empty();
     }

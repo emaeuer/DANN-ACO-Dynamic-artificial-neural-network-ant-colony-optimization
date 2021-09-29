@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public enum OptimizationMethodNames {
     NEAT,
-    PACO;
+    DANN_ACO;
 
     public static String[] getNames() {
         return Arrays.stream(OptimizationMethodNames.values())

@@ -1,21 +1,21 @@
-package de.emaeuer.optimization.paco.population.impl;
+package de.emaeuer.optimization.dannaco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.Optional;
 
 public class AgeAndProbabilityBasedPopulation extends ProbabilityBasedPopulation {
 
-    public AgeAndProbabilityBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+    public AgeAndProbabilityBasedPopulation(ConfigurationHandler<DannacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, baseNetwork, rng);
     }
 
     @Override
-    public Optional<PacoAnt> addAnt(PacoAnt ant) {
+    public Optional<Ant> addAnt(Ant ant) {
         checkAndSetIfGlobalBest(ant);
 
         // the difference to ProbabilityBasedPopulation is that the new ant is always added

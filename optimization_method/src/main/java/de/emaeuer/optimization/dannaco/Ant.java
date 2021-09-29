@@ -1,22 +1,22 @@
-package de.emaeuer.optimization.paco;
+package de.emaeuer.optimization.dannaco;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.TopologyData;
 import org.apache.commons.math3.linear.RealVector;
 
-public class PacoAnt implements Solution {
+public class Ant implements Solution {
 
     private double fitness = 0;
     private double generalizationCapability = 0;
 
     private final TopologyData solution;
 
-    public PacoAnt(NeuralNetwork brain, int topologyGroupID) {
+    public Ant(NeuralNetwork brain, int topologyGroupID) {
         this.solution = new TopologyData(brain, topologyGroupID);
     }
 
-    public PacoAnt(TopologyData topology) {
+    public Ant(TopologyData topology) {
         this.solution = topology;
     }
 
@@ -51,7 +51,7 @@ public class PacoAnt implements Solution {
 
     @Override
     public Solution copy() {
-        return new PacoAnt(this.solution.copy());
+        return new Ant(this.solution.copy());
     }
 
     public TopologyData getTopologyData() {

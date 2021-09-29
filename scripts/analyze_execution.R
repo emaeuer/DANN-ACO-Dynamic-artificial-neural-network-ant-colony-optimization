@@ -57,7 +57,7 @@ extractIterationData <- function(filepath, name) {
       csvValue <- str_split(line, " = ", 2)[[1]][2]
       values <- as.numeric(str_split(csvValue, ",")[[1]])
       currentRow$connections <- list(values)
-    } else if (grepl("^GENERAL_STATE\\.RUN_\\d*?\\.PACO_RUN\\.CONNECTION_WEIGHTS_SCATTERED", line)) {
+    } else if (grepl("^GENERAL_STATE\\.RUN_\\d*?\\.DANNACO_RUN\\.CONNECTION_WEIGHTS_SCATTERED", line)) {
       value <- str_split(line, " = ", 2)[[1]][2]
       singleLists <- str_split(value, "\\]\\,\\[")
       singleLists <- str_replace_all(unlist(singleLists), "\\[|\\]*", "")
@@ -81,7 +81,6 @@ drawRunSummary <- function(fileName, runNumber) {
 
   result <- extractIterationData(fileName)
   data <- result[["data"]]
-  configuration <- result[["configuration"]]
 
   filteredData <- data %>%
     filter(runID == runNumber) %>%

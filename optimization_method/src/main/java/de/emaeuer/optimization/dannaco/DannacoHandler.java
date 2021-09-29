@@ -1,4 +1,4 @@
-package de.emaeuer.optimization.paco;
+package de.emaeuer.optimization.dannaco;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
@@ -10,36 +10,36 @@ import de.emaeuer.optimization.Solution;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationRunState;
 import de.emaeuer.optimization.configuration.OptimizationState;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.population.AbstractPopulation;
-import de.emaeuer.optimization.paco.population.PopulationFactory;
-import de.emaeuer.optimization.paco.state.PacoRunState;
-import de.emaeuer.optimization.paco.state.PacoState;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
+import de.emaeuer.optimization.dannaco.population.AbstractPopulation;
+import de.emaeuer.optimization.dannaco.population.PopulationFactory;
+import de.emaeuer.optimization.dannaco.state.DannacoRunState;
+import de.emaeuer.optimization.dannaco.state.DannacoState;
 import de.emaeuer.state.StateHandler;
 
 import java.util.*;
 
-public class PacoHandler extends OptimizationMethod {
+public class DannacoHandler extends OptimizationMethod {
 
     private AbstractPopulation<?> population;
 
-    private final ConfigurationHandler<PacoConfiguration> configuration;
-    private final StateHandler<PacoRunState> runState;
-    private final StateHandler<PacoState> state;
+    private final ConfigurationHandler<DannacoConfiguration> configuration;
+    private final StateHandler<DannacoRunState> runState;
+    private final StateHandler<DannacoState> state;
 
-    public PacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
+    public DannacoHandler(ConfigurationHandler<OptimizationConfiguration> configuration, StateHandler<OptimizationState> generalState) {
         super(configuration, generalState);
 
-        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, PacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
+        this.configuration = ConfigurationHelper.extractEmbeddedConfiguration(configuration, DannacoConfiguration.class, OptimizationConfiguration.IMPLEMENTATION_CONFIGURATION);
         this.configuration.logConfiguration();
 
         //noinspection unchecked
         StateHandler<OptimizationRunState> runState = generalState.getValue(OptimizationState.STATE_OF_CURRENT_RUN, StateHandler.class);
-        this.runState = new StateHandler<>(PacoRunState.class, runState);
-        this.runState.setName("PACO_RUN");
+        this.runState = new StateHandler<>(DannacoRunState.class, runState);
+        this.runState.setName("DANN_ACO_RUN");
 
-        this.state = new StateHandler<>(PacoState.class, generalState);
-        this.state.setName("PACO");
+        this.state = new StateHandler<>(DannacoState.class, generalState);
+        this.state.setName("DANNACO");
 
         // register own state in optimization state
         runState.execute(s -> s.addNewValue(OptimizationRunState.IMPLEMENTATION_RUN_STATE, this.runState));
@@ -64,7 +64,7 @@ public class PacoHandler extends OptimizationMethod {
     public void resetAndRestart() {
         super.resetAndRestart();
 
-        this.runState.execute(t -> t.resetValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED));
+        this.runState.execute(t -> t.resetValue(DannacoRunState.CONNECTION_WEIGHTS_SCATTERED));
 
         initialize();
     }
@@ -78,10 +78,10 @@ public class PacoHandler extends OptimizationMethod {
     public void update() {
         this.population.updatePheromone();
 
-        PacoAnt bestOfThisIteration = this.population.getCurrentAnts()
+        Ant bestOfThisIteration = this.population.getCurrentAnts()
                 .stream()
-                .max(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
-                        .thenComparingDouble(PacoAnt::getFitness))
+                .max(Comparator.comparingDouble(Ant::getGeneralizationCapability)
+                        .thenComparingDouble(Ant::getFitness))
                 .orElse(null);
 
         this.population.exportPheromoneMatrixState(getEvaluationCounter(), this.runState);
@@ -103,8 +103,8 @@ public class PacoHandler extends OptimizationMethod {
     protected void updateImplementationState() {
         this.population.exportDeviation(this.state);
         this.runState.execute(s -> {
-            s.resetValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED);
-            s.resetValue(PacoRunState.USED_GROUPS);
+            s.resetValue(DannacoRunState.CONNECTION_WEIGHTS_SCATTERED);
+            s.resetValue(DannacoRunState.USED_GROUPS);
         });
     }
 
@@ -122,7 +122,7 @@ public class PacoHandler extends OptimizationMethod {
     protected DoubleSummaryStatistics getFitnessOfIteration() {
         return this.population.getCurrentAnts()
                 .stream()
-                .mapToDouble(PacoAnt::getFitness)
+                .mapToDouble(Ant::getFitness)
                 .summaryStatistics();
     }
 }

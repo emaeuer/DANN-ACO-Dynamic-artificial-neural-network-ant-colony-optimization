@@ -1,15 +1,13 @@
-package de.emaeuer.paco.pheromone;
+package de.emaeuer.dannaco.pheromone;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
 import de.emaeuer.ann.impl.neuron.based.NeuronBasedNeuralNetworkBuilder;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.configuration.ConfigurationHelper;
-import de.emaeuer.optimization.configuration.OptimizationConfiguration;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.population.impl.AgeBasedPopulation;
-import de.emaeuer.optimization.paco.population.impl.FitnessBasedPopulation;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
+import de.emaeuer.optimization.dannaco.population.impl.AgeBasedPopulation;
+import de.emaeuer.optimization.dannaco.population.impl.FitnessBasedPopulation;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -26,10 +24,10 @@ public class PopulationTest {
         return ant;
     }
 
-    private ConfigurationHandler<PacoConfiguration> createConfiguration(int maxSize, boolean useElitism) {
-        ConfigurationHandler<PacoConfiguration> config = new ConfigurationHandler<>(PacoConfiguration.class);
-        config.setValue(PacoConfiguration.POPULATION_SIZE, maxSize);
-        config.setValue(PacoConfiguration.ELITISM, useElitism);
+    private ConfigurationHandler<DannacoConfiguration> createConfiguration(int maxSize, boolean useElitism) {
+        ConfigurationHandler<DannacoConfiguration> config = new ConfigurationHandler<>(DannacoConfiguration.class);
+        config.setValue(DannacoConfiguration.POPULATION_SIZE, maxSize);
+        config.setValue(DannacoConfiguration.ELITISM, useElitism);
         return config;
     }
 

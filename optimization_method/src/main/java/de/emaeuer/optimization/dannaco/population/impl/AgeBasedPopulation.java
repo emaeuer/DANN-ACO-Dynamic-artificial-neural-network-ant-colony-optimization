@@ -1,22 +1,22 @@
-package de.emaeuer.optimization.paco.population.impl;
+package de.emaeuer.optimization.dannaco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.population.AbstractPopulation;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
+import de.emaeuer.optimization.dannaco.population.AbstractPopulation;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
 
-public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> {
+public class AgeBasedPopulation extends AbstractPopulation<LinkedList<Ant>> {
 
-    public AgeBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+    public AgeBasedPopulation(ConfigurationHandler<DannacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, new LinkedList<>(), baseNetwork, rng);
     }
 
     @Override
-    public Optional<PacoAnt> addAnt(PacoAnt ant) {
+    public Optional<Ant> addAnt(Ant ant) {
         checkAndSetIfGlobalBest(ant);
 
         getPopulation().add(ant);
@@ -24,7 +24,7 @@ public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> 
     }
 
     @Override
-    public Optional<PacoAnt> removeAnt() {
+    public Optional<Ant> removeAnt() {
         if (getPopulation().size() <= getMaxSize()) {
             return Optional.empty();
         } else if (usesElitism()) {
@@ -34,8 +34,8 @@ public class AgeBasedPopulation extends AbstractPopulation<LinkedList<PacoAnt>> 
         }
     }
 
-    private Optional<PacoAnt> removeWithRespectToElitism() {
-        PacoAnt antToRemove = getPopulation().poll();
+    private Optional<Ant> removeWithRespectToElitism() {
+        Ant antToRemove = getPopulation().poll();
 
         // keep the global best ant ant in the population and remove the next element
         if (antToRemove == getGlobalBest()) {

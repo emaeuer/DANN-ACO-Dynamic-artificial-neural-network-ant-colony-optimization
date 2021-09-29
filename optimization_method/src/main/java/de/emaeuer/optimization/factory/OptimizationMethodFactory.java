@@ -6,7 +6,7 @@ import de.emaeuer.optimization.OptimizationMethodNames;
 import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.neat.NeatHandler;
-import de.emaeuer.optimization.paco.PacoHandler;
+import de.emaeuer.optimization.dannaco.DannacoHandler;
 import de.emaeuer.state.StateHandler;
 
 public class OptimizationMethodFactory {
@@ -18,7 +18,7 @@ public class OptimizationMethodFactory {
 
         return switch (method) {
             case NEAT -> createNEAT(config, state);
-            case PACO -> createPACO(config, state);
+            case DANN_ACO -> createDANNACO(config, state);
         };
     }
 

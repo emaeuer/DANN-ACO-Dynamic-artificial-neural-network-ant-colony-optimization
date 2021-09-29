@@ -28,7 +28,13 @@ import java.util.stream.Collectors;
 
 public class CliLauncher {
 
-    private static final Logger LOG = LogManager.getLogger(CliLauncher.class);
+    static {
+        System.setProperty("logFilename", "variation" + System.currentTimeMillis());
+        Locale.setDefault(Locale.US);
+        LOG = LogManager.getLogger(CliLauncher.class);
+    }
+
+    private static final Logger LOG;
 
     private final OptimizationEnvironmentHandler optimization = new OptimizationEnvironmentHandler();
 
@@ -40,7 +46,7 @@ public class CliLauncher {
     public static void main(String[] args) {
         CliLauncher launcher = new CliLauncher(args);
         launcher.run();
-        System.out.println((-1 * launcher.getCost()) + " [" + launcher.getTimeMillis() + "]");
+        System.out.println((launcher.getCost()) + " [" + launcher.getTimeMillis() + "]");
     }
 
     public CliLauncher(String[] args) {
@@ -82,7 +88,13 @@ public class CliLauncher {
             ConfigurationIOHandler.importConfiguration(basicParameters.getConfigFile(), this.configuration);
         }
 
-        this.configuration.setValue(EvaluationConfiguration.MAX_TIME, basicParameters.getMaxTime());
+        if (parameter.getNumberOfRuns() == 1) {
+            run.getConfiguration().setValue(EvaluationConfiguration.SEED, parameter.getSeed());
+        } else {
+            run.getConfiguration().setValue(EvaluationConfiguration.SEED, this.rng.nextInt());
+        }
+
+        run.getConfiguration().setValue(EvaluationConfiguration.MAX_TIME, this.parameter.getMaxTime());
 
         if (parameters == null) {
             return;
@@ -162,6 +174,25 @@ public class CliLauncher {
         long startTime = System.nanoTime();
         this.optimization.run();
         this.timeMillis = (System.nanoTime() - startTime) / 1000000;
+    }
+
+    private void updateResults(CliSingleRunData run, long startTimeNanos) {
+        if (this.algorithmParameters instanceof DannacoCliParameter) {
+            //noinspection unchecked
+            StateHandler<DannacoState> state = run.getOptimizationState().getValue(OptimizationState.IMPLEMENTATION_STATE, StateHandler.class);
+            Map<String, Long> modificationQuantities = ((DataQuantityStateValue) state.getCurrentState().get(DannacoState.MODIFICATION_DISTRIBUTION)).getValue();
+            this.modifications.add(modificationQuantities);
+
+            this.deviation.addAll(((DistributionStateValue) state.getCurrentState().get(DannacoState.AVERAGE_STANDARD_DEVIATION)).getValue());
+        }
+
+        this.stoppedBecauseOfException |= run.getOptimization().stoppedBecauseOfException();
+        this.time.add((System.nanoTime() - startTimeNanos) / 1000000.0);
+        this.evaluations.addAll(((DistributionStateValue) run.getOptimizationState().getCurrentState().get(OptimizationState.EVALUATION_DISTRIBUTION)).getValue());
+        this.neurons.addAll(((DistributionStateValue) run.getOptimizationState().getCurrentState().get(OptimizationState.HIDDEN_NODES_DISTRIBUTION)).getValue());
+        this.connections.addAll(((DistributionStateValue) run.getOptimizationState().getCurrentState().get(OptimizationState.CONNECTIONS_DISTRIBUTION)).getValue());
+        this.success.addAll(((DistributionStateValue) run.getOptimizationState().getCurrentState().get(OptimizationState.FINISHED_RUN_DISTRIBUTION)).getValue());
+
     }
 
     public double getCost() {

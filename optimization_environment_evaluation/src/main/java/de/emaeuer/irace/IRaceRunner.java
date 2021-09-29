@@ -14,16 +14,19 @@ import java.util.Optional;
 
 public class IRaceRunner {
 
-    public static void main(String[] args) {
-        Logger log = null;
-        try {
-            System.setProperty("logFilename", args[0]);
-            log = LogManager.getLogger(IRaceRunner.class);
+    static {
+        System.setProperty("logFilename", "variation" + System.currentTimeMillis());
+        Locale.setDefault(Locale.US);
+        LOG = LogManager.getLogger(CliLauncher.class);
+    }
 
-            //        searchInFiles("C:\\Users\\emaeu\\IdeaProjects\\ParticleEnvironment\\tuning\\execDir\\log");
-            log.debug("IRACE-Call-Parameters: " + Arrays.toString(args));
+    private static final Logger LOG;
+
+    public static void main(String[] args) {
+        try {
+            LOG.debug("IRACE-Call-Parameters: " + Arrays.toString(args));
             if (args.length < 5) {
-                log.warn("\nUsage: ./target-runner.jar <configuration_id> <instance_id> <seed> <instance_path_name> <list of parameters>\n");
+                LOG.warn("\nUsage: ./target-runner.jar <configuration_id> <instance_id> <seed> <instance_path_name> <list of parameters>\n");
                 System.exit(1);
             }
 
@@ -36,11 +39,12 @@ public class IRaceRunner {
             log.debug("Starting optimization");
             CliLauncher algorithmRunner = new CliLauncher(algParameters, seed);
             algorithmRunner.run();
-            log.debug("Optimization finished after {} milliseconds and cost of {}", algorithmRunner.getTimeMillis(), algorithmRunner.getCost());
+            LOG.debug("Optimization finished after {} milliseconds and cost of {}", algorithmRunner.getTimeMillis(), algorithmRunner.getCost());
             System.out.println(algorithmRunner.getCost() + " " + algorithmRunner.getTimeMillis());
         } catch (Exception e) {
-            if (log != null) {
-                log.warn("Unexpected exception", e);
+            e.printStackTrace();
+            if (LOG != null) {
+                LOG.warn("Unexpected exception", e);
             }
             System.out.println(Double.POSITIVE_INFINITY + " " + 0);
         }

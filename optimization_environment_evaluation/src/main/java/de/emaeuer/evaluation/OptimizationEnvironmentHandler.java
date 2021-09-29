@@ -237,6 +237,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             LOG.warn("Unexpected exception in update thread", e);
             this.stoppedBecauseOfException = true;
         }

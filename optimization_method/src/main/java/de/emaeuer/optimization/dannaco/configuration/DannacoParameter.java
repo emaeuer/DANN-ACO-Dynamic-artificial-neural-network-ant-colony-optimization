@@ -1,8 +1,8 @@
-package de.emaeuer.optimization.paco.configuration;
+package de.emaeuer.optimization.dannaco.configuration;
 
 import de.emaeuer.configuration.ConfigurationVariable;
 
-public enum PacoParameter implements ConfigurationVariable {
+public enum DannacoParameter implements ConfigurationVariable {
     SUM_OF_DIFFERENCES("Squared sum of differences from mean", "s"),
     POPULATION_SIZE("Size of the population", "k"),
     NUMBER_OF_VALUES("Number of values in the population for this specific value", "n"),
@@ -14,7 +14,7 @@ public enum PacoParameter implements ConfigurationVariable {
     private final String name;
     private final String abbreviation;
 
-    PacoParameter(String name, String abbreviation) {
+    DannacoParameter(String name, String abbreviation) {
         this.name = name;
         this.abbreviation = abbreviation;
     }

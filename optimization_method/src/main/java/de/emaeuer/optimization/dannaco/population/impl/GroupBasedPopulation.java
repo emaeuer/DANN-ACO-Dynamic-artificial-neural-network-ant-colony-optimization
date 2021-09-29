@@ -1,9 +1,9 @@
-package de.emaeuer.optimization.paco.population.impl;
+package de.emaeuer.optimization.dannaco.population.impl;
 
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.configuration.ConfigurationHandler;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
 import de.emaeuer.optimization.util.RandomUtil;
 
 import java.util.*;
@@ -13,7 +13,7 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
 
     private final Set<Integer> addedGroups = new HashSet<>();
 
-    public GroupBasedPopulation(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+    public GroupBasedPopulation(ConfigurationHandler<DannacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         super(configuration, baseNetwork, rng);
     }
 
@@ -21,16 +21,16 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
     public void updatePheromone() {
         addedGroups.clear();
 
-        getCurrentAnts().sort(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
-                .thenComparingDouble(PacoAnt::getFitness)
+        getCurrentAnts().sort(Comparator.comparingDouble(Ant::getGeneralizationCapability)
+                .thenComparingDouble(Ant::getFitness)
                 .reversed());
         int remainingAntUpdates = calculateNumberOfAntsToAdd();
-        for (PacoAnt ant : getCurrentAnts()) {
+        for (Ant ant : getCurrentAnts()) {
             if (remainingAntUpdates <= 0) {
                 break;
             }
 
-            Optional<PacoAnt> addResult = addAnt(ant);
+            Optional<Ant> addResult = addAnt(ant);
 
             if (addResult.isPresent()) {
                 getPheromone().addAnt(ant);
@@ -46,7 +46,7 @@ public class GroupBasedPopulation extends AgeBasedPopulation {
     }
 
     @Override
-    public Optional<PacoAnt> addAnt(PacoAnt ant) {
+    public Optional<Ant> addAnt(Ant ant) {
         int group = ant.getTopologyData().getTopologyGroupID();
 
         if (getSize() < getMaxSize() || !this.addedGroups.contains(group)) {

@@ -1,4 +1,4 @@
-package de.emaeuer.optimization.paco.pheromone;
+package de.emaeuer.optimization.dannaco.pheromone;
 
 import com.google.common.collect.*;
 import de.emaeuer.ann.NeuralNetwork;
@@ -10,11 +10,11 @@ import de.emaeuer.ann.util.NeuralNetworkUtil.Connection;
 import de.emaeuer.configuration.ConfigurationHandler;
 import de.emaeuer.configuration.ConfigurationVariablesBuilder;
 import de.emaeuer.optimization.TopologyData;
-import de.emaeuer.optimization.paco.PacoAnt;
-import de.emaeuer.optimization.paco.configuration.PacoConfiguration;
-import de.emaeuer.optimization.paco.configuration.PacoParameter;
-import de.emaeuer.optimization.paco.state.PacoRunState;
-import de.emaeuer.optimization.paco.state.PacoState;
+import de.emaeuer.optimization.dannaco.Ant;
+import de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration;
+import de.emaeuer.optimization.dannaco.configuration.DannacoParameter;
+import de.emaeuer.optimization.dannaco.state.DannacoRunState;
+import de.emaeuer.optimization.dannaco.state.DannacoState;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.state.StateHandler;
 import de.emaeuer.state.value.AbstractStateValue;
@@ -30,9 +30,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static de.emaeuer.optimization.paco.configuration.PacoConfiguration.*;
+import static de.emaeuer.optimization.dannaco.configuration.DannacoConfiguration.*;
 
-public class PacoPheromone {
+public class Pheromone {
 
     private enum DecisionType {
         ADD,
@@ -43,15 +43,15 @@ public class PacoPheromone {
 
     private static record Decision(Connection connection, DecisionType type, double pheromoneValue) {}
 
-    private static final Logger LOG = LogManager.getLogger(PacoPheromone.class);
+    private static final Logger LOG = LogManager.getLogger(Pheromone.class);
 
-    private final ConfigurationHandler<PacoConfiguration> configuration;
+    private final ConfigurationHandler<DannacoConfiguration> configuration;
 
     private final int maximalPopulationSize;
 
     private final NeuralNetwork baseNetwork;
 
-    private final List<PacoAnt> solutions = new ArrayList<>();
+    private final List<Ant> solutions = new ArrayList<>();
 
     // use this sorted flag because java has no sorted data structure which supports indexing
     // --> sort solutions list only when necessary
@@ -75,7 +75,7 @@ public class PacoPheromone {
     //################ Methods for initialization ################
     //############################################################
 
-    public PacoPheromone(ConfigurationHandler<PacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
+    public Pheromone(ConfigurationHandler<DannacoConfiguration> configuration, NeuralNetwork baseNetwork, RandomUtil rng) {
         this.configuration = configuration;
         this.maximalPopulationSize = this.configuration.getValue(POPULATION_SIZE, Integer.class);
         this.baseNetwork = baseNetwork;
@@ -125,7 +125,7 @@ public class PacoPheromone {
     //############### Methods for pheromone update ###############
     //############################################################
 
-    public void removeAnt(PacoAnt ant) {
+    public void removeAnt(Ant ant) {
         // remove all knowledge of this ant
         removeTemplateOfAnt(ant);
         removeWeightsOfAnt(ant);
@@ -133,7 +133,7 @@ public class PacoPheromone {
         this.solutions.remove(ant);
     }
 
-    private void removeTemplateOfAnt(PacoAnt ant) {
+    private void removeTemplateOfAnt(Ant ant) {
         // decrease counter of usage of this specific population
         TopologyData antData = ant.getTopologyData();
 
@@ -148,7 +148,7 @@ public class PacoPheromone {
         }
     }
 
-    private void removeWeightsOfAnt(PacoAnt ant) {
+    private void removeWeightsOfAnt(Ant ant) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         while (connections.hasNext()) {
             Connection next = connections.next();
@@ -164,7 +164,7 @@ public class PacoPheromone {
         }
     }
 
-    public void addAnt(PacoAnt ant) {
+    public void addAnt(Ant ant) {
         // add all weights of this ant
         addTemplateOfAnt(ant);
         addWeightsOfAnt(ant);
@@ -173,7 +173,7 @@ public class PacoPheromone {
         this.solutionsAreSorted = false;
     }
 
-    private void addTemplateOfAnt(PacoAnt ant) {
+    private void addTemplateOfAnt(Ant ant) {
         // increase counter of usage of this specific population
         TopologyData antData = ant.getTopologyData();
 
@@ -186,7 +186,7 @@ public class PacoPheromone {
         }
     }
 
-    private void addWeightsOfAnt(PacoAnt ant) {
+    private void addWeightsOfAnt(Ant ant) {
         Iterator<Connection> connections = NeuralNetworkUtil.iterateNeuralNetworkConnections(ant.getNeuralNetwork());
         connections.forEachRemaining(c -> addConnectionToPopulation(c, ant.getTopologyData().getTopologyGroupID()));
     }
@@ -200,21 +200,21 @@ public class PacoPheromone {
     //########### Methods for solution generation ################
     //############################################################
 
-    public PacoAnt createAntFromPopulation() {
+    public Ant createAntFromPopulation() {
         // select random ant from this population and use its neural network as template
-        PacoAnt templateAnt = selectTemplate();
+        Ant templateAnt = selectTemplate();
         TopologyData topology = templateAnt.getTopologyData().copy();
 
         // modify template depending on other values of this population
         applyNeuralNetworkDynamics(topology);
         adjustWeights(topology);
 
-        return new PacoAnt(topology);
+        return new Ant(topology);
     }
 
-    protected PacoAnt selectTemplate() {
+    protected Ant selectTemplate() {
         if (this.solutions.isEmpty()) {
-            return new PacoAnt(this.baseNetwork.copy(), 0);
+            return new Ant(this.baseNetwork.copy(), 0);
         }
 
         double[] weights = this.solutionWeights;
@@ -225,18 +225,18 @@ public class PacoPheromone {
         int selectedIndex = rng.selectRandomElementFromVector(weights);
 
         if (!solutionsAreSorted) {
-            this.solutions.sort(Comparator.comparingDouble(PacoAnt::getGeneralizationCapability)
-                    .thenComparingDouble(PacoAnt::getFitness)
+            this.solutions.sort(Comparator.comparingDouble(Ant::getGeneralizationCapability)
+                    .thenComparingDouble(Ant::getFitness)
                     .reversed());
         }
 
-        PacoAnt templateAnt = this.solutions.get(selectedIndex);
+        Ant templateAnt = this.solutions.get(selectedIndex);
 
         if (templateAnt != null) {
             return templateAnt;
         } else {
             LOG.warn("Failed to select template");
-            return new PacoAnt(this.baseNetwork.copy(), 0);
+            return new Ant(this.baseNetwork.copy(), 0);
         }
     }
 
@@ -382,13 +382,13 @@ public class PacoPheromone {
             populationKnowledge = HashMultiset.create();
         }
 
-        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
-                .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
-                .with(PacoParameter.CONNECTION_PHEROMONE, connectionPheromone)
-                .with(PacoParameter.TOPOLOGY_PHEROMONE, topologyPheromone)
-                .with(PacoParameter.STANDARD_DEVIATION, calculateDeviation(populationKnowledge, connection.weight()))
+        Map<String, Double> variables = ConfigurationVariablesBuilder.<DannacoParameter>build()
+                .with(DannacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(DannacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
+                .with(DannacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences)
+                .with(DannacoParameter.CONNECTION_PHEROMONE, connectionPheromone)
+                .with(DannacoParameter.TOPOLOGY_PHEROMONE, topologyPheromone)
+                .with(DannacoParameter.STANDARD_DEVIATION, calculateDeviation(populationKnowledge, connection.weight()))
                 .getVariables();
 
         return this.configuration.getValue(SPLIT_PROBABILITY, Double.class, variables) > this.rng.nextDouble();
@@ -550,14 +550,14 @@ public class PacoPheromone {
                 .map(d -> Math.abs(mean - d))
                 .sum();
 
-        ConfigurationVariablesBuilder<PacoParameter> builder = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, populationValues.size())
-                .with(PacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences);
+        ConfigurationVariablesBuilder<DannacoParameter> builder = ConfigurationVariablesBuilder.<DannacoParameter>build()
+                .with(DannacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(DannacoParameter.NUMBER_OF_VALUES, populationValues.size())
+                .with(DannacoParameter.SUM_OF_DIFFERENCES, sumOfDifferences);
 
         double penalty = this.configuration.getValue(NUMBER_OF_VALUES_PENALTY, Double.class, builder.getVariables());
 
-        builder.with(PacoParameter.NUMBER_OF_VALUES_PENALTY, penalty);
+        builder.with(DannacoParameter.NUMBER_OF_VALUES_PENALTY, penalty);
 
         double deviation = this.configuration.getValue(DEVIATION_FUNCTION, Double.class, builder.getVariables());
 
@@ -570,9 +570,9 @@ public class PacoPheromone {
     private double calculateTopologyPheromone(TopologyData topology) {
         int numberOfUsages = Objects.requireNonNullElse(this.topologyPheromone.get(topology.getTopologyGroupID(), topology.getTopologyKey()), 0);
 
-        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, numberOfUsages)
+        Map<String, Double> variables = ConfigurationVariablesBuilder.<DannacoParameter>build()
+                .with(DannacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(DannacoParameter.NUMBER_OF_VALUES, numberOfUsages)
                 .getVariables();
 
         return this.configuration.getValue(TOPOLOGY_PHEROMONE, Double.class, variables);
@@ -586,9 +586,9 @@ public class PacoPheromone {
 
         int sizeOfPopulationKnowledge = populationKnowledge == null ? 0 : populationKnowledge.size();
 
-        Map<String, Double> variables = ConfigurationVariablesBuilder.<PacoParameter>build()
-                .with(PacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
-                .with(PacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
+        Map<String, Double> variables = ConfigurationVariablesBuilder.<DannacoParameter>build()
+                .with(DannacoParameter.POPULATION_SIZE, this.maximalPopulationSize)
+                .with(DannacoParameter.NUMBER_OF_VALUES, sizeOfPopulationKnowledge)
                 .getVariables();
 
         return this.configuration.getValue(CONNECTION_PHEROMONE, Double.class, variables);
@@ -603,10 +603,10 @@ public class PacoPheromone {
                 end.getLayerIndex(), end.getNeuronIndex());
     }
 
-    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<PacoRunState> state) {
+    public void exportPheromoneMatrixState(int evaluationNumber, StateHandler<DannacoRunState> state) {
         state.execute(s -> {
             //noinspection unchecked safe cast for generic not possible
-            Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) s.getValue(PacoRunState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
+            Map<String, AbstractStateValue<?, ?>> currentState = (Map<String, AbstractStateValue<?, ?>>) s.getValue(DannacoRunState.CONNECTION_WEIGHTS_SCATTERED, Map.class);
 
             for (Map.Entry<Long, Multiset<Double>> connection : this.weightPheromone.entrySet()) {
                 currentState.putIfAbsent(connection.getKey().toString(), new ScatteredDataStateValue());
@@ -618,11 +618,11 @@ public class PacoPheromone {
                                 .toArray(Double[]::new)));
             }
 
-            s.export(PacoRunState.CONNECTION_WEIGHTS_SCATTERED);
+            s.export(DannacoRunState.CONNECTION_WEIGHTS_SCATTERED);
         });
     }
 
-    public void exportCurrentGroups(int evaluationNumber, StateHandler<PacoRunState> state) {
+    public void exportCurrentGroups(int evaluationNumber, StateHandler<DannacoRunState> state) {
         Map<String, DataPoint> value = new HashMap<>();
 
         for (Integer groupID : this.topologyPheromone.rowKeySet()) {
@@ -635,16 +635,16 @@ public class PacoPheromone {
             value.put(Integer.toString(groupID), new DataPoint(evaluationNumber, groupUsage));
         }
 
-        state.execute(s -> s.addNewValue(PacoRunState.USED_GROUPS, value));
+        state.execute(s -> s.addNewValue(DannacoRunState.USED_GROUPS, value));
     }
 
-    public void exportModificationCounts(StateHandler<PacoState> state) {
-        state.execute(s -> s.addNewValue(PacoState.MODIFICATION_DISTRIBUTION, this.modificationCounts));
+    public void exportModificationCounts(StateHandler<DannacoState> state) {
+        state.execute(s -> s.addNewValue(DannacoState.MODIFICATION_DISTRIBUTION, this.modificationCounts));
         this.modificationCounts.clear();
     }
 
-    public void exportDeviation(StateHandler<PacoState> runState) {
-        runState.execute(s -> s.addNewValue(PacoState.AVERAGE_STANDARD_DEVIATION, this.sum / this.number));
+    public void exportDeviation(StateHandler<DannacoState> runState) {
+        runState.execute(s -> s.addNewValue(DannacoState.AVERAGE_STANDARD_DEVIATION, this.sum / this.number));
     }
 
     public Multiset<Double> getPopulationValues(NeuronID start, NeuronID end, int groupID) {

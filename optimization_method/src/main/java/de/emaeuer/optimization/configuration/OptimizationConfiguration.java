@@ -19,8 +19,8 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE), true),
     GENERALIZATION_CAPABILITY_THRESHOLD("Generalization capability threshold", new DoubleConfigurationValue(0.5, 0, 1), true),
     TEST_GENERALIZATION("Test the generalization capability", new BooleanConfigurationValue(false), true),
-    IMPLEMENTATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.PACO))),
-    METHOD_NAME("The name of the optimization method", new StringConfigurationValue("PACO", OptimizationMethodNames.getNames()),
+    IMPLEMENTATION_CONFIGURATION("The configuration of the selected optimization method", new EmbeddedConfiguration<>(OptimizationConfigFactory.createOptimizationConfiguration(OptimizationMethodNames.DANN_ACO))),
+    METHOD_NAME("The name of the optimization method", new StringConfigurationValue("DANN_ACO", OptimizationMethodNames.getNames()),
             (v, h) -> {
                 OptimizationMethodNames methodName = OptimizationMethodNames.valueOf(v.getStringRepresentation());
                 ConfigurationHandler<?> configuration = OptimizationConfigFactory.createOptimizationConfiguration(methodName);
