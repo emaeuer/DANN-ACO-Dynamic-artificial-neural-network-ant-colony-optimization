@@ -9,7 +9,6 @@ import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +21,7 @@ public class ConfigurationValueInputMapper {
 
     private ConfigurationValueInputMapper() {}
 
-    public static List<Node> createPaneForConfiguration(ConfigurationHandler<?> configuration, Runnable action, String name, Node parent) {
+    public static List<Node> createPaneForConfiguration(ConfigurationHandler<?> configuration, Runnable action, String name) {
         if (configuration == null) {
             return Collections.emptyList();
         }
@@ -52,7 +51,7 @@ public class ConfigurationValueInputMapper {
                 .filter(e -> EmbeddedConfiguration.class.equals(e.getKey().getValueType()))
                 .filter(e -> e.getValue() != null)
                 .map(e -> createPaneForConfiguration(((EmbeddedConfiguration<?>) e.getValue()).getValue(),
-                        action, e.getKey().getName(), parent))
+                        action, e.getKey().getName()))
                 .forEach(nodes::addAll);
 
         return nodes;
@@ -86,7 +85,12 @@ public class ConfigurationValueInputMapper {
         spinner.setDisable(value.isDisabled());
 
         if (config.refreshNecessary()) {
-            spinner.valueProperty().addListener((v, o, n) -> action.run());
+            spinner.focusedProperty().addListener((v,o,n) -> {
+                // check if focus lost event
+                if (o && !n) {
+                    action.run();
+                }
+            });
         }
 
         return createStandardInput(config.getName(), spinner);
@@ -112,7 +116,12 @@ public class ConfigurationValueInputMapper {
             field.setDisable(value.isDisabled());
 
             if (config.refreshNecessary()) {
-                field.textProperty().addListener((v, o, n) -> action.run());
+                field.focusedProperty().addListener((v,o,n) -> {
+                    // check if focus lost event
+                    if (o && !n) {
+                        action.run();
+                    }
+                });
             }
 
             return createStandardInput(config.getName(), field);
@@ -140,7 +149,12 @@ public class ConfigurationValueInputMapper {
         });
 
         if (config.refreshNecessary()) {
-            field.textProperty().addListener((v, o, n) -> action.run());
+            field.focusedProperty().addListener((v,o,n) -> {
+                // check if focus lost event
+                if (o && !n) {
+                    action.run();
+                }
+            });
         }
 
         return createStandardInput(config.getName(), field);
@@ -156,7 +170,12 @@ public class ConfigurationValueInputMapper {
         });
 
         if (config.refreshNecessary()) {
-            field.textProperty().addListener((v, o, n) -> action.run());
+            field.focusedProperty().addListener((v,o,n) -> {
+                // check if focus lost event
+                if (o && !n) {
+                    action.run();
+                }
+            });
         }
 
         return createStandardInput(config.getName(), field);
@@ -178,7 +197,12 @@ public class ConfigurationValueInputMapper {
         field.textProperty().addListener((v, o, n) -> configurationHandler.setValue(config.getKeyName(), n));
 
         if (config.refreshNecessary()) {
-            field.textProperty().addListener((v, o, n) -> action.run());
+            field.focusedProperty().addListener((v,o,n) -> {
+                // check if focus lost event
+                if (o && !n) {
+                    action.run();
+                }
+            });
         }
 
         return createStandardInput(config.getName(), field);

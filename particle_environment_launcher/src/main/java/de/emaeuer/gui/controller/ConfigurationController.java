@@ -38,7 +38,7 @@ public class ConfigurationController {
         environmentConfig.setName("ENVIRONMENT_CONFIGURATION");
         this.configuration.get().setName("CONFIGURATION");
 
-        panel.getChildren().addAll(ConfigurationValueInputMapper.createPaneForConfiguration(this.configuration.get(), this::refreshPanel, "Configuration", panel));
+        panel.getChildren().addAll(ConfigurationValueInputMapper.createPaneForConfiguration(this.configuration.get(), this::refreshPanel, "Configuration"));
     }
 
     public void writeConfig() {

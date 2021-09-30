@@ -100,7 +100,7 @@ public class StateValueOutputMapper {
         NumberAxis xAxis = new NumberAxis();
         xAxis.setLabel("Evaluation number");
         NumberAxis yAxis = new NumberAxis();
-        yAxis.setLabel("Fitness");
+        yAxis.setLabel(stateType.getName());
         XYChart<Number, Number> chart;
 
         if (dataSeries instanceof CumulatedDataSeriesStateValue) {
