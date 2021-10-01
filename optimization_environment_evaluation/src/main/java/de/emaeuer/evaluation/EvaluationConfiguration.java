@@ -35,7 +35,7 @@ public enum EvaluationConfiguration implements DefaultConfiguration<EvaluationCo
                 ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, OptimizationConfiguration.class, OPTIMIZATION_CONFIGURATION);
                 optimizationConfig.setValue(OptimizationConfiguration.GENERALIZATION_CAPABILITY_THRESHOLD, v.getStringRepresentation());
             }),
-    TEST_GENERALIZATION("Test the generalization capability", new BooleanConfigurationValue(true),
+    TEST_GENERALIZATION("Test the generalization capability", new BooleanConfigurationValue(false),
             (v, h) -> {
                 ConfigurationHandler<OptimizationConfiguration> optimizationConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, OptimizationConfiguration.class, OPTIMIZATION_CONFIGURATION);
                 ConfigurationHandler<EnvironmentConfiguration> environmentConfig = ConfigurationHelper.extractEmbeddedConfiguration(h, EnvironmentConfiguration.class, ENVIRONMENT_CONFIGURATION);

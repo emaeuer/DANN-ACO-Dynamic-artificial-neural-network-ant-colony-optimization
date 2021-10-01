@@ -6,7 +6,6 @@ import de.emaeuer.optimization.configuration.OptimizationConfiguration;
 import de.emaeuer.optimization.configuration.OptimizationRunState;
 import de.emaeuer.optimization.configuration.OptimizationState;
 import de.emaeuer.optimization.util.GraphHelper;
-import de.emaeuer.optimization.util.ProgressionHandler;
 import de.emaeuer.optimization.util.RandomUtil;
 import de.emaeuer.optimization.util.RunDataHandler;
 import de.emaeuer.optimization.util.RunDataHandler.RunSummary;
@@ -32,7 +31,6 @@ public abstract class OptimizationMethod {
     private Solution currentlyBestSolution;
     private Solution overallBestSolution;
 
-    private ProgressionHandler progressionHandler;
     private final RunDataHandler averageHandler;
 
     private boolean optimizationFinished = false;
@@ -52,10 +50,6 @@ public abstract class OptimizationMethod {
         this.configuration.logConfiguration();
 
         incrementRunCounter();
-
-        this.progressionHandler = new ProgressionHandler(
-                configuration.getValue(OptimizationConfiguration.PROGRESSION_ITERATIONS, Integer.class),
-                configuration.getValue(OptimizationConfiguration.PROGRESSION_THRESHOLD, Double.class));
     }
 
     public List<? extends Solution> nextIteration() {
@@ -86,11 +80,6 @@ public abstract class OptimizationMethod {
 
         LOG.info("Best found solution of iteration {} has a fitness of {}", this.generationCounter, getBestFitness());
 
-        this.progressionHandler.addFitnessScore(getBestFitness());
-        if (this.progressionHandler.doesStagnate()) {
-            handleProgressionStagnation();
-        }
-
         if (!checkCurrentRunFinished()) {
             return;
         }
@@ -120,10 +109,6 @@ public abstract class OptimizationMethod {
         this.runFinished = false;
         this.generationCounter = 0;
         this.evaluationCounter = 0;
-
-        this.progressionHandler = new ProgressionHandler(
-                configuration.getValue(OptimizationConfiguration.PROGRESSION_ITERATIONS, Integer.class),
-                configuration.getValue(OptimizationConfiguration.PROGRESSION_THRESHOLD, Double.class));
     }
 
     private void updateGeneralState() {
@@ -212,10 +197,6 @@ public abstract class OptimizationMethod {
         } else {
             return maxFitnessReached || maxEvaluationsReached;
         }
-    }
-
-    protected void handleProgressionStagnation() {
-        this.progressionHandler.resetProgression();
     }
 
     protected void updateState() {

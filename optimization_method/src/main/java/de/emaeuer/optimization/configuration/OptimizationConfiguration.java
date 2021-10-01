@@ -13,8 +13,6 @@ public enum OptimizationConfiguration implements DefaultConfiguration<Optimizati
     SEED("Seed for generating the environment", new IntegerConfigurationValue(9369319), true),
     NEURAL_NETWORK_CONFIGURATION("Neural network configuration", new EmbeddedConfiguration<>(new ConfigurationHandler<>(NeuralNetworkConfiguration.class, "NEURAL_NETWORK"))),
     MAX_NUMBER_OF_EVALUATIONS("Maximal number of evaluations", new IntegerConfigurationValue(20000, 10, Integer.MAX_VALUE)),
-    PROGRESSION_THRESHOLD("Minimum fitness increase for progression", new DoubleConfigurationValue(0)),
-    PROGRESSION_ITERATIONS("Threshold for number of evaluations without progress", new IntegerConfigurationValue(200, 1, Integer.MAX_VALUE)),
     NUMBER_OF_RUNS("Number of runs", new IntegerConfigurationValue(10, 1, Integer.MAX_VALUE)),
     MAX_FITNESS_SCORE("Fitness threshold", new DoubleConfigurationValue(1000, 50, Double.MAX_VALUE), true),
     GENERALIZATION_CAPABILITY_THRESHOLD("Generalization capability threshold", new DoubleConfigurationValue(0.5, 0, 1), true),

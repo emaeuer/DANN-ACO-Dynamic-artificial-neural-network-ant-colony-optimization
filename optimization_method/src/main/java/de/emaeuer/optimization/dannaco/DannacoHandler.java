@@ -109,11 +109,6 @@ public class DannacoHandler extends OptimizationMethod {
     }
 
     @Override
-    protected void handleProgressionStagnation() {
-        super.handleProgressionStagnation();
-    }
-
-    @Override
     protected List<? extends Solution> getCurrentSolutions() {
         return this.population.getCurrentAnts();
     }
