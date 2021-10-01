@@ -2,7 +2,6 @@ package de.emaeuer.environment.pong.configuration;
 
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
-import de.emaeuer.environment.bird.configuration.FlappyBirdGeneralizationConfiguration;
 import de.emaeuer.environment.configuration.GeneralizationConfiguration;
 
 public enum PongGeneralizationConfiguration implements DefaultConfiguration<PongGeneralizationConfiguration>, GeneralizationConfiguration<PongGeneralizationConfiguration> {

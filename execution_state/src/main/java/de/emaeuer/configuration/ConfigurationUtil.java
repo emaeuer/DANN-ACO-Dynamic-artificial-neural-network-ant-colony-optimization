@@ -5,7 +5,6 @@ import de.emaeuer.persistence.BackgroundFileWriter;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class ConfigurationUtil {
 

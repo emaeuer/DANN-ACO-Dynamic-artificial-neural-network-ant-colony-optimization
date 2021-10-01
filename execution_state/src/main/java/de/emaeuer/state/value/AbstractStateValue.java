@@ -1,8 +1,5 @@
 package de.emaeuer.state.value;
 
-import java.util.Collection;
-import java.util.Set;
-
 public abstract class AbstractStateValue<I, O> {
 
     private boolean changedSinceLastGet = true;
@@ -30,8 +27,8 @@ public abstract class AbstractStateValue<I, O> {
 
     protected abstract O getValueImpl();
 
-    public boolean changedSinceLastGet() {
-        return changedSinceLastGet;
+    public boolean unchangedSinceLastGet() {
+        return !changedSinceLastGet;
     }
 
     public abstract String getExportValue();

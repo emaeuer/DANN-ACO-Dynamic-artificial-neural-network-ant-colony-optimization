@@ -3,7 +3,6 @@ package de.emaeuer.state.value;
 import de.emaeuer.state.value.data.DataPoint;
 
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
 public class DataSeriesStateValue extends AbstractStateValue<Map<String, DataPoint>, Map<String, Map<Double, DataPoint>>> {

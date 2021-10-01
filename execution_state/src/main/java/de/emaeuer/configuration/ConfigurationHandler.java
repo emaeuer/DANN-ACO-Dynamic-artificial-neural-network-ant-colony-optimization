@@ -1,11 +1,9 @@
 package de.emaeuer.configuration;
 
-import de.emaeuer.persistence.ConfigurationIOHandler;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Predicate;

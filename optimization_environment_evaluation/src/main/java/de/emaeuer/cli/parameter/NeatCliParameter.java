@@ -1,9 +1,5 @@
 package de.emaeuer.cli.parameter;
 
-import de.emaeuer.configuration.value.BooleanConfigurationValue;
-import de.emaeuer.configuration.value.DoubleConfigurationValue;
-import de.emaeuer.configuration.value.IntegerConfigurationValue;
-import de.emaeuer.configuration.value.StringConfigurationValue;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "neat")

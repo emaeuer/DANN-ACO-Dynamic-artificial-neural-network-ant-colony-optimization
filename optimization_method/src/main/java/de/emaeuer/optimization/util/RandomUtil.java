@@ -3,7 +3,6 @@ package de.emaeuer.optimization.util;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.random.JDKRandomGenerator;
-import org.apache.commons.math3.random.RandomGenerator;
 
 import java.util.Arrays;
 import java.util.Collections;

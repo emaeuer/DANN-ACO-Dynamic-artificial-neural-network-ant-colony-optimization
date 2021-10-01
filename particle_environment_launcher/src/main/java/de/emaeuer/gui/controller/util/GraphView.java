@@ -274,12 +274,9 @@ public class GraphView<V, E> extends Pane {
             throw new IllegalStateException("You must call init() method before any updates.");
         }
 
-        final FutureTask<Boolean> update = new FutureTask<>(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                updateNodes();
-                return true;
-            }
+        final FutureTask<Boolean> update = new FutureTask<>(() -> {
+            updateNodes();
+            return true;
         });
 
         //this will be called from a non-javafx thread, so this must be guaranteed to run of the graphics thread

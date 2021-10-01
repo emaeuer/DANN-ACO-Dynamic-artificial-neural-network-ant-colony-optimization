@@ -10,7 +10,7 @@ import org.jgap.Chromosome;
 
 public class ChromosomeSolutionMapper {
 
-    private static Logger LOG = LogManager.getLogger(ChromosomeSolutionMapper.class);
+    private static final Logger LOG = LogManager.getLogger(ChromosomeSolutionMapper.class);
 
     private static ActivatorTranscriber TRANSCRIBER;
 
