@@ -11,13 +11,11 @@ import de.emaeuer.state.value.data.DataPoint;
 import de.emaeuer.state.value.GraphStateValue.Connection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.chart.*;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.apache.logging.log4j.LogManager;
@@ -27,10 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 public class StateValueOutputMapper {
 
@@ -273,7 +268,7 @@ public class StateValueOutputMapper {
 
     // FIXME nodes in graph lay on top of each other
     private void refreshGraphView(StateParameter<?> stateType, GraphStateValue graphState, String suffix) {
-        if (!graphState.changedSinceLastGet() || graphState.getValue() == null || graphState.getValue().connections().isEmpty()) {
+        if (graphState.unchangedSinceLastGet() || graphState.getValue() == null || graphState.getValue().connections().isEmpty()) {
             return;
         }
 
@@ -350,7 +345,7 @@ public class StateValueOutputMapper {
     // *********************************************
 
     private void refreshDistributionState(StateParameter<?> stateType, DistributionStateValue distributionState, String suffix) {
-        if (!distributionState.changedSinceLastGet()) {
+        if (distributionState.unchangedSinceLastGet()) {
             return;
         }
 
@@ -380,6 +375,7 @@ public class StateValueOutputMapper {
     // *********************************************
     
     private void refreshScatteredDataState(StateParameter<?> stateType, ScatteredDataStateValue scatteredValue, String suffix) {
+        // Unused because of performance issues
 //        if (!scatteredValue.changedSinceLastGet()) {
 //            return;
 //        }

@@ -8,7 +8,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
-import org.apache.logging.log4j.core.appender.ScriptAppenderSelector;
 
 import java.util.HashMap;
 import java.util.Map;

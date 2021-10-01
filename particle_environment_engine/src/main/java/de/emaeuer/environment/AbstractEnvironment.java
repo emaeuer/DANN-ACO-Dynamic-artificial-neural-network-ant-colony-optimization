@@ -12,8 +12,8 @@ import java.util.function.BiConsumer;
 
 public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfiguration<T> & GeneralizationConfiguration<T>> {
 
-    private final double width = 800;
-    private final double height = 800;
+    private static final double WIDTH = 800;
+    private static final double HEIGHT = 800;
 
     private final List<AgentController> agentControllers = Collections.synchronizedList(new ArrayList<>());
     private final List<AbstractElement> agentsToDraw = Collections.synchronizedList(new ArrayList<>());
@@ -114,11 +114,11 @@ public abstract class AbstractEnvironment<T extends Enum<T> & DefaultConfigurati
     }
 
     public double getWidth() {
-        return width;
+        return WIDTH;
     }
 
     public double getHeight() {
-        return height;
+        return HEIGHT;
     }
 
     public List<AgentController> getAgents() {

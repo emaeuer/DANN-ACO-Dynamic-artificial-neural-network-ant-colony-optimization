@@ -4,8 +4,6 @@ import de.emaeuer.ann.ActivationFunction;
 import de.emaeuer.ann.NeuronID;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Neuron {
 

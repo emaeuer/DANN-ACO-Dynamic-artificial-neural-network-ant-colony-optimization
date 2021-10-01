@@ -109,7 +109,7 @@ public class OptimizationEnvironmentHandler implements Runnable {
             this.updateNotifier = !this.updateNotifier;
         }
 
-        if (!this.finished && !isPaused()) {
+        if (!this.finished && isPlaying()) {
             step();
         }
     }
@@ -168,9 +168,9 @@ public class OptimizationEnvironmentHandler implements Runnable {
                 .max()
                 .orElse(0);
 
-//        if (max > 20) {
-//            throw new IllegalStateException("Network got to large, aborting optimization");
-//        }
+        if (max > 20) {
+            throw new IllegalStateException("Network got to large, aborting optimization");
+        }
 
         this.environment.setControllers(solutions);
     }
@@ -314,8 +314,8 @@ public class OptimizationEnvironmentHandler implements Runnable {
         this.automaticallyStartNextRun = automaticallyStartNextRun;
     }
 
-    public boolean isPaused() {
-        return this.pauseThread.get();
+    public boolean isPlaying() {
+        return !this.pauseThread.get();
     }
 
     public boolean stoppedBecauseOfException() {

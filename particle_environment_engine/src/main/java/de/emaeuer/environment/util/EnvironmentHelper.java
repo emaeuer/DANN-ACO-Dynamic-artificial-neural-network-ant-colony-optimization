@@ -11,7 +11,7 @@ public class EnvironmentHelper {
     private EnvironmentHelper() {
     }
 
-    public static final BiConsumer<Particle, AbstractEnvironment> REFLECT_ON_BORDER = (particle, env) -> {
+    public static final BiConsumer<Particle, AbstractEnvironment<?>> REFLECT_ON_BORDER = (particle, env) -> {
         // particle reaches right border and wants to go further
         if (particle.getPosition().getX() + particle.getRadius() > env.getWidth() && particle.getVelocity().getX() > 0) {
             particle.getPosition().setX(env.getWidth() - particle.getRadius());
@@ -33,7 +33,7 @@ public class EnvironmentHelper {
         }
     };
 
-    public static final BiConsumer<Particle, AbstractEnvironment> GO_TO_OTHER_SIDE = (particle, env) -> {
+    public static final BiConsumer<Particle, AbstractEnvironment<?>> GO_TO_OTHER_SIDE = (particle, env) -> {
         // particle reaches right border and wants to go further
         if (particle.getPosition().getX() > env.getWidth()) {
             particle.getPosition().setX(0);

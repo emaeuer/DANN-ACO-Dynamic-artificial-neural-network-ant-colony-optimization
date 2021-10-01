@@ -3,7 +3,6 @@ package de.emaeuer.ann.impl.layer.based;
 import de.emaeuer.ann.NeuralNetwork;
 import de.emaeuer.ann.NeuronID;
 import de.emaeuer.ann.configuration.NeuralNetworkConfiguration;
-import de.emaeuer.ann.impl.neuron.based.Neuron;
 import de.emaeuer.configuration.ConfigurationHandler;
 import org.apache.commons.math3.linear.RealVector;
 

@@ -1,7 +1,5 @@
 package de.emaeuer.state.value;
 
-import de.emaeuer.state.value.data.DataPoint;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;

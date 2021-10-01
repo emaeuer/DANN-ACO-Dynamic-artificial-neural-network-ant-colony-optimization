@@ -3,7 +3,6 @@ package de.emaeuer.environment.bird.configuration;
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
 import de.emaeuer.configuration.value.BooleanConfigurationValue;
-import de.emaeuer.configuration.value.DoubleConfigurationValue;
 import de.emaeuer.configuration.value.IntegerConfigurationValue;
 
 public enum FlappyBirdConfiguration implements DefaultConfiguration<FlappyBirdConfiguration> {

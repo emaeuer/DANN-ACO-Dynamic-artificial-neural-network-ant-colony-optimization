@@ -2,7 +2,6 @@ package de.emaeuer.environment.pong.configuration;
 
 import de.emaeuer.configuration.DefaultConfiguration;
 import de.emaeuer.configuration.value.AbstractConfigurationValue;
-import de.emaeuer.configuration.value.BooleanConfigurationValue;
 import de.emaeuer.configuration.value.IntegerConfigurationValue;
 
 public enum PongConfiguration implements DefaultConfiguration<PongConfiguration> {

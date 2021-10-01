@@ -7,7 +7,7 @@ import java.util.List;
 
 public class SimpleShape implements Shape<AbstractElement> {
 
-    private Shapes shape;
+    private final Shapes shape;
 
     public SimpleShape(Shapes shape) {
         this.shape = shape;

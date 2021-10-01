@@ -117,7 +117,7 @@ public class EnvironmentController {
     }
 
     private void refreshProperties() {
-        this.runningProperty.set(!this.handler.isPaused());
+        this.runningProperty.set(this.handler.isPlaying());
 
         this.handler.refreshProperties();
 

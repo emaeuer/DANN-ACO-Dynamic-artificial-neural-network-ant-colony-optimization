@@ -5,7 +5,6 @@ import de.emaeuer.variation.VariationParameter.StaticParameter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MultiVariationParameterIterator implements Iterator<List<StaticParameter<?>>>, Iterable<List<StaticParameter<?>>> {
 

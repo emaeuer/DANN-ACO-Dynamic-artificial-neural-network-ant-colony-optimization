@@ -2,8 +2,6 @@ package de.emaeuer.cli.parameter;
 
 import picocli.CommandLine;
 
-import java.io.File;
-
 @CommandLine.Command(name = "dannaco")
 public class DannacoCliParameter implements AlgorithmCliParameter {
 

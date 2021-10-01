@@ -3,11 +3,11 @@ package de.emaeuer.optimization.util;
 public class ProgressionHandler {
 
     private int currentIteration = 0;
-    private int numberOfIterationsToCheck;
+    private final int numberOfIterationsToCheck;
     private int iterationWithLastIncrease = 0;
 
     private double fitnessOfLastIterationWithIncrease = 0;
-    private double progressThreshold;
+    private final double progressThreshold;
 
     public ProgressionHandler(int numberOfIterationsToCheck, double progressThreshold) {
         this.numberOfIterationsToCheck = numberOfIterationsToCheck;

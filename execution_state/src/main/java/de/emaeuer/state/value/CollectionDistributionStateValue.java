@@ -9,7 +9,7 @@ public class CollectionDistributionStateValue extends AbstractStateValue<List<Do
 
     private final DataSeriesStateValue representation = new DataSeriesStateValue();
 
-    private List<List<Double>> values = new ArrayList<>();
+    private final List<List<Double>> values = new ArrayList<>();
 
     private double overallMax = Double.MIN_VALUE;
     private double dataCount = 0;
