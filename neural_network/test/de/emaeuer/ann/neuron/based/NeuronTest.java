@@ -104,6 +104,7 @@ public class NeuronTest {
         Neuron neuron = buildNeuron(new NeuronID(0, 0), ActivationFunction.SIGMOID, NeuronType.HIDDEN, 2);
         neuron.activate();
         assertEquals(ActivationFunction.SIGMOID.apply(2), neuron.getActivation());
+        neuron.reactivate();
         neuron.activate();
         assertEquals(ActivationFunction.SIGMOID.apply(2), neuron.getActivation());
     }
@@ -121,6 +122,9 @@ public class NeuronTest {
 
             assertEquals(1, start.getActivation());
             assertEquals(-3, end.getActivation());
+
+            start.reactivate();
+            end.reactivate();
         }
     }
 
@@ -145,6 +149,11 @@ public class NeuronTest {
             assertEquals(i, startB.getActivation());
             assertEquals(-1, startC.getActivation());
             assertEquals(2 + i, end.getActivation());
+
+            startA.reactivate();
+            startB.reactivate();
+            startC.reactivate();
+            end.reactivate();
         }
     }
 
@@ -157,11 +166,14 @@ public class NeuronTest {
 
         // test no dependencies between iterations
         for (int i = 0; i < 100; i++) {
+            // activation of start automatically invokes activation of end because it is an input
             start.activate();
-            end.activate();
 
             assertEquals(i % 2 == 0 ? 1 : 0, start.getActivation());
-            assertEquals(i % 2 == 0 ? -1 : 0, end.getActivation());
+            assertEquals(i % 2 == 0 ? 0 : -1, end.getActivation());
+
+            start.reactivate();
+            end.reactivate();
         }
     }
 

@@ -9,8 +9,6 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
-    private static final Logger LOG = LogManager.getLogger(Main.class);
-
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/gui/main.fxml"));

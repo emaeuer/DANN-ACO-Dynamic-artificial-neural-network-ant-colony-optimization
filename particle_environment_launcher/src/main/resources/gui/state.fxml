@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="10" styleClass="side_panel" stylesheets="@style.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.emaeuer.gui.controller.StateController">
+<VBox spacing="10" styleClass="side_panel" stylesheets="@style.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="de.emaeuer.gui.controller.StateController">
     <Label text="Optimization state" styleClass="panel_title" />
 
     <ScrollPane VBox.vgrow="ALWAYS" styleClass="side_panel_scroll" vbarPolicy="NEVER" hbarPolicy="NEVER" fitToWidth="true">
